@@ -1,0 +1,6 @@
+
+#include "states.h"
+
+APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
+APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
+

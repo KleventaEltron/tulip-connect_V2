@@ -348,6 +348,7 @@
         <itemPath>../src/files/sdcard.h</itemPath>
         <itemPath>../src/files/credentials.h</itemPath>
         <itemPath>../src/files/logging.h</itemPath>
+        <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/states.h</itemPath>
       </logicalFolder>
       <logicalFolder name="packs" displayName="packs" projectFiles="true">
         <logicalFolder name="ATSAME54P20A_DFP"
@@ -864,6 +865,7 @@
         <itemPath>../src/files/hardware_rev.c</itemPath>
         <itemPath>../src/files/sdcard.c</itemPath>
         <itemPath>../src/files/logging.c</itemPath>
+        <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/states.c</itemPath>
       </logicalFolder>
       <logicalFolder name="wolfcrypt" displayName="wolfcrypt" projectFiles="true">
         <logicalFolder name="port" displayName="port" projectFiles="true">
@@ -1075,6 +1077,8 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-fffff"/>
         <property key="poweroptions.powerenable" value="false"/>
+        <property key="programmerToGoFilePath"
+                  value="//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/tulip_connect.X/debug/default/tulip_connect_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"
@@ -1506,6 +1510,8 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-fffff"/>
         <property key="poweroptions.powerenable" value="false"/>
+        <property key="programmerToGoFilePath"
+                  value="//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/tulip_connect.X/debug/Debug/tulip_connect_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"
