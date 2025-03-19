@@ -3,7 +3,7 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>tulip_connect_V1-1-6</name>
+            <name>tulip_connect_V2</name>
             <creation-uuid>573d09ad-ec9c-4761-9af7-9338b34cd4dd</creation-uuid>
             <make-project-type>0</make-project-type>
             <sourceEncoding>ISO-8859-1</sourceEncoding>
