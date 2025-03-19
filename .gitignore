@@ -1,17 +1,23 @@
-# MPLAB X build directories
+# MPLAB X build directories (ignore output files)
 tulip_connect.X/nbproject/private/
-tulip_connect.X/nbproject/Makefile-*
 tulip_connect.X/nbproject/Package-*
 
+# Keep project configuration files tracked
+!tulip_connect.X/nbproject/Makefile
+!tulip_connect.X/nbproject/configurations.xml
+!tulip_connect.X/tulip_connect.X.cproj
+
+# Ignore build artifacts
 tulip_connect.X/dist/
 tulip_connect.X/debug/
 tulip_connect.X/queuelogs/
 tulip_connect.X/build/
 tulip_connect.X/.generated_files/flags/default/
 
+# Ignore sensitive files
 src/files/credentials.h
 
-# Build artifacts
+# Ignore common build artifacts
 *.elf
 *.hex
 *.cof
@@ -24,12 +30,12 @@ src/files/credentials.h
 *.a
 *.S
 
-# Debugging files
+# Ignore debugging files
 *.dSYM/
 *.pdb
 *.log
 
-# MPLABX auto-generated files
+# Ignore MPLABX auto-generated files
 *.dep
 *.iobj
 *.o.d
@@ -41,7 +47,7 @@ src/files/credentials.h
 *.sym
 *.asm
 
-# Temporary files
+# Ignore temporary files
 *.bak
 *.swp
 *.swo
@@ -53,4 +59,3 @@ src/files/credentials.h
 
 # Windows specific files
 Thumbs.db
-
