@@ -764,7 +764,6 @@ void SYS_Initialize ( void* data )
    /* Network Presentation Layer Initialization */
    sysObj.netPres = NET_PRES_Initialize(0, (SYS_MODULE_INIT*)&netPresInitData);
    /* TCPIP Stack Initialization */
-   
    //sysObj.tcpip = TCPIP_STACK_Init();
    //SYS_ASSERT(sysObj.tcpip != SYS_MODULE_OBJ_INVALID, "TCPIP_STACK_Init Failed" );
 
@@ -782,9 +781,11 @@ void SYS_Initialize ( void* data )
     APP_I2C_TASKS_Initialize();
     APP_LOGGING_TASKS_Initialize();
     APP_SD_CARD_TASKS_Initialize();
+    APP_ACTIVE_MODE_CONTROLLER_Initialize();
 
 
     NVIC_Initialize();
+
 
     /* MISRAC 2012 deviation block end */
 }

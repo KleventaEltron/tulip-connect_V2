@@ -646,6 +646,7 @@
       <itemPath>../src/app_i2c_tasks.h</itemPath>
       <itemPath>../src/app_logging_tasks.h</itemPath>
       <itemPath>../src/app_sd_card_tasks.h</itemPath>
+      <itemPath>../src/app_active_mode_controller.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -988,6 +989,7 @@
       <itemPath>../src/app_i2c_tasks.c</itemPath>
       <itemPath>../src/app_logging_tasks.c</itemPath>
       <itemPath>../src/app_sd_card_tasks.c</itemPath>
+      <itemPath>../src/app_active_mode_controller.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
@@ -1073,6 +1075,8 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-fffff"/>
         <property key="poweroptions.powerenable" value="false"/>
+        <property key="programmerToGoFilePath"
+                  value="//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/tulip_connect.X/debug/default/tulip_connect_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"
@@ -1097,6 +1101,7 @@
       <C32>
         <property key="additional-warnings" value="true"/>
         <property key="addresss-attribute-use" value="false"/>
+        <property key="appendMe" value="-g"/>
         <property key="cast-align" value="false"/>
         <property key="code-model" value="default"/>
         <property key="const-model" value="default"/>
@@ -1178,6 +1183,7 @@
         <property key="additional-options-use-response-files" value="false"/>
         <property key="additional-options-write-sla" value="false"/>
         <property key="allocate-dinit" value="false"/>
+        <property key="appendMe" value="--dinit-compression=0"/>
         <property key="code-dinit" value="false"/>
         <property key="ebase-addr" value=""/>
         <property key="enable-check-sections" value="false"/>
@@ -1224,6 +1230,7 @@
       <C32CPP>
         <property key="additional-warnings" value="false"/>
         <property key="addresss-attribute-use" value="false"/>
+        <property key="appendMe" value="-g"/>
         <property key="check-new" value="false"/>
         <property key="eh-specs" value="true"/>
         <property key="enable-app-io" value="false"/>
@@ -1253,6 +1260,7 @@
         <appendMe value="-g"/>
       </C32CPP>
       <C32Global>
+        <property key="appendMe" value=""/>
         <property key="combine-sourcefiles" value="false"/>
         <property key="common-include-directories" value=""/>
         <property key="common-macros" value=""/>
@@ -1504,6 +1512,8 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-fffff"/>
         <property key="poweroptions.powerenable" value="false"/>
+        <property key="programmerToGoFilePath"
+                  value="//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/tulip_connect.X/debug/Debug/tulip_connect_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"

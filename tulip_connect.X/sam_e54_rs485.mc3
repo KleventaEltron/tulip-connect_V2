@@ -586,6 +586,38 @@
 </value>
       </entry>
       <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="HarmonyCore" name="APP7_C"/>
+         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;HarmonyCore&gt;
+  &lt;HarmonyCore dnOrder=&quot;0&quot; id=&quot;APP7_C&quot;&gt;
+    &lt;Attributes dnOrder=&quot;0&quot;&gt;
+      &lt;Boolean dnOrder=&quot;0&quot; id=&quot;enabled&quot;&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;true&lt;/Value&gt;
+      &lt;/Boolean&gt;
+      &lt;String dnOrder=&quot;1&quot; id=&quot;name&quot;&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;app_active_mode_controller.c&lt;/Value&gt;
+      &lt;/String&gt;
+    &lt;/Attributes&gt;
+  &lt;/HarmonyCore&gt;
+&lt;/HarmonyCore&gt;
+</value>
+      </entry>
+      <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="HarmonyCore" name="APP7_H"/>
+         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;HarmonyCore&gt;
+  &lt;HarmonyCore dnOrder=&quot;0&quot; id=&quot;APP7_H&quot;&gt;
+    &lt;Attributes dnOrder=&quot;0&quot;&gt;
+      &lt;Boolean dnOrder=&quot;0&quot; id=&quot;enabled&quot;&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;true&lt;/Value&gt;
+      &lt;/Boolean&gt;
+      &lt;String dnOrder=&quot;1&quot; id=&quot;name&quot;&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;app_active_mode_controller.h&lt;/Value&gt;
+      &lt;/String&gt;
+    &lt;/Attributes&gt;
+  &lt;/HarmonyCore&gt;
+&lt;/HarmonyCore&gt;
+</value>
+      </entry>
+      <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="HarmonyCore" name="COMMON_SYMBOL_CNTR"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;HarmonyCore&gt;
   &lt;HarmonyCore dnOrder=&quot;0&quot; id=&quot;COMMON_SYMBOL_CNTR&quot;&gt;
@@ -2822,7 +2854,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;HarmonyCore&gt;
   &lt;HarmonyCore dnOrder=&quot;0&quot; id=&quot;GEN_APP_TASK_COUNT&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;7&quot;/&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;8&quot;/&gt;
     &lt;/Values&gt;
   &lt;/HarmonyCore&gt;
 &lt;/HarmonyCore&gt;
@@ -3179,7 +3211,9 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="HarmonyCore" name="GEN_APP_TASK_NAME_7"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;HarmonyCore&gt;
   &lt;HarmonyCore dnOrder=&quot;0&quot; id=&quot;GEN_APP_TASK_NAME_7&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;/&gt;
+    &lt;Values dnOrder=&quot;0&quot;&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;app_active_mode_controller&quot;/&gt;
+    &lt;/Values&gt;
   &lt;/HarmonyCore&gt;
 &lt;/HarmonyCore&gt;
 </value>
@@ -36376,6 +36410,14 @@
    </tokenMap>
    <generatedFileHashHistoryMap class="java.util.TreeMap">
       <entry>
+         <file>..\src\app_active_mode_controller.c</file>
+         <hash>e209a8f83ccc685ad822fc19970bd707b0e778cd9050841d571e3a9234cfb374</hash>
+      </entry>
+      <entry>
+         <file>..\src\app_active_mode_controller.h</file>
+         <hash>e949980083085e15e6348c548b42cdadda9bb02dad9085ee1ebb640287350a9d</hash>
+      </entry>
+      <entry>
          <file>..\src\app_display_comm.c</file>
          <hash>fd6b25b3ada9604ff27879028716c3fceb0636a1c9617dbe449c30e4c62ed9c6</hash>
       </entry>
@@ -36453,7 +36495,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\definitions.h</file>
-         <hash>e669b1ddd28a43a4728d11a8f6084ce5b4e65fa7966012db28df1d1a529db627</hash>
+         <hash>28d26ee16d881e861b073bf12684b7a27fd1e66c756b3167ff8234445b1ca935</hash>
       </entry>
       <entry>
          <file>..\src\config\default\device.h</file>
@@ -36577,7 +36619,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\initialization.c</file>
-         <hash>dc5b9a7adab9c1f6b03065b77d0482e4e9e79438466be3f6d038268f3db04758</hash>
+         <hash>c0959806e88e18f6c2b1bfe2e7d3c06cfcc842e7e296ac7528478b5f859c2bbb</hash>
       </entry>
       <entry>
          <file>..\src\config\default\interrupts.c</file>
@@ -37589,7 +37631,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\tasks.c</file>
-         <hash>140444a38e96384c07fbccf92a7fb67a3f7fc64f36f7ec66ad97c08dc92c3991</hash>
+         <hash>5dcd9c7558276a8ec961e0678838dfb6fd09bcce03895eaf4b3fb413283dd0cd</hash>
       </entry>
       <entry>
          <file>..\src\config\default\toolchain_specifics.h</file>

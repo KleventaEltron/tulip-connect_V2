@@ -73,26 +73,39 @@
 void SYS_Tasks ( void )
 {
     /* Maintain system services */
-    SYS_CMD_Tasks();
+    
 
-    SYS_FS_Tasks();
+SYS_CMD_Tasks();
 
-    DRV_SDMMC_Tasks(sysObj.drvSDMMC0);
+
+
+SYS_FS_Tasks();
+
+DRV_SDMMC_Tasks(sysObj.drvSDMMC0);
+
+
+
+
 
     /* Maintain Device Drivers */
-    DRV_MIIM_OBJECT_BASE_Default.DRV_MIIM_Tasks(sysObj.drvMiim_0);
+       DRV_MIIM_OBJECT_BASE_Default.DRV_MIIM_Tasks(sysObj.drvMiim_0);
+
+
+
 
     /* Maintain Middleware & Other Libraries */
     
-    TCPIP_STACK_Task(sysObj.tcpip);
+   TCPIP_STACK_Task(sysObj.tcpip);
 
-    NET_PRES_Tasks(sysObj.netPres);
+
+
+NET_PRES_Tasks(sysObj.netPres);
+
+
+
 
     /* Maintain the application's state machine. */
-    /* Call Application task APP_SD_CARD_TASKS. */
-    APP_SD_CARD_TASKS_Tasks(); 
-    
-    /* Call Application task APP_HEATPUMP_COMM. */
+        /* Call Application task APP_HEATPUMP_COMM. */
     APP_HEATPUMP_COMM_Tasks();
 
     /* Call Application task APP_DISPLAY_COMM. */
@@ -109,6 +122,14 @@ void SYS_Tasks ( void )
 
     /* Call Application task APP_LOGGING_TASKS. */
     APP_LOGGING_TASKS_Tasks();
+
+    /* Call Application task APP_SD_CARD_TASKS. */
+    APP_SD_CARD_TASKS_Tasks();
+
+    /* Call Application task APP_ACTIVE_MODE_CONTROLLER. */
+    APP_ACTIVE_MODE_CONTROLLER_Tasks();
+
+
 
 
 }
