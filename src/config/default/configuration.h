@@ -227,23 +227,21 @@ extern "C" {
 #define NO_WRITEV
 #define MICROCHIP_TCPIP
 #define HAVE_FFDHE_2048
-#define HAVE_FFDHE_3072
-#define HAVE_FFDHE_4096
 #define WOLFSSL_DTLS
 #define NO_PWDBASED
 #define HAVE_TLS_EXTENSIONS
 #define HAVE_SUPPORTED_CURVES
 #define HAVE_SNI
-#define WOLFSSL_SMALL_STACK
 #define NO_ERROR_STRINGS
 #define WOLFSSL_MAX_ERROR_SZ 38 // Fix Mandatory Misra 21.18 caused by removing error strings with defining NO_ERROR_STRINGS
-#define WOLFSSL_ALLOW_TLSV10
-#define WOLFSSL_ALLOW_SSLV3
+#define NO_OLD_TLS
+#define USE_FAST_MATH
+#define NO_WOLFSSL_SERVER
 
 
 /*** TCP Configuration ***/
 #define TCPIP_TCP_MAX_SEG_SIZE_TX		        	1460
-#define TCPIP_TCP_SOCKET_DEFAULT_TX_SIZE			2048
+#define TCPIP_TCP_SOCKET_DEFAULT_TX_SIZE			4096
 #define TCPIP_TCP_SOCKET_DEFAULT_RX_SIZE			512
 #define TCPIP_TCP_DYNAMIC_OPTIONS             			true
 #define TCPIP_TCP_START_TIMEOUT_VAL		        	1000
@@ -355,7 +353,7 @@ extern "C" {
 /*** TCPIP Heap Configuration ***/
 #define TCPIP_STACK_USE_INTERNAL_HEAP
 #define TCPIP_STACK_DRAM_SIZE                       65536
-#define TCPIP_STACK_DRAM_RUN_LIMIT                  2048
+#define TCPIP_STACK_DRAM_RUN_LIMIT                  8192
 
 #define TCPIP_STACK_MALLOC_FUNC                     malloc
 
@@ -507,33 +505,30 @@ extern "C" {
 // ---------- FUNCTIONAL CONFIGURATION START ----------
 #define WOLFSSL_AES_SMALL_TABLES
 #define NO_MD4
-#define WOLFSSL_SHA224
+#define NO_SHA // specifically, no SHA1 (legacy name)
+#define NO_SHA224
 #define WOLFSSL_SHA384
-#define WOLFSSL_SHA512
-#define HAVE_SHA512
+#define NO_SHA512
 #define WOLFSSL_AES_128
-#define WOLFSSL_AES_192
+#define NO_AES_192 // not supported by HW accelerator
 #define WOLFSSL_AES_256
 #define WOLFSSL_AES_DIRECT
 #define HAVE_AES_DECRYPT
 #define HAVE_AES_ECB
 #define HAVE_AES_CBC
-#define WOLFSSL_AES_COUNTER
-#define WOLFSSL_AES_CFB
-#define WOLFSSL_AES_OFB
 #define HAVE_AESGCM
-#define HAVE_AESCCM
 #define NO_RC4
 #define NO_HC128
 #define NO_RABBIT
 #define HAVE_ECC
-#define HAVE_DH
+#define NO_DH
 #define NO_DSA
-#define FP_MAX_BITS 8192
+#define FP_MAX_BITS 4096
 #define USE_CERT_BUFFERS_2048
-#define WC_RSA_PSS
+#define WC_NO_RSA_OAEP
 #define NO_DEV_RANDOM
 #define HAVE_HASHDRBG
+#define NO_RNG_TEST
 #define WC_NO_HARDEN
 #define SINGLE_THREADED
 #define NO_SIG_WRAPPER
