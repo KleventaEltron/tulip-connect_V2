@@ -326,6 +326,12 @@
         </logicalFolder>
       </logicalFolder>
       <logicalFolder name="files" displayName="files" projectFiles="true">
+        <logicalFolder name="f1" displayName="activeModes" projectFiles="true">
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/heating_mode.h</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/hot_water_mode.h</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/cooling_mode.h</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/floor_heating_mode.h</itemPath>
+        </logicalFolder>
         <logicalFolder name="i2c" displayName="i2c" projectFiles="true">
           <itemPath>../src/files/i2c/mac.h</itemPath>
         </logicalFolder>
@@ -844,6 +850,12 @@
         </logicalFolder>
       </logicalFolder>
       <logicalFolder name="files" displayName="files" projectFiles="true">
+        <logicalFolder name="f1" displayName="activeModes" projectFiles="true">
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/heating_mode.c</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/hot_water_mode.c</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/cooling_mode.c</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/floor_heating_mode.c</itemPath>
+        </logicalFolder>
         <logicalFolder name="i2c" displayName="i2c" projectFiles="true">
           <itemPath>../src/files/i2c/mac.c</itemPath>
         </logicalFolder>
@@ -1078,7 +1090,7 @@
         <property key="memories.programmemory.ranges" value="0-fffff"/>
         <property key="poweroptions.powerenable" value="false"/>
         <property key="programmerToGoFilePath"
-                  value="//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/tulip_connect.X/debug/default/tulip_connect_ptg"/>
+                  value="../tulip_connect_V1-1-3.X/debug/default/tulip_connect_V1-1-3_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"
@@ -1515,7 +1527,7 @@
         <property key="memories.programmemory.ranges" value="0-fffff"/>
         <property key="poweroptions.powerenable" value="false"/>
         <property key="programmerToGoFilePath"
-                  value="//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/tulip_connect.X/debug/Debug/tulip_connect_ptg"/>
+                  value="../tulip_connect_V1-1-3.X/debug/default/tulip_connect_V1-1-3_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"
