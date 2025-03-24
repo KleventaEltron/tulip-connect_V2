@@ -101,6 +101,7 @@
 #include "app_i2c_tasks.h"
 #include "app_logging_tasks.h"
 #include "app_sd_card_tasks.h"
+#include "app_active_mode_controller.h"
 
 
 
