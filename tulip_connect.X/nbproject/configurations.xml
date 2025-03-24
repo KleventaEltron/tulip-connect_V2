@@ -327,10 +327,10 @@
       </logicalFolder>
       <logicalFolder name="files" displayName="files" projectFiles="true">
         <logicalFolder name="f1" displayName="activeModes" projectFiles="true">
-          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/heating_mode.h</itemPath>
-          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/hot_water_mode.h</itemPath>
-          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/cooling_mode.h</itemPath>
-          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/floor_heating_mode.h</itemPath>
+          <itemPath>../src/files/heating_mode.h</itemPath>
+          <itemPath>../src/files/hot_water_mode.h</itemPath>
+          <itemPath>../src/files/cooling_mode.h</itemPath>
+          <itemPath>../src/files/floor_heating_mode.h</itemPath>
         </logicalFolder>
         <logicalFolder name="i2c" displayName="i2c" projectFiles="true">
           <itemPath>../src/files/i2c/mac.h</itemPath>
@@ -354,7 +354,7 @@
         <itemPath>../src/files/sdcard.h</itemPath>
         <itemPath>../src/files/credentials.h</itemPath>
         <itemPath>../src/files/logging.h</itemPath>
-        <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/states.h</itemPath>
+        <itemPath>../src/files/states.h</itemPath>
       </logicalFolder>
       <logicalFolder name="packs" displayName="packs" projectFiles="true">
         <logicalFolder name="ATSAME54P20A_DFP"
@@ -851,10 +851,10 @@
       </logicalFolder>
       <logicalFolder name="files" displayName="files" projectFiles="true">
         <logicalFolder name="f1" displayName="activeModes" projectFiles="true">
-          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/heating_mode.c</itemPath>
-          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/hot_water_mode.c</itemPath>
-          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/cooling_mode.c</itemPath>
-          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/floor_heating_mode.c</itemPath>
+          <itemPath>../src/files/heating_mode.c</itemPath>
+          <itemPath>../src/files/hot_water_mode.c</itemPath>
+          <itemPath>../src/files/cooling_mode.c</itemPath>
+          <itemPath>../src/files/floor_heating_mode.c</itemPath>
         </logicalFolder>
         <logicalFolder name="i2c" displayName="i2c" projectFiles="true">
           <itemPath>../src/files/i2c/mac.c</itemPath>
@@ -877,7 +877,7 @@
         <itemPath>../src/files/hardware_rev.c</itemPath>
         <itemPath>../src/files/sdcard.c</itemPath>
         <itemPath>../src/files/logging.c</itemPath>
-        <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/states.c</itemPath>
+        <itemPath>../src/files/states.c</itemPath>
       </logicalFolder>
       <logicalFolder name="wolfcrypt" displayName="wolfcrypt" projectFiles="true">
         <logicalFolder name="port" displayName="port" projectFiles="true">
