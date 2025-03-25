@@ -11,13 +11,14 @@ extern "C" {
 #define EXAMPLE_CONSTANT 0
 
 typedef enum{
-            HEATING=0,
-            COOLING,
-            FLOOR_HEATING,
-            HOT_WATER,
-            HOT_WATER_COOLING,
-            HOT_WATER_HEATING,
-            HOT_WATER_FLOOR_HEATING
+    COOLING=0,
+    HEATING,
+    HOT_WATER,
+    FLOOR_HEATING,
+    HOT_WATER_COOLING,
+    HOT_WATER_HEATING,
+    RESERVE,
+    HOT_WATER_FLOOR_HEATING,
 } RUNNING_MODES;    
     
     
@@ -199,6 +200,7 @@ typedef struct{
 
 
 void resetActiveModeStates();
+const char * getActiveModeToString(RUNNING_MODES state);
 
 
 

@@ -24,6 +24,7 @@ void HOT_WATER_MODE_Tasks ( void )
     switch ( hot_water_mode_data.state )
     {
         case HOT_WATER_INITIALIZE:{
+            SYS_CONSOLE_PRINT("HOT_WATER_INITIALIZE\r\n");
             hot_water_mode_data.state = HOT_WATER_IDLE;
             break;
         }
