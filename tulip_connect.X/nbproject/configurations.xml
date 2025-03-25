@@ -331,6 +331,9 @@
           <itemPath>../src/files/hot_water_mode.h</itemPath>
           <itemPath>../src/files/cooling_mode.h</itemPath>
           <itemPath>../src/files/floor_heating_mode.h</itemPath>
+          <itemPath>../src/files/hot_water_cooling_mode.h</itemPath>
+          <itemPath>../src/files/hot_water_heating_mode.h</itemPath>
+          <itemPath>../src/files/hot_water_floor_heating_mode.h</itemPath>
         </logicalFolder>
         <logicalFolder name="i2c" displayName="i2c" projectFiles="true">
           <itemPath>../src/files/i2c/mac.h</itemPath>
@@ -855,6 +858,9 @@
           <itemPath>../src/files/hot_water_mode.c</itemPath>
           <itemPath>../src/files/cooling_mode.c</itemPath>
           <itemPath>../src/files/floor_heating_mode.c</itemPath>
+          <itemPath>../src/files/hot_water_cooling_mode.c</itemPath>
+          <itemPath>../src/files/hot_water_heating_mode.c</itemPath>
+          <itemPath>../src/files/hot_water_floor_heating_mode.c</itemPath>
         </logicalFolder>
         <logicalFolder name="i2c" displayName="i2c" projectFiles="true">
           <itemPath>../src/files/i2c/mac.c</itemPath>
@@ -1089,8 +1095,6 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-fffff"/>
         <property key="poweroptions.powerenable" value="false"/>
-        <property key="programmerToGoFilePath"
-                  value="../tulip_connect_V1-1-3.X/debug/default/tulip_connect_V1-1-3_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"
@@ -1115,7 +1119,6 @@
       <C32>
         <property key="additional-warnings" value="true"/>
         <property key="addresss-attribute-use" value="false"/>
-        <property key="appendMe" value="-g"/>
         <property key="cast-align" value="false"/>
         <property key="code-model" value="default"/>
         <property key="const-model" value="default"/>
@@ -1197,7 +1200,6 @@
         <property key="additional-options-use-response-files" value="false"/>
         <property key="additional-options-write-sla" value="false"/>
         <property key="allocate-dinit" value="false"/>
-        <property key="appendMe" value="--dinit-compression=0"/>
         <property key="code-dinit" value="false"/>
         <property key="ebase-addr" value=""/>
         <property key="enable-check-sections" value="false"/>
@@ -1244,7 +1246,6 @@
       <C32CPP>
         <property key="additional-warnings" value="false"/>
         <property key="addresss-attribute-use" value="false"/>
-        <property key="appendMe" value="-g"/>
         <property key="check-new" value="false"/>
         <property key="eh-specs" value="true"/>
         <property key="enable-app-io" value="false"/>
@@ -1274,7 +1275,6 @@
         <appendMe value="-g"/>
       </C32CPP>
       <C32Global>
-        <property key="appendMe" value=""/>
         <property key="combine-sourcefiles" value="false"/>
         <property key="common-include-directories" value=""/>
         <property key="common-macros" value=""/>
@@ -1526,8 +1526,6 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-fffff"/>
         <property key="poweroptions.powerenable" value="false"/>
-        <property key="programmerToGoFilePath"
-                  value="../tulip_connect_V1-1-3.X/debug/default/tulip_connect_V1-1-3_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"

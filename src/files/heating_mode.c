@@ -24,6 +24,7 @@ void HEATING_MODE_Tasks ( void )
     switch ( heating_mode_data.state )
     {
         case HEATING_INITIALIZE:{
+            SYS_CONSOLE_PRINT("HEATING_INITIALIZE\r\n");
             heating_mode_data.state = HEATING_IDLE;
             break;
         }
