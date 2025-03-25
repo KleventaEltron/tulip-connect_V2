@@ -9,11 +9,16 @@
 #include "app_active_mode_controller.h"
 #include "files/states.h"
 
+#include "files/eeprom.h"
+
 #include "files/heating_mode.h"
 #include "files/hot_water_mode.h"
 #include "files/cooling_mode.h"
+#include "files/floor_heating_mode.h"
+#include "files/hot_water_cooling_mode.h"
+#include "files/hot_water_heating_mode.h"
+#include "files/hot_water_floor_heating_mode.h"
 
-#include "files/time_counters.h"
 
 extern APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
 extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
@@ -36,7 +41,7 @@ void callActiveModeTaskHandler() {
         
         
         case FLOOR_HEATING: {
-            APP_ACTIVE_MODE_CONTROLLER_Initialize();
+            FLOOR_HEATING_MODE_Tasks();
             break;
         }
             
@@ -48,17 +53,19 @@ void callActiveModeTaskHandler() {
         
         
         case HOT_WATER_COOLING:{
+            HOT_WATER_COOLING_MODE_Tasks();
             break;
         }
         
         
         case HOT_WATER_HEATING:{
+            HOT_WATER_HEATING_MODE_Tasks();
             break;
         }
         
         
         case HOT_WATER_FLOOR_HEATING:{
-            APP_ACTIVE_MODE_CONTROLLER_Initialize();
+            HOT_WATER_FLOOR_HEATING_MODE_Tasks();
             break;
         }
         
@@ -76,12 +83,24 @@ void callActiveModeTaskHandler() {
 
 void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
 {
-    app_active_mode_controllerData.currentRunningMode = HEATING;
-    app_active_mode_controllerData.previousRunningMode = HEATING;
+    int16_t heatpumpMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
+    
+    // If the value in the eeprom is invalid we reset it it to default heating mode
+    if(heatpumpMode == RESERVE || heatpumpMode > 7) {
+        WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, HEATING);
+        heatpumpMode = HEATING;
+    }
+    
+    app_active_mode_controllerData.currentRunningMode = heatpumpMode;
+    app_active_mode_controllerData.previousRunningMode  = heatpumpMode;
     
     HEATING_MODE_Initialize();
     HOT_WATER_MODE_Initialize();
     COOLING_MODE_Initialize();
+    FLOOR_HEATING_MODE_Initialize();
+    HOT_WATER_COOLING_MODE_Initialize();
+    HOT_WATER_HEATING_MODE_Initialize();
+    HOT_WATER_FLOOR_HEATING_MODE_Initialize();
     
     app_active_mode_controllerState = APP_ACTIVE_MODE_CONTROLLER_STATE_INIT;
 }
@@ -91,8 +110,9 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
 
 void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
 {    
-    UpdateCounters();
-    
+    // Get the most resent selected active mode from the display
+    app_active_mode_controllerData.currentRunningMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
+            
     
     switch ( app_active_mode_controllerState )
     {
@@ -106,7 +126,9 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         
         case APP_ACTIVE_MODE_CONTROLLER_STATE_SERVICE_TASKS:
         {
+            // Check if the active mode was switched
             if (app_active_mode_controllerData.currentRunningMode != app_active_mode_controllerData.previousRunningMode) {     
+                SYS_CONSOLE_PRINT("Switching to mode %s\r\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
                 resetActiveModeStates();
                 app_active_mode_controllerData.previousRunningMode = app_active_mode_controllerData.currentRunningMode;
             }

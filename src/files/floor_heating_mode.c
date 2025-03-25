@@ -24,6 +24,7 @@ void FLOOR_HEATING_MODE_Tasks ( void )
     switch ( floor_heating_mode_data.state )
     {
         case FLOOR_HEATING_INITIALIZE:{
+            SYS_CONSOLE_PRINT("FLOOR_HEATING_INITIALIZE\r\n");
             floor_heating_mode_data.state = FLOOR_HEATING_IDLE;
             break;
         }

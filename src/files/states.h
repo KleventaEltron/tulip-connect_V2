@@ -7,23 +7,18 @@
 extern "C" {
 #endif
 
-#include <stddef.h>                    
-#include <stdbool.h>                   
-#include <stdlib.h>                   
-#include <string.h>
-#include <stdio.h>
-#include "definitions.h"   
 
 #define EXAMPLE_CONSTANT 0
 
 typedef enum{
-            HEATING=0,
-            COOLING,
-            FLOOR_HEATING,
-            HOT_WATER,
-            HOT_WATER_COOLING,
-            HOT_WATER_HEATING,
-            HOT_WATER_FLOOR_HEATING
+    COOLING=0,
+    HEATING,
+    HOT_WATER,
+    FLOOR_HEATING,
+    HOT_WATER_COOLING,
+    HOT_WATER_HEATING,
+    RESERVE,
+    HOT_WATER_FLOOR_HEATING,
 } RUNNING_MODES;    
     
     
@@ -53,15 +48,13 @@ typedef struct
 typedef enum{
     HEATING_INITIALIZE,
     HEATING_IDLE,
-    HEATING_RUNNING,
-    HEATING_RUNNING_WITH_ELEMENT_ON 
+    HEATING_MODE
 } HEATING_MODE_STATES;
 
 
 
 typedef struct{
     HEATING_MODE_STATES state;
-    int16_t initialBufferTemp;
 } HEATING_MODE_DATA;
 
 
@@ -207,8 +200,8 @@ typedef struct{
 
 
 void resetActiveModeStates();
-bool isDefrostingActive();
-uint16_t getHeatpumpCompressorFrequency();
+const char * getActiveModeToString(RUNNING_MODES state);
+
 
 
 #ifdef __cplusplus

@@ -24,6 +24,7 @@ void COOLING_MODE_Tasks ( void )
     switch ( cooling_mode_data.state )
     {
         case COOLING_INITIALIZE:{
+            SYS_CONSOLE_PRINT("COOLING_INITIALIZE\r\n");
             cooling_mode_data.state = COOLING_IDLE;
             break;
         }
