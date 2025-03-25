@@ -13,6 +13,8 @@
 #include "files/hot_water_mode.h"
 #include "files/cooling_mode.h"
 
+#include "files/time_counters.h"
+
 extern APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
 extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
 
@@ -89,6 +91,8 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
 
 void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
 {    
+    UpdateCounters();
+    
     
     switch ( app_active_mode_controllerState )
     {

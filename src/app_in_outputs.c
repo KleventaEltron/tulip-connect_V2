@@ -95,7 +95,7 @@ void APP_IN_OUTPUTS_Initialize ( void )
 
 void APP_IN_OUTPUTS_Tasks ( void )
 {
-    UpdateCounters();
+    // UpdateCounters();
     /* Check the application's current state. */
     switch ( app_in_outputsData.state )
     {
