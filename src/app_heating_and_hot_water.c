@@ -643,7 +643,7 @@ void APP_HEATING_AND_HOT_WATER_Tasks ( void )
         case APP_HEATING_AND_HOT_WATER_STATE_INIT:
         { 
             secondCounterWaitForSensors = 0;
-            app_Data.appState = APP_HEATING_AND_HOT_WATER_STATE_WAIT_FOR_SENSORS;
+            //app_Data.appState = APP_HEATING_AND_HOT_WATER_STATE_WAIT_FOR_SENSORS;
             break;
         }
         

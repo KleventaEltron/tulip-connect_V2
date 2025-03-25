@@ -1,5 +1,13 @@
+#include <stddef.h>                    
+#include <stdbool.h>                   
+#include <stdlib.h>                   
+#include <string.h>
+#include <stdio.h>
+#include "definitions.h" 
 
 #include "states.h"
+
+#include "modbus/heatpump_parameters.h"
 
 APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
 APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
@@ -74,4 +82,20 @@ const char * getActiveModeToString(RUNNING_MODES state){
         }
         return "-1, Unkown";
     }
+}
+
+bool isDefrostingActive()
+{
+    if (RealTimeDataStatussen[ADDRESS_RUNNING_STATUS_1 - START_ADDRESS_REAL_TIME_DATA_STATUSSEN][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] & (1 << RUNNING_STATUS_1_SYSTEM_DEFROST_BIT)){
+        // Defrosting bit high and thus active
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
+uint16_t getHeatpumpCompressorFrequency()
+{
+    return 0;
 }

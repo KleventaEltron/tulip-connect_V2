@@ -13,6 +13,7 @@ tulip_connect.X/debug/
 tulip_connect.X/queuelogs/
 tulip_connect.X/build/
 tulip_connect.X/.generated_files/flags/default/
+tulip_connect.X/.generated_files/flags/debug/
 
 # Ignore sensitive files
 src/files/credentials.h
