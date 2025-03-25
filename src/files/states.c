@@ -97,5 +97,5 @@ bool isDefrostingActive()
 
 uint16_t getHeatpumpCompressorFrequency()
 {
-    return 0;
+    return RealTimeData[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
 }
