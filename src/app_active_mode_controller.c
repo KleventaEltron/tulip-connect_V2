@@ -10,6 +10,7 @@
 #include "files/states.h"
 
 #include "files/eeprom.h"
+#include "files/time_counters.h"
 
 #include "files/heating_mode.h"
 #include "files/hot_water_mode.h"
@@ -112,7 +113,8 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
 {    
     // Get the most resent selected active mode from the display
     app_active_mode_controllerData.currentRunningMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
-            
+    
+    UpdateCounters();
     
     switch ( app_active_mode_controllerState )
     {

@@ -6,7 +6,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+    
+#include <stddef.h>                    
+#include <stdbool.h>                   
+#include <stdlib.h>                   
+#include <string.h>
+#include <stdio.h>
+#include "definitions.h" 
 
 #define EXAMPLE_CONSTANT 0
 
@@ -48,13 +54,15 @@ typedef struct
 typedef enum{
     HEATING_INITIALIZE,
     HEATING_IDLE,
-    HEATING_MODE
+    HEATING_RUNNING,
+    HEATING_RUNNING_WITH_ELEMENT_ON
 } HEATING_MODE_STATES;
 
 
 
 typedef struct{
     HEATING_MODE_STATES state;
+    int16_t initialBufferTemp;
 } HEATING_MODE_DATA;
 
 
@@ -201,7 +209,8 @@ typedef struct{
 
 void resetActiveModeStates();
 const char * getActiveModeToString(RUNNING_MODES state);
-
+bool isDefrostingActive();
+uint16_t getHeatpumpCompressorFrequency();
 
 
 #ifdef __cplusplus

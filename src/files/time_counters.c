@@ -16,6 +16,8 @@ static uint32_t SecondCounterLoggingSDCard = UINT32_MAX;
 //static uint32_t SecondCounterFtp = UINT32_MAX;
 //static uint32_t SecondCounterResetSoftware = UINT32_MAX;
 
+uint32_t SecondCounterHeatingTask = UINT32_MAX;
+
 
 
 void TC1_Callback_InterruptHandler(TC_TIMER_STATUS status, uintptr_t context)
@@ -44,6 +46,16 @@ void InitTimerCounters ( void )
     TC1_TimerStart();
 }
 
+uint32_t getSecondCounterHeatingTask()
+{
+    return SecondCounterHeatingTask;
+}
+void setSecondCounterHeatingTask(uint32_t count)
+{
+    SecondCounterHeatingTask = count;
+}
+
+
     
 /******************************************************************************
   Function:
@@ -51,9 +63,23 @@ void InitTimerCounters ( void )
  */
 void UpdateCounters ( void )
 {
+    static uint8_t i = 0;
+    
     if (isTimerExpired == true)
     {   // Every 100 ms
         isTimerExpired = false;
+        
+        if (i >= 10){
+            // Every second
+            i = 0;
+            
+            if (SecondCounterHeatingTask >= 0 && SecondCounterHeatingTask < UINT32_MAX){
+                SecondCounterHeatingTask++;
+            }
+        }
+        else{
+            i++;
+        }
         
         if (SecondCounterLeds >= 0 && SecondCounterLeds < UINT32_MAX)
             SecondCounterLeds++;

@@ -14,6 +14,8 @@
 void InitTimerCounters ( void );
 
 void UpdateCounters ( void );
+uint32_t getSecondCounterHeatingTask();
+void setSecondCounterHeatingTask(uint32_t count);
 
 bool LedsTimerExpired ( void );
 bool HeatingHotWaterTimerExpired ( void );
