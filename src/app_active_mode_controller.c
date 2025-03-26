@@ -260,6 +260,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
     
 
 
+    UpdateCounters();
     
     switch ( app_active_mode_controllerState )
     {

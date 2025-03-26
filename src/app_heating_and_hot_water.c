@@ -110,7 +110,7 @@ static bool isCompressorRunning = false;
 static bool dayPassedSinceLastSoftwareReset = false;
 
 // Debug purpose:
-char debugBuffer[4096];
+//char debugBuffer[4096];
 
 // App state strings
 static char * StringInit = "Init";
@@ -210,6 +210,7 @@ static void getAppDataVariables(void)
     app_Data.currentDisplayTimeMinutes = (uint8_t)UserParameters[ADDRESS_DISPLAY_TIME - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
 }
 
+/*
 static void updateTimerCounters(void)
 {
     if (secondCounterHotWater >= 0 && secondCounterHotWater != UINT32_MAX)
@@ -237,6 +238,7 @@ static void updateTimerCounters(void)
         secondCounterLegionella++;
    
 }
+*/
 
 const char * GetStringWithAppState(APP_HEATING_AND_HOT_WATER_STATES state)
 {
@@ -285,7 +287,7 @@ const char * GetStringWithSwitch3WayValveState(SWITCH_3_WAY_VALVE_STATES state)
 
 static void debugPrint(void)
 {
-    memset(debugBuffer, 0, sizeof(debugBuffer));
+    //memset(debugBuffer, 0, sizeof(debugBuffer));
     
     
     //TCPIP_NET_HANDLE netH = TCPIP_STACK_NetHandleGet("eth0");
@@ -309,6 +311,7 @@ static void debugPrint(void)
         \r\n", 
      * 
      */
+    /*
     sprintf(debugBuffer, "\r\nInfo:\r\n  SN: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x\r\n  FW: %d-%d-%d\r\n  REV:%d\r\n  RST:%d\r\n\
         \r\nHeatpump:\r\n  SP:   %d\r\n  Freq: %d\r\n  Flow: %d\r\n  Rtr:  %d\r\n\
         \r\nHeating:\r\n  Buffer:  %d\r\n  SP:      %d\r\n  Delta:   %d\r\n  Element: %s\r\n  Start:   %d\r\n  Counter: %d\r\n\
@@ -377,6 +380,7 @@ static void debugPrint(void)
             );
 
     SYS_DEBUG_PRINT(SYS_ERROR_ERROR, debugBuffer);
+    */
 }
 
 APP_HEATING_AND_HOT_WATER_STATES checkHotWaterStateInHeatingMode(bool heatingElementStatus, uint32_t secondCounter, int16_t setpoint, int16_t currentTemp, int16_t delta, APP_HEATING_AND_HOT_WATER_STATES currentState)
@@ -541,7 +545,7 @@ void APP_HEATING_AND_HOT_WATER_Tasks ( void )
         
         getAppDataVariables();
         // Update counting timers:
-        updateTimerCounters();
+        //updateTimerCounters();
         //while(!releaseLoggingLock());
         
         // Circulation pump control:
@@ -643,7 +647,7 @@ void APP_HEATING_AND_HOT_WATER_Tasks ( void )
         case APP_HEATING_AND_HOT_WATER_STATE_INIT:
         { 
             secondCounterWaitForSensors = 0;
-            app_Data.appState = APP_HEATING_AND_HOT_WATER_STATE_WAIT_FOR_SENSORS;
+            //app_Data.appState = APP_HEATING_AND_HOT_WATER_STATE_WAIT_FOR_SENSORS;
             break;
         }
         
