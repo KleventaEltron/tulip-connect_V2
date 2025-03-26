@@ -11,6 +11,14 @@ extern "C" {
 #define EXAMPLE_CONSTANT 0
 
 typedef enum{
+    OFF=0,
+    PASSIVE,
+    ACTIVE,
+} STERILIZATION_MODE;    
+    
+    
+    
+typedef enum{
     COOLING=0,
     HEATING,
     HOT_WATER,

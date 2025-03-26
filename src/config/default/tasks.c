@@ -112,7 +112,7 @@ NET_PRES_Tasks(sysObj.netPres);
     APP_DISPLAY_COMM_Tasks();
 
     /* Call Application task APP_HEATING_AND_HOT_WATER. */
-    APP_HEATING_AND_HOT_WATER_Tasks();
+    //APP_HEATING_AND_HOT_WATER_Tasks();
 
     /* Call Application task APP_IN_OUTPUTS. */
     APP_IN_OUTPUTS_Tasks();
