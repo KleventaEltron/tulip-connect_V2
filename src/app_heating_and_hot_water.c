@@ -87,7 +87,7 @@ extern APP_LOGGING_TASKS_DATA app_logging_tasksData;
 static uint32_t secondCounterHotWater   = UINT32_MAX;
 static uint32_t secondCounterHeating    = UINT32_MAX;
 
-static uint32_t secondCounterCirculationPump    = 0; 
+//static uint32_t secondCounterCirculationPump    = 0; 
 //static uint32_t secondCounterCirculationPump    = TRY_OUT_VALUE_COUNTERS;    // Set already to 0, must always be on
 
 static uint32_t secondCounterChangeSystem = UINT32_MAX;    
@@ -520,7 +520,7 @@ void APP_HEATING_AND_HOT_WATER_Initialize ( void )
     TurnOffHeatingElementHotWaterBuffer();
     TurnOffHeatingElementHeatingBuffer();
     
-    CirculationPumpInit(); 
+    //CirculationPumpInit(); 
 }
 
 
@@ -549,6 +549,7 @@ void APP_HEATING_AND_HOT_WATER_Tasks ( void )
         //while(!releaseLoggingLock());
         
         // Circulation pump control:
+        /*
         CirculationPumpControl(app_Data.appState, 
             GetThermostatContact(), 
             getStatusHeatingElementHeatingBuffer(), 
@@ -556,6 +557,7 @@ void APP_HEATING_AND_HOT_WATER_Tasks ( void )
             app_Data.setpointHeatingBufferTemp,
             app_Data.currentHeatingBufferTemp,
             CheckIfDefrostModeActive());
+        */
         
         isCompressorRunning = CheckIfCompressorIsRunning(app_Data.compressorOperatingFrequency);
         

@@ -8,6 +8,7 @@
 #include "states.h"
 
 #include "modbus/heatpump_parameters.h"
+#include "eeprom.h"
 
 APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
 APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
@@ -21,6 +22,7 @@ HOT_WATER_COOLING_MODE_DATA hot_water_cooling_mode_data;
 HOT_WATER_HEATING_MODE_DATA hot_water_heating_mode_data;
 HOT_WATER_FLOOR_HEATING_MODE_DATA hot_water_floor_heating_mode_data;
 
+CIRCULATION_PUMP_DATA circulation_pump_data;
 
 void resetActiveModeStates() {
     heating_mode_data.state = HEATING_INITIALIZE;
@@ -98,4 +100,24 @@ bool isDefrostingActive()
 uint16_t getHeatpumpCompressorFrequency()
 {
     return RealTimeData[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+}
+
+CIRCULATION_PUMP_DATA getCircPumpData(){
+    return circulation_pump_data;
+}
+
+HEATING_MODE_DATA getHeatingModeData(){
+    return heating_mode_data;
+}
+
+int16_t getHeatingSetpoint()
+{
+    // Get Heating setpoint out of smart eeprom
+    int16_t setpointHeating = ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT);
+    
+    if (setpointHeating != TEMPERATURE_ALARM_VALUE){
+        setpointHeating *= 10;
+    }
+    
+    return setpointHeating;
 }
