@@ -15,8 +15,6 @@
 
 extern HEATING_MODE_DATA heating_mode_data;
 
-char debugBuffer[4096];
-
 void HEATING_MODE_Initialize ( void )
 {
     setSecondCounterHeatingTask(UINT32_MAX);
@@ -133,6 +131,7 @@ void HEATING_MODE_Tasks ( void )
         }
         
         default:{
+            HEATING_MODE_Initialize();
             break;
         }
     }
