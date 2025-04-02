@@ -36,35 +36,45 @@ void ParseDisplayData(uint8_t * rxBuffer)
         
         switch (regAddress)
         {
-            case ADDRESS_SET_MODE:
+            case ADDRESS_SET_MODE: {
                 WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, data); // Save the mode to smart eeprom
                 SetDataInArrays(regAddress, data);
                 
                 if (data == SET_MODE_HOT_WATER_AND_HEATING)
                 {   // If the display tells the heatpump to go to Hot water and Heating, this must not be possible, because we control the hot water with the Connect. So tell to go to heating only
                     ChangeHeatpumpSetting(regAddress, SET_MODE_HEATING); 
-                }
-                else
+                } else
                 {   // All other modes can be sent to the heatpump
                     ChangeHeatpumpSetting(regAddress, data);
                 }
 
                 break;
-            case ADDRESS_HEATING_SET_TEMPERATURE:
+            }
+            case ADDRESS_HEATING_SET_TEMPERATURE: {
                 //if (UserParameters[ADDRESS_HEATING_FLOOR_HEATING_CURVE_SETTING - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] == HEATING_CURVE_SETTING_OFF)
                     WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT, data);
                 //ChangeHeatpumpSetting(regAddress, data); 
                 break;
-            case ADDRESS_HOT_WATER_SET_TEMPERATURE:
+            }
+            case ADDRESS_HOT_WATER_SET_TEMPERATURE: {
                 //SetpointHotWater = data;
                 WriteSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT, data);
                 //ChangeHeatpumpSetting(regAddress, data); 
                 break;
-            default:
+            }
+            case ADDRESS_ON_OFF:{
+                WriteSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON, data);
+                ChangeHeatpumpSetting(regAddress, data);
+                SetDataInArrays(regAddress, data);
+                break;
+            }    
+                
+            default: {
                 //SetDataInDisplayArray(regAddress, data);
                 ChangeHeatpumpSetting(regAddress, data);
                 SetDataInArrays(regAddress, data);
                 break;
+            }
         }    
         
         //checksum = calculateCRC16(rxBuffer, 6);
