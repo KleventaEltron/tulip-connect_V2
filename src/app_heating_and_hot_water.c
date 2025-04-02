@@ -95,7 +95,8 @@ static uint32_t secondCounterResetInitSystemStuck = UINT32_MAX;
 static uint32_t secondCounterSetpointControl = 0;
 static uint32_t secondCounterWaitForSensors = UINT32_MAX;  
 
-static uint32_t secondCounterLegionella = UINT32_MAX;
+extern uint32_t secondCounterLegionella;
+//static uint32_t secondCounterLegionella = UINT32_MAX;
 //static uint32_t secondCounterLegionella = TRY_OUT_VALUE_COUNTERS;
 
 static uint32_t secondCounterDays = 0;

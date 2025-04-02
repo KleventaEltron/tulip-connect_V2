@@ -29,6 +29,17 @@ void HEATING_MODE_Initialize ( void )
 
 void HEATING_MODE_Tasks ( void )
 {        
+    /*
+    if (HeatingHotWaterTimerExpired() == true){ // HOAKS
+        if (DebugDipSwitch() == true)
+        {
+            memset(debugBuffer, 0, sizeof(debugBuffer));
+            sprintf(debugBuffer, "\r\nState: %d\r\nStart: %d\r\nTimer: %d\r\nElement: %d\r\n", heating_mode_data.state, heating_mode_data.initialBufferTemp, (int)getSecondCounterHeatingTask(), (int)getStatusHeatingElementHeatingBuffer());
+            SYS_DEBUG_PRINT(SYS_ERROR_ERROR, debugBuffer);
+        }
+    }
+    */
+    
     switch ( heating_mode_data.state )
     {
         case HEATING_INITIALIZE:{

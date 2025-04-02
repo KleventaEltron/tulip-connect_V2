@@ -5,17 +5,22 @@
 #include "definitions.h"
 #include "time_counters.h"
 
-static volatile bool isTimerExpired = false;
+volatile bool isTimerExpired = false;
 
-static uint32_t SecondCounterLeds = UINT32_MAX;
-static uint32_t SecondCounterHeatingHotWater = UINT32_MAX;
-static uint32_t SecondCounterDisplayCommunication = UINT32_MAX;
-static uint32_t SecondCounterHeatpumpCommunication = UINT32_MAX;
-static uint32_t SecondCounterLogging = UINT32_MAX;
-static uint32_t SecondCounterLoggingSDCard = UINT32_MAX;
+uint32_t SecondCounterLeds = UINT32_MAX;
+uint32_t SecondCounterHeatingHotWater = UINT32_MAX;
+uint32_t SecondCounterDisplayCommunication = UINT32_MAX;
+uint32_t SecondCounterHeatpumpCommunication = UINT32_MAX;
+uint32_t SecondCounterLogging = UINT32_MAX;
+uint32_t SecondCounterLoggingSDCard = UINT32_MAX;
+
+// Time counters, when MAX value the counter is off, when 0 counter is on
+uint32_t secondCounterLegionella = UINT32_MAX;
+uint32_t waitingThreeWayValveSwitch = UINT32_MAX;
+uint32_t systemStuckProtectionCounter = UINT32_MAX;
+
 //static uint32_t SecondCounterFtp = UINT32_MAX;
 //static uint32_t SecondCounterResetSoftware = UINT32_MAX;
-
 uint32_t SecondCounterHeatingTask = UINT32_MAX;
 uint32_t SecondCounterCirculationPumpTask = UINT32_MAX;
 
@@ -75,6 +80,7 @@ void UpdateCounters ( void )
     if (isTimerExpired == true)
     {   // Every 100 ms
         isTimerExpired = false;
+        i++;
         
         if (i >= 10){
             // Every second
@@ -87,11 +93,20 @@ void UpdateCounters ( void )
             if (SecondCounterCirculationPumpTask >= 0 && SecondCounterCirculationPumpTask < UINT32_MAX){
                 SecondCounterCirculationPumpTask++;
             }
-        }
-        else{
-            i++;
-        }
-        
+            
+            if (secondCounterLegionella >= 0 && secondCounterLegionella < UINT32_MAX){
+                secondCounterLegionella++;
+            }
+
+            if (waitingThreeWayValveSwitch >= 0 && waitingThreeWayValveSwitch < UINT32_MAX) {
+                waitingThreeWayValveSwitch++;
+            }
+
+            if (systemStuckProtectionCounter >= 0 && systemStuckProtectionCounter < UINT32_MAX) {
+                systemStuckProtectionCounter++;
+            }            
+        }   
+
         if (SecondCounterLeds >= 0 && SecondCounterLeds < UINT32_MAX)
             SecondCounterLeds++;
         
@@ -115,6 +130,30 @@ void UpdateCounters ( void )
         //if (SecondCounterResetSoftware >= 0 && SecondCounterResetSoftware < UINT32_MAX)
         //    SecondCounterResetSoftware++;
     }    
+}
+
+uint32_t getSecondCounterLegionella() {
+    return secondCounterLegionella;
+}
+
+void setSecondCounterLegionella(uint32_t value) {
+    secondCounterLegionella = value;
+}
+
+uint32_t getWaitingThreeWayValveSwitch() {
+    return waitingThreeWayValveSwitch;
+}
+
+void setWaitingThreeWayValveSwitch(uint32_t value) {
+    waitingThreeWayValveSwitch = value;
+}
+
+uint32_t getSystemStuckProtectionCounter() {
+    return systemStuckProtectionCounter;
+}
+
+void setSystemStuckProtectionCounter(uint32_t value) {
+    systemStuckProtectionCounter = value;
 }
 
 bool LedsTimerExpired ( void )

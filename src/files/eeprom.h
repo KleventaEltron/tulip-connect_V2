@@ -63,6 +63,11 @@
 #define SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP           58 // 2 bytes   V1-0-12
 
 #define BOOTLOADER_SOFTWARE_VERSION                         60 // 4 bytes V1-0-13
+
+#define SEEP_ADDR_DISPLAY_PUMP_ON                           65 // 1 byte V2-0-0
+
+#define SEEP_ADDR
+
 //.....
 #define SEEP_ADDR_LAST                  4095
 
