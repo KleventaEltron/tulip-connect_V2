@@ -29,9 +29,10 @@ extern APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
 extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
 
 // Time counters, when MAX value the counter is off, when 0 counter is on
-uint32_t secondCounter   = UINT32_MAX;
 uint32_t secondCounterLegionella = UINT32_MAX;
 uint32_t sterilizationReachedTemperatureTimeStamp = UINT32_MAX;
+uint32_t waitingThreeWayValveSwitch = UINT32_MAX;
+uint32_t systemStuckProtectionCounter = UINT32_MAX;
 
 uint16_t sterilizationTemperatureOffset = TEMPERATURE_ALARM_VALUE;
 
@@ -201,18 +202,108 @@ bool sterilisationIsActivelyRunning() {
 
 
 
+
+
+
+
+bool neededThreeWayValveState() {    
+    bool valvePositionForActiveState = 0;
+    
+    if (sterilisationMode == ACTIVE) {
+        valvePositionForActiveState = VALVE_IS_ON_HOT_WATER_CIRCUIT;
+        return valvePositionForActiveState;
+    }
+    
+    switch(app_active_mode_controllerData.currentRunningMode)
+    { 
+        case HEATING:{
+            valvePositionForActiveState = VALVE_IS_ON_HEATING_CIRCUIT;
+            break;
+        }
+        
+        
+        case COOLING:{
+            valvePositionForActiveState = VALVE_IS_ON_HEATING_CIRCUIT;
+            break;
+        }
+        
+        
+        case FLOOR_HEATING: {
+            valvePositionForActiveState = VALVE_IS_ON_HEATING_CIRCUIT;    
+            break;
+        }
+            
+        
+        case HOT_WATER:{
+            valvePositionForActiveState = VALVE_IS_ON_HOT_WATER_CIRCUIT;
+            break;
+        }
+        
+        
+        case HOT_WATER_COOLING:{
+            // TODO: LATER OP TERUG KOMEN
+            //valvePositionForActiveState = VALVE_IS_ON_HEATING_CIRCUIT;
+            break;
+        }
+        
+        
+        case HOT_WATER_HEATING:{
+            valvePositionForActiveState = VALVE_IS_ON_HOT_WATER_CIRCUIT;
+            // TODO: LATER OP TERUG KOMEN
+            break;
+        }
+        
+        
+        case HOT_WATER_FLOOR_HEATING:{
+            valvePositionForActiveState = VALVE_IS_ON_HEATING_CIRCUIT;
+            // TODO: LATER OP TERUG KOMEN
+            break;
+        }
+         
+        default:{
+            break;
+        }
+    }        
+    
+    return valvePositionForActiveState;
+}
+
+
+void switchThreeWayValve(bool neededValvePosition) {
+    // Heatpump must be off, and water flow must be 0 before we are allowed to switch the valve
+    if (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] != SET_HEATPUMP_OFF || 
+            RealTimeData[ADDRESS_WATER_FLOW - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] != 0) {
+        ChangeHeatpumpSetting(ADDRESS_ON_OFF, SET_HEATPUMP_OFF);
+        waitingThreeWayValveSwitch = 0;
+        return;
+    }
+    
+    if (neededValvePosition == VALVE_IS_ON_HEATING_CIRCUIT) {
+        Switch3WayValveToHeating();
+    } else if (neededValvePosition == VALVE_IS_ON_HOT_WATER_CIRCUIT) {
+        Switch3WayValveToHotWater();
+    } 
+    waitingThreeWayValveSwitch = 0;
+    
+    return;
+}
+
+
+
 void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
 {
     int16_t heatpumpMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
     
     // If the value in the eeprom is invalid we reset it it to default heating mode
-    if(heatpumpMode == RESERVE || heatpumpMode > 7) {
+    if(heatpumpMode == RESERVED || heatpumpMode > 7 || heatpumpMode < 0) {
         WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, HEATING);
         heatpumpMode = HEATING;
     }
     
     app_active_mode_controllerData.currentRunningMode = heatpumpMode;
     app_active_mode_controllerData.previousRunningMode  = heatpumpMode;
+    
+    systemStuckProtectionCounter = 0;
     
     HEATING_MODE_Initialize();
     HOT_WATER_MODE_Initialize();
@@ -227,40 +318,79 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
 
 
 
-
+ bool valvePosition = 0;  
+ bool neededValvePosition = 0;
+    
 void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
 {       
-    // Triggers every second
-    if(HeatingHotWaterTimerExpired()) {
-        if (secondCounter >= 0 && secondCounter != UINT32_MAX) {
-            secondCounter++;  
-        }
-        if (secondCounterLegionella >= 0 && secondCounterLegionella != UINT32_MAX){
-            secondCounterLegionella++;
-        }
-        
-        if (DebugDipSwitch() == true) {
-            SYS_CONSOLE_PRINT("Active mode %s\r\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
-        }
-        
-        // Sterilization was either on passive mode or off, but has to be started
-        if(sterilisationMode != ACTIVE && goToActiveSterilization()){
-            sterilisationMode = ACTIVE;
-        }
+    UpdateCounters();
+    
+    // SYSTEM IS STUCK, RESET
+    if (systemStuckProtectionCounter >= 120) {
+        SYS_RESET_SoftwareReset();
     }
     
     // Get the most resent selected active mode from the display
     app_active_mode_controllerData.currentRunningMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
     
-    // If sterilisation was actively running return
-    if(sterilisationIsActivelyRunning()){
+    valvePosition = getStatus3WayValve();   
+    neededValvePosition = neededThreeWayValveState();
+    
+    // Triggers every second
+    if(HeatingHotWaterTimerExpired()) {
+
+        if (secondCounterLegionella >= 0 && secondCounterLegionella != UINT32_MAX){
+            secondCounterLegionella++;
+        }
+        
+        if (waitingThreeWayValveSwitch >= 0 && waitingThreeWayValveSwitch != UINT32_MAX) {
+            waitingThreeWayValveSwitch++;
+        }
+        
+        if (systemStuckProtectionCounter >= 0 && systemStuckProtectionCounter != UINT32_MAX) {
+            systemStuckProtectionCounter++;
+        }
+        
+        if (DebugDipSwitch() == true) {
+            SYS_CONSOLE_PRINT("Active mode %s\r\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
+            SYS_CONSOLE_PRINT("3-way valve mode %s\r\n", getThreeWayValveState(valvePosition));
+            SYS_CONSOLE_PRINT("3-way needed state %s\r\n", getThreeWayValveState(neededValvePosition));
+            SYS_CONSOLE_PRINT("Heatpump state %i\r\n", UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
+            SYS_CONSOLE_PRINT("Sterilisation active >> %i\r\n", sterilisationMode);
+            SYS_CONSOLE_PRINT("Counters >> %i, %i, %i\r\n", secondCounterLegionella, waitingThreeWayValveSwitch, systemStuckProtectionCounter);
+        }
+        
+        // Sterilization was either on passive mode or off, but has to be started
+        if(sterilisationMode != ACTIVE && goToActiveSterilization()){
+            sterilisationMode = ACTIVE;
+        }        
+    }
+    
+    // Delay for after either turning off the heatpump or switching the three way valve
+    if (waitingThreeWayValveSwitch >= 0 && waitingThreeWayValveSwitch < 20) {
+        return;
+    }
+    waitingThreeWayValveSwitch = UINT32_MAX;
+    
+    // Check the valve position and switch it if needed
+    if (valvePosition != neededValvePosition) {   
+        switchThreeWayValve(neededValvePosition);      
         return;
     }
     
+    // Heatpump must be on before we can may start any other action again
+    if(UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] != SET_HEATPUMP_ON){
+        ChangeHeatpumpSetting(ADDRESS_ON_OFF, SET_HEATPUMP_ON);
+        waitingThreeWayValveSwitch = 0;
+        return;
+    }
     
-
-
-    UpdateCounters();
+    systemStuckProtectionCounter = 0;
+    // If sterilisation was actively running return
+    if(sterilisationIsActivelyRunning()){
+        return;
+    }      
+    
     
     switch ( app_active_mode_controllerState )
     {

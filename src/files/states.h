@@ -31,7 +31,7 @@ typedef enum{
     FLOOR_HEATING,
     HOT_WATER_COOLING,
     HOT_WATER_HEATING,
-    RESERVE,
+    RESERVED,
     HOT_WATER_FLOOR_HEATING,
 } RUNNING_MODES;    
     
@@ -219,6 +219,7 @@ void resetActiveModeStates();
 const char * getActiveModeToString(RUNNING_MODES state);
 bool isDefrostingActive();
 uint16_t getHeatpumpCompressorFrequency();
+const char * getThreeWayValveState(int state);
 
 
 #ifdef __cplusplus

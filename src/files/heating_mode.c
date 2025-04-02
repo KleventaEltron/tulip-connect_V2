@@ -31,6 +31,7 @@ void HEATING_MODE_Initialize ( void )
 
 void HEATING_MODE_Tasks ( void )
 {        
+    /*
     if (HeatingHotWaterTimerExpired() == true){ // HOAKS
         if (DebugDipSwitch() == true)
         {
@@ -39,6 +40,7 @@ void HEATING_MODE_Tasks ( void )
             SYS_DEBUG_PRINT(SYS_ERROR_ERROR, debugBuffer);
         }
     }
+    */
     
     switch ( heating_mode_data.state )
     {

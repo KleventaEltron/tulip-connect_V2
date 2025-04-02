@@ -66,7 +66,7 @@ const char * getActiveModeToString(RUNNING_MODES state){
             break;
         }
         
-        case(RESERVE): {
+        case(RESERVED): {
             return "6, Reserved";
             break;
         }
@@ -80,9 +80,35 @@ const char * getActiveModeToString(RUNNING_MODES state){
             return "-1, Unkown";
             break;
         }
-        return "-1, Unkown";
     }
+    return "-1, Unkown";
 }
+
+
+
+const char * getThreeWayValveState(int state) {
+    switch (state)
+    {
+        case(0): {
+            return "0, VALVE_IS_ON_HEATING_CIRCUIT";
+            break;
+        }
+        
+        case(1): {
+            return "1, VALVE_IS_ON_HOT_WATER_CIRCUIT";
+            break;
+        }
+        
+        default: {
+            return "-1, Unkown";
+            break;
+        }
+    }
+
+    return "-1, Unkown";
+}
+
+
 
 bool isDefrostingActive()
 {
