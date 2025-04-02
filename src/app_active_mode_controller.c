@@ -24,6 +24,8 @@
 #include "files/hot_water_heating_mode.h"
 #include "files/hot_water_floor_heating_mode.h"
 
+#include "files/circulation_pump.h"
+
 
 extern APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
 extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
@@ -36,7 +38,6 @@ uint32_t sterilizationReachedTemperatureTimeStamp = UINT32_MAX;
 uint16_t sterilizationTemperatureOffset = TEMPERATURE_ALARM_VALUE;
 
 STERILIZATION_MODE sterilisationMode = OFF;
-
 
 void callActiveModeTaskHandler() {
     switch(app_active_mode_controllerData.currentRunningMode)
@@ -222,6 +223,8 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     HOT_WATER_HEATING_MODE_Initialize();
     HOT_WATER_FLOOR_HEATING_MODE_Initialize();
     
+    CIRCULATION_PUMP_Initialize();
+    
     app_active_mode_controllerState = APP_ACTIVE_MODE_CONTROLLER_STATE_INIT;
 }
 
@@ -240,7 +243,15 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         }
         
         if (DebugDipSwitch() == true) {
-            SYS_CONSOLE_PRINT("Active mode %s\r\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
+            SYS_CONSOLE_PRINT("\r\nActive mode %s\r\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
+            SYS_CONSOLE_PRINT("Pumpstate: %s\r\n", getCirculationPumpStateToString());
+            SYS_CONSOLE_PRINT("Buffer: %d\r\n", GetNtcTemperature(NTC_HEATING_BUFFER));
+            SYS_CONSOLE_PRINT("Temp too low: %d\r\n", getCircPumpData().temperatureTooLowForPumpToBeOn);
+            SYS_CONSOLE_PRINT("Counter: %d\r\n", (int)getSecondCounterCirculationPumpTask());
+               
+            //memset(debugBuffer, 0, sizeof(debugBuffer));d
+            //sprintf(debugBuffer, "\r\nState: %d\r\nTimer: %d\r\n", getCircPumpData().state, (int)getSecondCounterCirculationPumpTask());
+            //SYS_DEBUG_PRINT(SYS_ERROR_ERROR, debugBuffer);
         }
         
         // Sterilization was either on passive mode or off, but has to be started
@@ -261,6 +272,8 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
 
 
     UpdateCounters();
+    
+    CIRCULATION_PUMP_Tasks();
     
     switch ( app_active_mode_controllerState )
     {

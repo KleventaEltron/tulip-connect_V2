@@ -17,7 +17,7 @@ static uint32_t SecondCounterLoggingSDCard = UINT32_MAX;
 //static uint32_t SecondCounterResetSoftware = UINT32_MAX;
 
 uint32_t SecondCounterHeatingTask = UINT32_MAX;
-
+uint32_t SecondCounterCirculationPumpTask = UINT32_MAX;
 
 
 void TC1_Callback_InterruptHandler(TC_TIMER_STATUS status, uintptr_t context)
@@ -55,7 +55,14 @@ void setSecondCounterHeatingTask(uint32_t count)
     SecondCounterHeatingTask = count;
 }
 
-
+uint32_t getSecondCounterCirculationPumpTask()
+{
+    return SecondCounterCirculationPumpTask;
+}
+void setSecondCounterCirculationPumpTask(uint32_t count)
+{
+    SecondCounterCirculationPumpTask = count;
+}
     
 /******************************************************************************
   Function:
@@ -75,6 +82,10 @@ void UpdateCounters ( void )
             
             if (SecondCounterHeatingTask >= 0 && SecondCounterHeatingTask < UINT32_MAX){
                 SecondCounterHeatingTask++;
+            }
+            
+            if (SecondCounterCirculationPumpTask >= 0 && SecondCounterCirculationPumpTask < UINT32_MAX){
+                SecondCounterCirculationPumpTask++;
             }
         }
         else{

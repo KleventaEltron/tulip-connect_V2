@@ -1096,7 +1096,7 @@
         <property key="memories.programmemory.ranges" value="0-fffff"/>
         <property key="poweroptions.powerenable" value="false"/>
         <property key="programmerToGoFilePath"
-                  value="C:/Users/kolkman/Desktop/tulip-connect_V2/tulip_connect.X/debug/default/tulip_connect_ptg"/>
+                  value="../tulip_connect_V1-1-3.X/debug/default/tulip_connect_V1-1-3_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"
@@ -1533,7 +1533,7 @@
         <property key="memories.programmemory.ranges" value="0-fffff"/>
         <property key="poweroptions.powerenable" value="false"/>
         <property key="programmerToGoFilePath"
-                  value="C:/Users/kolkman/Desktop/tulip-connect_V2/tulip_connect.X/debug/Debug/tulip_connect_ptg"/>
+                  value="../tulip_connect_V1-1-3.X/debug/default/tulip_connect_V1-1-3_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"

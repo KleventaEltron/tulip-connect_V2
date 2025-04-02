@@ -213,13 +213,36 @@ typedef struct{
     HOT_WATER_FLOOR_HEATING_MODE_STATES state;
 } HOT_WATER_FLOOR_HEATING_MODE_DATA;
 
+/*   _____ _____ _____   _____ _    _ _            _______ _____ ____  _   _   _____  _    _ __  __ _____  
+  / ____|_   _|  __ \ / ____| |  | | |        /\|__   __|_   _/ __ \| \ | | |  __ \| |  | |  \/  |  __ \ 
+ | |      | | | |__) | |    | |  | | |       /  \  | |    | || |  | |  \| | | |__) | |  | | \  / | |__) |
+ | |      | | |  _  /| |    | |  | | |      / /\ \ | |    | || |  | | . ` | |  ___/| |  | | |\/| |  ___/ 
+ | |____ _| |_| | \ \| |____| |__| | |____ / ____ \| |   _| || |__| | |\  | | |    | |__| | |  | | |     
+  \_____|_____|_|  \_\\_____|\____/|______/_/    \_\_|  |_____\____/|_| \_| |_|     \____/|_|  |_|_|     
+*/
 
+typedef enum{
+    CIRCULATION_PUMP_INITIALIZE,
+    CIRCULATION_PUMP_OFF,
+    CIRCULATION_PUMP_ON,
+    CIRCULATION_PUMP_LAG_TIME,
+    CIRCULATION_PUMP_TOO_LONG_OFF
+} CIRCULATION_PUMP_STATES; 
+
+
+
+typedef struct{
+    CIRCULATION_PUMP_STATES state;
+    bool temperatureTooLowForPumpToBeOn;
+} CIRCULATION_PUMP_DATA;
 
 void resetActiveModeStates();
 const char * getActiveModeToString(RUNNING_MODES state);
 bool isDefrostingActive();
 uint16_t getHeatpumpCompressorFrequency();
-
+CIRCULATION_PUMP_DATA getCircPumpData();
+HEATING_MODE_DATA getHeatingModeData();
+int16_t getHeatingSetpoint();
 
 #ifdef __cplusplus
 }
