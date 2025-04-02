@@ -11,6 +11,10 @@
 #define TENTH_SECOND_COUNTER_30_SECONDS         300
 //#define TENTH_SECOND_COUNTER_1_DAY  36000             // 1 uur
 
+//uint32_t secondCounterLegionella;
+//uint32_t waitingThreeWayValveSwitch;
+//uint32_t systemStuckProtectionCounter;
+
 void InitTimerCounters ( void );
 
 void UpdateCounters ( void );
@@ -18,6 +22,13 @@ uint32_t getSecondCounterHeatingTask();
 void setSecondCounterHeatingTask(uint32_t count);
 uint32_t getSecondCounterCirculationPumpTask();
 void setSecondCounterCirculationPumpTask(uint32_t count);
+
+uint32_t getSecondCounterLegionella();
+void setSecondCounterLegionella(uint32_t value);
+uint32_t getWaitingThreeWayValveSwitch();
+void setWaitingThreeWayValveSwitch(uint32_t value);
+uint32_t getSystemStuckProtectionCounter();
+void setSystemStuckProtectionCounter(uint32_t value);
 
 bool LedsTimerExpired ( void );
 bool HeatingHotWaterTimerExpired ( void );

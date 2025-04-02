@@ -247,6 +247,10 @@ void SmartEepromInit(void)
         WriteSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW, 100);
         WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP, 20);
     }
+    
+    if (thisEepromVersion < 2000000) {
+        WriteSmartEeprom8 (SEEP_ADDR_DISPLAY_PUMP_ON, true);
+    }
 
     //if (thisEepromVersion < 1000013) // 1.0.13
     //{   // Current eeprom version is lower than 1.0.13
