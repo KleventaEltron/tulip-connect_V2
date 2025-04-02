@@ -17,6 +17,7 @@ static uint32_t SecondCounterLoggingSDCard = UINT32_MAX;
 //static uint32_t SecondCounterResetSoftware = UINT32_MAX;
 
 uint32_t SecondCounterHeatingTask = UINT32_MAX;
+uint32_t SecondCounterHotwaterTask = UINT32_MAX;
 uint32_t SecondCounterCirculationPumpTask = UINT32_MAX;
 
 
@@ -55,6 +56,15 @@ void setSecondCounterHeatingTask(uint32_t count)
     SecondCounterHeatingTask = count;
 }
 
+uint32_t getSecondCounterHotwaterTask()
+{
+    return SecondCounterHotwaterTask;
+}
+void setSecondCounterHotwaterTask(uint32_t count)
+{
+    SecondCounterHotwaterTask = count;
+}
+
 uint32_t getSecondCounterCirculationPumpTask()
 {
     return SecondCounterCirculationPumpTask;
@@ -82,6 +92,10 @@ void UpdateCounters ( void )
             
             if (SecondCounterHeatingTask >= 0 && SecondCounterHeatingTask < UINT32_MAX){
                 SecondCounterHeatingTask++;
+            }
+            
+            if (SecondCounterHotwaterTask >= 0 && SecondCounterHotwaterTask < UINT32_MAX){
+                SecondCounterHotwaterTask++;
             }
             
             if (SecondCounterCirculationPumpTask >= 0 && SecondCounterCirculationPumpTask < UINT32_MAX){
