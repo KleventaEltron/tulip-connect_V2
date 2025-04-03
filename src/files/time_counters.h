@@ -11,6 +11,8 @@
 #define TENTH_SECOND_COUNTER_30_SECONDS         300
 //#define TENTH_SECOND_COUNTER_1_DAY  36000             // 1 uur
 
+#define SYS_STUCK_TIMER_MAX_LIMIT               300
+
 //uint32_t secondCounterLegionella;
 //uint32_t waitingThreeWayValveSwitch;
 //uint32_t systemStuckProtectionCounter;
