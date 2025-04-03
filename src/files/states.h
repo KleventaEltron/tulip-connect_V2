@@ -196,8 +196,6 @@ typedef struct{
     
     bool hotwaterPassive;
     int16_t  setpointHotWaterOffset;
-    
-    int16_t initialDefrostingBoilerTemp;
 } HOT_WATER_HEATING_MODE_DATA;
 
 
@@ -258,6 +256,7 @@ const char * getThreeWayValveState(int state);
 
 CIRCULATION_PUMP_DATA getCircPumpData();
 HEATING_MODE_DATA getHeatingModeData();
+HOT_WATER_HEATING_MODE_DATA getHotWaterHeatingModeData();
 int16_t getHeatingSetpoint();
 int16_t getHotwaterSetpoint();
 int16_t getHotwaterDelta();

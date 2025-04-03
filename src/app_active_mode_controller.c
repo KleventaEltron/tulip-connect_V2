@@ -25,6 +25,7 @@
 #include "files/hot_water_floor_heating_mode.h"
 #include "files/threeWayValve.h"
 #include "files/sterilization.h"
+#include "files/defrosting.h"
 
 #include "files/circulation_pump.h"
 
@@ -212,6 +213,15 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
     if(!validateThreeWayValveStateOkay(app_active_mode_controllerData.currentRunningMode)) {
         return;
     }
+    
+    
+    /* 
+     * 
+     * In the hot water states, including sterilization, defrosting must be checked.
+     * If the boiler temperature drops to far, the element must be turned on.
+     *
+     */
+    CheckDefrosting(getHotWaterHeatingModeData().state, getSterilisationMode());
     
     
     /*

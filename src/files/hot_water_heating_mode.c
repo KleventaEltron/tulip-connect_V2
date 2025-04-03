@@ -12,6 +12,7 @@
 #include "time_counters.h"
 #include "ntc.h"
 #include "sterilization.h"
+#include "defrosting.h"
 
 extern HOT_WATER_HEATING_MODE_DATA hot_water_heating_mode_data;
 
@@ -34,45 +35,6 @@ bool areWeOnHotWaterMode()
     }
     
     return false;
-}
-
-void checkDefrosting()
-{
-    if (isDefrostingActive() == true){
-        // Defrosting is active in heatpump
-        if (hot_water_heating_mode_data.initialDefrostingBoilerTemp == TEMPERATURE_ALARM_VALUE){
-            // Initial defrosting temperature is alarm value (undefined), so give it a start value
-            hot_water_heating_mode_data.initialDefrostingBoilerTemp = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
-        }
-        
-        if (GetNtcTemperature(NTC_HOT_WATER_BUFFER) <= (hot_water_heating_mode_data.initialDefrostingBoilerTemp - ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_FALL_BEFORE_ELEMENT_ON))){
-            // Temperature decreased under threshold, turn on heating element
-            TurnOnHeatingElementHotWaterBuffer();
-        }
-        
-        if (GetNtcTemperature(NTC_HOT_WATER_BUFFER) >= (hot_water_heating_mode_data.initialDefrostingBoilerTemp - ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_FALL_BEFORE_ELEMENT_ON)+ ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_RISE_BEFORE_ELEMENT_OFF)))
-        {   // Temperature rised above threshold, turn off heating element
-            TurnOffHeatingElementHotWaterBuffer();
-        }
-        return;
-    }
-    
-    if ((isDefrostingActive() == false) && (hot_water_heating_mode_data.initialDefrostingBoilerTemp != TEMPERATURE_ALARM_VALUE)){
-        // Defrosting not active and initial defrosting temperature has a valid value
-        if (getStatusHeatingElementHotWaterBuffer() == false){
-            // Hot water element already off
-            hot_water_heating_mode_data.initialDefrostingBoilerTemp = TEMPERATURE_ALARM_VALUE;
-            return;
-        }
-        
-        if (app_Data.currentHotWaterBufferTemp >= (hot_water_heating_mode_data.initialDefrostingBoilerTemp - ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_FALL_BEFORE_ELEMENT_ON) + ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_RISE_BEFORE_ELEMENT_OFF))){ 
-            // Element is on and heating rised enough for element to go off again
-            TurnOffHeatingElementHotWaterBuffer();
-            hot_water_heating_mode_data.initialDefrostingBoilerTemp = TEMPERATURE_ALARM_VALUE;
-        }                     
-
-        return;
-    }
 }
 
 void adjustSetpointOffset()
@@ -101,7 +63,6 @@ void HOT_WATER_HEATING_MODE_Initialize ( void )
     hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
     hot_water_heating_mode_data.hotwaterPassive = false;
     hot_water_heating_mode_data.setpointHotWaterOffset = TEMPERATURE_ALARM_VALUE;
-    hot_water_heating_mode_data.initialDefrostingBoilerTemp = TEMPERATURE_ALARM_VALUE;
     
     hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HEATING;
     return;
@@ -110,8 +71,7 @@ void HOT_WATER_HEATING_MODE_Initialize ( void )
 
 
 void HOT_WATER_HEATING_MODE_Tasks ( void )
-{    
-    
+{   
     if (areWeOnHotWaterMode() == true){
         // Already in one of the hot water modes
         // If sterilization goes to passive mode, go to heating
@@ -271,7 +231,6 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         }
         
         case HOT_WATER_HEATING_STATE_WAIT_FOR_MINIMAL_TIME_IN_HOT_WATER:{
-            checkDefrosting();
             adjustSetpointOffset();
             
             if (getSecondCounterHotwaterTask() >= ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_MIN_TIME_IN_HOT_WATER_MODE)){
@@ -284,7 +243,6 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         }
         
         case HOT_WATER_HEATING_STATE_RUNNING_IN_HOT_WATER:{
-            checkDefrosting();
             adjustSetpointOffset();
             
             if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
@@ -310,7 +268,6 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         }
         
         case HOT_WATER_HEATING_STATE_RUNNING_WITH_ELEMENT_ON_IN_HOT_WATER:{
-            checkDefrosting();
             adjustSetpointOffset();
             
             if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
