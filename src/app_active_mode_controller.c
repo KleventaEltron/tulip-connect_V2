@@ -37,7 +37,6 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
 
  
  void printDebugInfo() {
-    uint16_t dayCounter = ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION);
     if (DebugDipSwitch() == true) {
         SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
         SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
@@ -50,7 +49,7 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
                           "   Legionella:               %i\n"
                           "   3-Way switch:             %i\n"
                           "   Sys stuck protection:     %i\n"
-                          "   Day Counter:              %i\n\n", getSecondCounterLegionella(), getWaitingThreeWayValveSwitch(), getSystemStuckProtectionCounter(), dayCounter);
+                          "   Day Counter:              %i\n\n", getSecondCounterLegionella(), getWaitingThreeWayValveSwitch(), getSystemStuckProtectionCounter(),  ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION));
         SYS_CONSOLE_PRINT(" Pumpstate:            %s\n", getCirculationPumpStateToString());
         SYS_CONSOLE_PRINT(" Buffer:               %d\n", GetNtcTemperature(NTC_HEATING_BUFFER));
         SYS_CONSOLE_PRINT(" Temp too low:         %d\n", getCircPumpData().temperatureTooLowForPumpToBeOn);
