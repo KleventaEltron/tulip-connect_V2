@@ -49,27 +49,6 @@ typedef struct
 } APP_ACTIVE_MODE_CONTROLLER_DATA;    
     
 
-/*  ______   _________  ________  _______     _____  _____     _____  ________       _     _________  _____   ___   ____  _____  
-.' ____ \ |  _   _  ||_   __  ||_   __ \   |_   _||_   _|   |_   _||  __   _|     / \   |  _   _  ||_   _|.'   `.|_   \|_   _| 
-| (___ \_||_/ | | \_|  | |_ \_|  | |__) |    | |    | |       | |  |_/  / /      / _ \  |_/ | | \_|  | | /  .-.  \ |   \ | |   
- _.____`.     | |      |  _| _   |  __ /     | |    | |   _   | |     .'.' _    / ___ \     | |      | | | |   | | | |\ \| |   
-| \____) |   _| |_    _| |__/ | _| |  \ \_  _| |_  _| |__/ | _| |_  _/ /__/ | _/ /   \ \_  _| |_    _| |_\  `-'  /_| |_\   |_  
- \______.'  |_____|  |________||____| |___||_____||________||_____||________||____| |____||_____|  |_____|`.___.'|_____|\____| 
-*/                                                                                                                               
-
-typedef enum{
-    OFF=0,
-    PASSIVE,
-    ACTIVE,
-} STERILIZATION_MODE_STATES; 
-
-
-typedef struct{
-    STERILIZATION_MODE_STATES state;
-    uint32_t sterilizationReachedTemperatureTimeStamp;
-    uint16_t sterilizationTemperatureOffset ;
-} STERILIZATION_MODE_DATA;
-
 /*********
 ,--.  ,--.,------.  ,---. ,--------.,--.,--.  ,--. ,----.       ,--.   ,--. ,-----. ,------.  ,------. 
 |  '--'  ||  .---' /  O  \'--.  .--'|  ||  ,'.|  |'  .-./       |   `.'   |'  .-.  '|  .-.  \ |  .---' 
@@ -217,6 +196,8 @@ typedef struct{
     
     bool hotwaterPassive;
     int16_t  setpointHotWaterOffset;
+    
+    int16_t initialDefrostingBoilerTemp;
 } HOT_WATER_HEATING_MODE_DATA;
 
 
@@ -272,11 +253,11 @@ void resetActiveModeStates();
 const char * getActiveModeToString(RUNNING_MODES state);
 bool isDefrostingActive();
 uint16_t getHeatpumpCompressorFrequency();
+int16_t getHeatpumpReturnWaterTemperature();
 const char * getThreeWayValveState(int state);
 
 CIRCULATION_PUMP_DATA getCircPumpData();
 HEATING_MODE_DATA getHeatingModeData();
-STERILIZATION_MODE_DATA getSterilizationModeData();
 int16_t getHeatingSetpoint();
 int16_t getHotwaterSetpoint();
 int16_t getHotwaterDelta();

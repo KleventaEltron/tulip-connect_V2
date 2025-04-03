@@ -23,7 +23,6 @@ HOT_WATER_HEATING_MODE_DATA hot_water_heating_mode_data;
 HOT_WATER_FLOOR_HEATING_MODE_DATA hot_water_floor_heating_mode_data;
 
 CIRCULATION_PUMP_DATA circulation_pump_data;
-STERILIZATION_MODE_DATA sterilization_mode_data;
 
 
 void resetActiveModeStates() {
@@ -130,16 +129,24 @@ uint16_t getHeatpumpCompressorFrequency()
     return RealTimeData[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
 }
 
+int16_t getHeatpumpReturnWaterTemperature()
+{
+    int16_t returnWaterTemperature = RealTimeData[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    
+    if (returnWaterTemperature != TEMPERATURE_ALARM_VALUE){
+        // If temperature is not an alarm value, do times 10
+        returnWaterTemperature *= 10;
+    }
+    
+    return returnWaterTemperature;
+}
+
 CIRCULATION_PUMP_DATA getCircPumpData(){
     return circulation_pump_data;
 }
 
 HEATING_MODE_DATA getHeatingModeData(){
     return heating_mode_data;
-}
-
-STERILIZATION_MODE_DATA getSterilizationModeData(){
-    return sterilization_mode_data;
 }
 
 int16_t getHeatingSetpoint()

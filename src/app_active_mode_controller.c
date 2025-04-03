@@ -33,12 +33,6 @@
 extern APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
 extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
 
-//uint32_t sterilizationReachedTemperatureTimeStamp = UINT32_MAX;
-//uint16_t sterilizationTemperatureOffset = TEMPERATURE_ALARM_VALUE;
-
-//STERILIZATION_MODE sterilisationMode = OFF;
-extern STERILIZATION_MODE_DATA sterilization_mode_data;
-
  
  
  
@@ -151,11 +145,6 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     HOT_WATER_FLOOR_HEATING_MODE_Initialize();
     
     CIRCULATION_PUMP_Initialize();
-    
-    
-    sterilization_mode_data.sterilizationReachedTemperatureTimeStamp = UINT32_MAX;
-    sterilization_mode_data.sterilizationTemperatureOffset = TEMPERATURE_ALARM_VALUE;
-    sterilization_mode_data.state = OFF;
     
     app_active_mode_controllerState = APP_ACTIVE_MODE_CONTROLLER_STATE_INIT;
 }

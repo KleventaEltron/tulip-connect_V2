@@ -358,8 +358,8 @@
         <itemPath>../src/files/credentials.h</itemPath>
         <itemPath>../src/files/logging.h</itemPath>
         <itemPath>../src/files/states.h</itemPath>
-        <itemPath>../src/files/threeWayValve.h</itemPath>
         <itemPath>../src/files/sterilization.h</itemPath>
+        <itemPath>../src/files/threeWayValve.h</itemPath>
       </logicalFolder>
       <logicalFolder name="packs" displayName="packs" projectFiles="true">
         <logicalFolder name="ATSAME54P20A_DFP"
@@ -886,8 +886,8 @@
         <itemPath>../src/files/sdcard.c</itemPath>
         <itemPath>../src/files/logging.c</itemPath>
         <itemPath>../src/files/states.c</itemPath>
-        <itemPath>../src/files/threeWayValve.c</itemPath>
         <itemPath>../src/files/sterilization.c</itemPath>
+        <itemPath>../src/files/threeWayValve.c</itemPath>
       </logicalFolder>
       <logicalFolder name="wolfcrypt" displayName="wolfcrypt" projectFiles="true">
         <logicalFolder name="port" displayName="port" projectFiles="true">

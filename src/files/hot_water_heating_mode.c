@@ -11,6 +11,7 @@
 #include "eeprom.h"
 #include "time_counters.h"
 #include "ntc.h"
+#include "sterilization.h"
 
 extern HOT_WATER_HEATING_MODE_DATA hot_water_heating_mode_data;
 
@@ -58,53 +59,35 @@ void checkDefrosting()
     
     if ((isDefrostingActive() == false) && (hot_water_heating_mode_data.initialDefrostingBoilerTemp != TEMPERATURE_ALARM_VALUE)){
         // Defrosting not active and initial defrosting temperature has a valid value
-        
-    }
-    
-    if(CheckIfDefrostModeActive() == true)
-    {   // Heatpump is doing defrosting
-        if (initialDefrostingBoilerTemp == TEMPERATURE_ALARM_VALUE)
-            initialDefrostingBoilerTemp = app_Data.currentHotWaterBufferTemp;
-
-        if (app_Data.currentHotWaterBufferTemp <= (initialDefrostingBoilerTemp - ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_FALL_BEFORE_ELEMENT_ON)))
-        {   // Temperature falled 4 degrees Celcius beneath de defrosting starting temperature
-            TurnOnHeatingElementHotWaterBuffer();
-        }
-        else if (app_Data.currentHotWaterBufferTemp >= 
-                (initialDefrostingBoilerTemp - 
-                ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_FALL_BEFORE_ELEMENT_ON)+ 
-                ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_RISE_BEFORE_ELEMENT_OFF)))
-        {   // Temperature rised to 1 degree beneath de defrosting starting temperature
-            TurnOffHeatingElementHotWaterBuffer();
-        }
-        else{}
-    }
-
-        if (initialDefrostingBoilerTemp != TEMPERATURE_ALARM_VALUE)
-        {   // Just came out of defrosting mode
-            if (getStatusHeatingElementHotWaterBuffer() == true)
-            {   // Hot water element is on
-                if (app_Data.currentHotWaterBufferTemp >= 
-                    (initialDefrostingBoilerTemp - 
-                    ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_FALL_BEFORE_ELEMENT_ON)+ 
-                    ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_RISE_BEFORE_ELEMENT_OFF)))
-                {   // Temperature falled 3 degrees Celcius beneath de defrosting starting temperature
-                    TurnOffHeatingElementHotWaterBuffer();
-                    initialDefrostingBoilerTemp = TEMPERATURE_ALARM_VALUE;
-                }                     
-            }
-            else
-            {   // Hot water element is already off
-                initialDefrostingBoilerTemp = TEMPERATURE_ALARM_VALUE;  // Reset initial defrosting temperature
-            }
-            //while(!releaseLoggingLock());
+        if (getStatusHeatingElementHotWaterBuffer() == false){
+            // Hot water element already off
+            hot_water_heating_mode_data.initialDefrostingBoilerTemp = TEMPERATURE_ALARM_VALUE;
             return;
         }
+        
+        if (app_Data.currentHotWaterBufferTemp >= (hot_water_heating_mode_data.initialDefrostingBoilerTemp - ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_FALL_BEFORE_ELEMENT_ON) + ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_RISE_BEFORE_ELEMENT_OFF))){ 
+            // Element is on and heating rised enough for element to go off again
+            TurnOffHeatingElementHotWaterBuffer();
+            hot_water_heating_mode_data.initialDefrostingBoilerTemp = TEMPERATURE_ALARM_VALUE;
+        }                     
+
+        return;
+    }
 }
 
 void adjustSetpointOffset()
 {
+    if (GetNtcTemperature(NTC_HOT_WATER_BUFFER) >= getHotwaterSetpoint())
+    {   // Hot water buffer tempereature is equal or higher than actual setpoint, so reset offset to 0
+        app_Data.setpointHotWaterOffset = 0; 
+        return;
+    }
     
+    if ((getHeatpumpReturnWaterTemperature() >= (getHotwaterSetpoint() + app_Data.setpointHotWaterOffset - 20)) && (app_Data.setpointHotWaterOffset != 0) && (app_Data.setpointHotWaterOffset != TEMPERATURE_ALARM_VALUE)){   
+        // Retour water temperature has come within 2 degree celcius of setpoint, increase offset with 2 degrees
+        app_Data.setpointHotWaterOffset += ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT_OFFSET_STEPS);  
+        return;
+    }
 }
 
 void HOT_WATER_HEATING_MODE_Initialize ( void )
@@ -132,7 +115,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
     if (areWeOnHotWaterMode() == true){
         // Already in one of the hot water modes
         // If sterilization goes to passive mode, go to heating
-        if (getSterilizationModeData().state == PASSIVE){
+        if (getSterilisationMode() == PASSIVE){
             // Sterilization mode on passive, so go back to heating            
             hot_water_heating_mode_data.hotwaterPassive = false;
             hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HEATING;
