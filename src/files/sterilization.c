@@ -71,74 +71,76 @@ bool goToActiveSterilization() {
 
 
 bool sterilisationIsActivelyRunning() {
-    if (sterilisationMode != OFF) {
-        
-        // If we start a fresh sterilization cycle we have to set some parameters before proceeding.
-        if (sterilisationMode == ACTIVE && getSecondCounterLegionella() == UINT32_MAX) {
+    if (sterilisationMode == OFF) {
+        return false;
+    } 
+    
+    // If we start a fresh sterilization cycle we have to set some parameters before proceeding.
+    if (sterilisationMode == ACTIVE && getSecondCounterLegionella() == UINT32_MAX) {
                     
-            bool valvePosition = getStatus3WayValve();
-            if (valvePosition != VALVE_IS_ON_HOT_WATER_CIRCUIT) {
-
-                return true;
-            }
-
-            TurnOffHeatingElementHotWaterBuffer();
-            setSecondCounterLegionella(0);    
-            sterilizationTemperatureOffset = ReadSmartEeprom16(SEEP_ADDR_STERILIZATION_SETPOINT_OFFSET_START);  
-        }        
-        
-        
-        uint16_t retourWaterTemperature = (RealTimeData[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] * 10);
-        int16_t sterilizationTemperature = (UnitSystemParameterL[ADDRESS_STERILIZATION_TEMPERATURE_SETTING - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] * 10);
-        
-        if ((retourWaterTemperature >= (sterilizationTemperature + sterilizationTemperatureOffset - 20)) && (sterilizationTemperatureOffset != 0) && (sterilizationTemperatureOffset != TEMPERATURE_ALARM_VALUE)) {   
-            // Retour water temperature has come within 2 degree celcius of setpoint
-            sterilizationTemperatureOffset += ReadSmartEeprom16(SEEP_ADDR_STERILIZATION_SETPOINT_OFFSET_STEPS);  // Increase offset with 2 degree Celcius
-        }    
-        
-        int16_t currentHotWaterBufferTemp = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
-        if(currentHotWaterBufferTemp >= sterilizationTemperature){
-            if (sterilizationReachedTemperatureTimeStamp == UINT32_MAX) {
-                // Sterilization reached the temperature for the first time, so store the timestamp
-                sterilizationReachedTemperatureTimeStamp = getSecondCounterLegionella();
-            }
-            
-            int16_t sterilizationRunTime = UnitSystemParameterL[ADDRESS_STERILIZATION_RUN_TIME - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
-            if (getSecondCounterLegionella() < (sterilizationReachedTemperatureTimeStamp + (sterilizationRunTime * 60))) {
-                return true;
-            }
-            
-            // Sterilization is done
-            TurnOffHeatingElementHotWaterBuffer();
-            setSecondCounterLegionella(UINT32_MAX);
-            sterilizationReachedTemperatureTimeStamp = UINT32_MAX;
-            WriteSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION, 0);
-            sterilizationTemperatureOffset = TEMPERATURE_ALARM_VALUE;
-             
-            setSterilisationMode(OFF);
+        bool valvePosition = getStatus3WayValve();
+        if (valvePosition != VALVE_IS_ON_HOT_WATER_CIRCUIT) {
             return true;
-        } 
-        
-        // Check if sterilisation was already on PASSIVE mode
-        sterilizationReachedTemperatureTimeStamp = UINT32_MAX;      
-        if (sterilisationMode == PASSIVE ) {
-            return false;
-        } 
+        }
 
-        // Max time in ACTIVE sterilisation has not been reached yet 
-        if (getSecondCounterLegionella() < ReadSmartEeprom16(SEEP_ADDR_STERILIZATION_MAX_TIME_IN_STERILIZATION_MODE)) {   
+        TurnOffHeatingElementHotWaterBuffer();
+        setSecondCounterLegionella(0);    
+        sterilizationTemperatureOffset = ReadSmartEeprom16(SEEP_ADDR_STERILIZATION_SETPOINT_OFFSET_START);  
+    }        
+               
+    uint16_t retourWaterTemperature = (RealTimeData[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] * 10);
+    int16_t sterilizationTemperature = (UnitSystemParameterL[ADDRESS_STERILIZATION_TEMPERATURE_SETTING - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] * 10);        
+       
+    if ((retourWaterTemperature >= (sterilizationTemperature + sterilizationTemperatureOffset - 20)) && (sterilizationTemperatureOffset != 0) && (sterilizationTemperatureOffset != TEMPERATURE_ALARM_VALUE)) {   
+        // Retour water temperature has come within 2 degree celcius of setpoint
+        sterilizationTemperatureOffset += ReadSmartEeprom16(SEEP_ADDR_STERILIZATION_SETPOINT_OFFSET_STEPS);  // Increase offset with 2 degree Celcius
+    }    
+        
+    if (sterilisationMode != PASSIVE) {
+        setActiveModeControllerHeatpumpSetpoint(sterilizationTemperature + sterilizationTemperatureOffset);
+    }
+        
+    int16_t currentHotWaterBufferTemp = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
+    if(currentHotWaterBufferTemp >= sterilizationTemperature){
+        if (sterilizationReachedTemperatureTimeStamp == UINT32_MAX) {
+            // Sterilization reached the temperature for the first time, so store the timestamp
+            sterilizationReachedTemperatureTimeStamp = getSecondCounterLegionella();
+        }
+            
+        int16_t sterilizationRunTime = UnitSystemParameterL[ADDRESS_STERILIZATION_RUN_TIME - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+        if (getSecondCounterLegionella() < (sterilizationReachedTemperatureTimeStamp + (sterilizationRunTime * 60))) {
             return true;
         }
             
-        // 120 minutes in ACTIVE sterilization mode passed, but still not finished, set sterilisation to PASSIVE mode
-        setSecondCounterLegionella(0);
-        TurnOnHeatingElementHotWaterBuffer();   // Set heating element on
+        // Sterilization is done
+        TurnOffHeatingElementHotWaterBuffer();
+        setSecondCounterLegionella(UINT32_MAX);
+        sterilizationReachedTemperatureTimeStamp = UINT32_MAX;
+        WriteSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION, 0);
         sterilizationTemperatureOffset = TEMPERATURE_ALARM_VALUE;
-            
-        setSterilisationMode(PASSIVE); 
+             
+        setSterilisationMode(OFF);
+        return true;
+    } 
+        
+    // Check if sterilisation was already on PASSIVE mode
+    sterilizationReachedTemperatureTimeStamp = UINT32_MAX;      
+    if (sterilisationMode == PASSIVE ) {
+        return false;
+    } 
+
+    // Max time in ACTIVE sterilisation has not been reached yet 
+    if (getSecondCounterLegionella() < ReadSmartEeprom16(SEEP_ADDR_STERILIZATION_MAX_TIME_IN_STERILIZATION_MODE)) {   
         return true;
     }
-    return false;    
+            
+    // 120 minutes in ACTIVE sterilization mode passed, but still not finished, set sterilisation to PASSIVE mode
+    setSecondCounterLegionella(0);
+    TurnOnHeatingElementHotWaterBuffer();   // Set heating element on
+    sterilizationTemperatureOffset = TEMPERATURE_ALARM_VALUE;
+            
+    setSterilisationMode(PASSIVE); 
+    return true;
 }
 
 

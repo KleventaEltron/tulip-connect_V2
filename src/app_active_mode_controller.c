@@ -51,6 +51,7 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
                           "   Sys stuck protection:     %i\n"
                           "   Day Counter:              %i\n\n", getSecondCounterLegionella(), getWaitingThreeWayValveSwitch(), getSystemStuckProtectionCounter(),  ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION));
         SYS_CONSOLE_PRINT(" Pumpstate:            %s\n", getCirculationPumpStateToString());
+        SYS_CONSOLE_PRINT(" Heatpump Setpoint:    %i\n", app_active_mode_controllerData.setPoint);
         SYS_CONSOLE_PRINT(" Buffer:               %d\n", GetNtcTemperature(NTC_HEATING_BUFFER));
         SYS_CONSOLE_PRINT(" Temp too low:         %d\n", getCircPumpData().temperatureTooLowForPumpToBeOn);
         SYS_CONSOLE_PRINT(" Counter:              %d\n", (int)getSecondCounterCirculationPumpTask());
@@ -58,6 +59,19 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
     return;
  }
  
+ 
+ 
+ void checkHeatpumpSetpoint() {
+    if (getWriteNewSetPointHeatpumpCounter() < 10) {
+        return;
+    }
+    
+    if (app_active_mode_controllerData.setPoint != (UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] * 10)) {   
+        // Setpoint in heatpump is not correct, send the correct one
+        ChangeHeatpumpSetting(ADDRESS_HEATING_SET_TEMPERATURE, (app_active_mode_controllerData.setPoint / 10));
+    }
+    getWriteNewSetPointHeatpumpCounter(0); 
+ }
  
  
  
@@ -130,6 +144,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     
     app_active_mode_controllerData.currentRunningMode = heatpumpMode;
     app_active_mode_controllerData.previousRunningMode  = heatpumpMode;
+    app_active_mode_controllerData.setPoint = 0;
     
     setSystemStuckProtectionCounter(0);
     
@@ -184,6 +199,8 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         printDebugInfo();
         // Sterilization was either on passive mode or off, but has to be set to ACTIVE mode
         checkNeedForSterilization();
+        // Every 10 seconds the setpoint in the heatpump is checked
+        checkHeatpumpSetpoint();
     }
     
 

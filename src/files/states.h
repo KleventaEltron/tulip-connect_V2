@@ -46,9 +46,10 @@ typedef struct
 {
     RUNNING_MODES previousRunningMode;
     RUNNING_MODES currentRunningMode;
+    uint16_t setPoint;
 } APP_ACTIVE_MODE_CONTROLLER_DATA;    
     
-
+void setActiveModeControllerHeatpumpSetpoint(int16_t newSetpoint);
 
 /*********
 ,--.  ,--.,------.  ,---. ,--------.,--.,--.  ,--. ,----.       ,--.   ,--. ,-----. ,------.  ,------. 

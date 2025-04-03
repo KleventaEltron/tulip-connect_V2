@@ -31,6 +31,8 @@ uint32_t getWaitingThreeWayValveSwitch();
 void setWaitingThreeWayValveSwitch(uint32_t value);
 uint32_t getSystemStuckProtectionCounter();
 void setSystemStuckProtectionCounter(uint32_t value);
+uint32_t getWriteNewSetPointHeatpumpCounter();
+void setWriteNewSetPointHeatpumpCounter(uint32_t value);
 
 bool LedsTimerExpired ( void );
 bool HeatingHotWaterTimerExpired ( void );
