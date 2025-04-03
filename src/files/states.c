@@ -23,6 +23,8 @@ HOT_WATER_HEATING_MODE_DATA hot_water_heating_mode_data;
 HOT_WATER_FLOOR_HEATING_MODE_DATA hot_water_floor_heating_mode_data;
 
 CIRCULATION_PUMP_DATA circulation_pump_data;
+STERILIZATION_MODE_DATA sterilization_mode_data;
+
 
 void resetActiveModeStates() {
     heating_mode_data.state = HEATING_INITIALIZE;
@@ -30,7 +32,7 @@ void resetActiveModeStates() {
     cooling_mode_data.state = COOLING_INITIALIZE;
     floor_heating_mode_data.state = FLOOR_HEATING_INITIALIZE;
     hot_water_cooling_mode_data.state = HOT_WATER_COOLING_INITIALIZE;
-    hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE;
+    hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HEATING;
     hot_water_floor_heating_mode_data.state = HOT_WATER_FLOOR_HEATING_INITIALIZE;
     return;
 }
@@ -136,6 +138,10 @@ HEATING_MODE_DATA getHeatingModeData(){
     return heating_mode_data;
 }
 
+STERILIZATION_MODE_DATA getSterilizationModeData(){
+    return sterilization_mode_data;
+}
+
 int16_t getHeatingSetpoint()
 {
     // Get Heating setpoint out of smart eeprom
@@ -146,4 +152,28 @@ int16_t getHeatingSetpoint()
     }
     
     return setpointHeating;
+}
+
+int16_t getHotwaterSetpoint()
+{
+    // Get hot water setpoint out of smart eeprom
+    int16_t setpointHotwater = ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT);
+    
+    if (setpointHotwater != TEMPERATURE_ALARM_VALUE){
+        setpointHotwater *= 10;
+    }
+    
+    return setpointHotwater;
+}
+
+int16_t getHotwaterDelta()
+{
+    int16_t delta = UnitSystemParameters[ADDRESS_HOT_WATER_RETURN_DIFFERENCE - START_ADDRESS_UNIT_SYSTEM_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    
+    if (delta != TEMPERATURE_ALARM_VALUE){
+        // Is not alarm value, so do times 10
+        delta *= 10;
+    }
+    
+    return delta;
 }

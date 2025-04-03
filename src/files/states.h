@@ -14,14 +14,7 @@ extern "C" {
 #include <stdio.h>
 #include "definitions.h" 
 
-#define EXAMPLE_CONSTANT 0
-
-typedef enum{
-    OFF=0,
-    PASSIVE,
-    ACTIVE,
-} STERILIZATION_MODE;    
-    
+#define EXAMPLE_CONSTANT 0   
     
     
 typedef enum{
@@ -50,6 +43,26 @@ typedef struct
 } APP_ACTIVE_MODE_CONTROLLER_DATA;    
     
 
+/*  ______   _________  ________  _______     _____  _____     _____  ________       _     _________  _____   ___   ____  _____  
+.' ____ \ |  _   _  ||_   __  ||_   __ \   |_   _||_   _|   |_   _||  __   _|     / \   |  _   _  ||_   _|.'   `.|_   \|_   _| 
+| (___ \_||_/ | | \_|  | |_ \_|  | |__) |    | |    | |       | |  |_/  / /      / _ \  |_/ | | \_|  | | /  .-.  \ |   \ | |   
+ _.____`.     | |      |  _| _   |  __ /     | |    | |   _   | |     .'.' _    / ___ \     | |      | | | |   | | | |\ \| |   
+| \____) |   _| |_    _| |__/ | _| |  \ \_  _| |_  _| |__/ | _| |_  _/ /__/ | _/ /   \ \_  _| |_    _| |_\  `-'  /_| |_\   |_  
+ \______.'  |_____|  |________||____| |___||_____||________||_____||________||____| |____||_____|  |_____|`.___.'|_____|\____| 
+*/                                                                                                                               
+
+typedef enum{
+    OFF=0,
+    PASSIVE,
+    ACTIVE,
+} STERILIZATION_MODE_STATES; 
+
+
+typedef struct{
+    STERILIZATION_MODE_STATES state;
+    uint32_t sterilizationReachedTemperatureTimeStamp;
+    uint16_t sterilizationTemperatureOffset ;
+} STERILIZATION_MODE_DATA;
 
 /*********
 ,--.  ,--.,------.  ,---. ,--------.,--.,--.  ,--. ,----.       ,--.   ,--. ,-----. ,------.  ,------. 
@@ -176,17 +189,28 @@ typedef struct{
  */
 
 typedef enum{
-    HOT_WATER_HEATING_INITIALIZE,
-    HOT_WATER_HEATING_IDLE,
+    // Heating modes:
+    HOT_WATER_HEATING_INITIALIZE_HEATING,
+    HOT_WATER_HEATING_IDLE_HEATING,
     HOT_WATER_HEATING_RUNNING_ON_HEATING,
-    HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON
+    HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON,
+            
+    // Hot water modes: 
+    HOT_WATER_HEATING_INITIALIZE_HOT_WATER,   
+    HOT_WATER_HEATING_STATE_WAIT_FOR_MINIMAL_TIME_IN_HOT_WATER,
+    HOT_WATER_HEATING_STATE_RUNNING_IN_HOT_WATER,
+    HOT_WATER_HEATING_STATE_RUNNING_WITH_ELEMENT_ON_IN_HOT_WATER
 } HOT_WATER_HEATING_MODE_STATES;
 
 
 
 typedef struct{
     HOT_WATER_HEATING_MODE_STATES state;
+    
     int16_t initialHeatingBufferTemp;
+    
+    bool hotwaterPassive;
+    int16_t  setpointHotWaterOffset;
 } HOT_WATER_HEATING_MODE_DATA;
 
 
@@ -246,7 +270,10 @@ const char * getThreeWayValveState(int state);
 
 CIRCULATION_PUMP_DATA getCircPumpData();
 HEATING_MODE_DATA getHeatingModeData();
+STERILIZATION_MODE_DATA getSterilizationModeData();
 int16_t getHeatingSetpoint();
+int16_t getHotwaterSetpoint();
+int16_t getHotwaterDelta();
 
 #ifdef __cplusplus
 }
