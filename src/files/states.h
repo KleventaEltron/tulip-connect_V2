@@ -1,6 +1,6 @@
 
-#ifndef _EXAMPLE_FILE_NAME_H    /* Guard against multiple inclusion */
-#define _EXAMPLE_FILE_NAME_H
+#ifndef _STATES_H    /* Guard against multiple inclusion */
+#define _STATES_H
 
 /* Provide C++ Compatibility */
 #ifdef __cplusplus
@@ -14,7 +14,6 @@ extern "C" {
 #include <stdio.h>
 #include "definitions.h" 
 
-#define EXAMPLE_CONSTANT 0
 
 typedef enum{
     OFF=0,
@@ -250,7 +249,7 @@ int16_t getHeatingSetpoint();
 }
 #endif
 
-#endif /* _EXAMPLE_FILE_NAME_H */
+#endif /* _STATES_H */
 
 /* *****************************************************************************
  End of File
