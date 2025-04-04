@@ -54,7 +54,8 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
                           "   Legionella:               %i\n"
                           "   3-Way switch:             %i\n"
                           "   Sys stuck protection:     %i\n"
-                          "   Day Counter:              %i\n\n", getSecondCounterLegionella(), getWaitingThreeWayValveSwitch(), getSystemStuckProtectionCounter(),  ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION));
+                          "   Day Counter:              %i\n"
+                          "   System On:                %i\n\n", getSecondCounterLegionella(), getWaitingThreeWayValveSwitch(), getSystemStuckProtectionCounter(),  ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION), getsystemOnCounter());
         SYS_CONSOLE_PRINT(" Pumpstate:            %s\n", getCirculationPumpStateToString());
         SYS_CONSOLE_PRINT(" Heatpump Setpoint:    %i\n", app_active_mode_controllerData.setPoint);
         SYS_CONSOLE_PRINT(" Buffer:               %d\n", GetNtcTemperature(NTC_HEATING_BUFFER));
@@ -140,6 +141,39 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
  
  
  
+ 
+ 
+ 
+ void checkIfSoftwareResetNeeded() {
+     if (!getPowerFailStatus()){
+         WriteSmartEeprom32(SEEP_ADDR_SECONDS_COUNTER_DAYS, getsystemOnCounter());
+     }
+     
+    // If sterilization is running ACTIVELY or PASSIVLY we have to wait for it to finish
+    if (getSterilisationMode() != OFF) {
+        return;
+    }
+    
+    // Wait till a day has passed before a reset is possible
+    if (getsystemOnCounter() < SECONDS_IN_DAY) {
+        return;
+    }
+    
+    uint16_t dayCounter = (ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION) + 1);
+    WriteSmartEeprom32(SEEP_ADDR_SECONDS_COUNTER_DAYS, 0);
+    WriteSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION, dayCounter);
+    
+    SYS_RESET_SoftwareReset();
+    
+    return;
+ }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 void callActiveModeTaskHandler() {
     switch(app_active_mode_controllerData.currentRunningMode)
     {
@@ -199,20 +233,28 @@ void callActiveModeTaskHandler() {
 
 void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
 {
-    int16_t heatpumpMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
+    // Get the previous system counter
+    int32_t storedSystemCounter = ReadSmartEeprom32(SEEP_ADDR_SECONDS_COUNTER_DAYS);
+    if(storedSystemCounter == UINT32_MAX) {
+        storedSystemCounter = 0;
+    }
+    setSystemOnCounter(storedSystemCounter);
     
+    // Get the previous heatpump mode
     // If the value in the eeprom is invalid we reset it it to default heating mode
+    int16_t heatpumpMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
     if(heatpumpMode == RESERVED || heatpumpMode > 7 || heatpumpMode < 0) {
         WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, HEATING);
         heatpumpMode = HEATING;
     }
-    
     app_active_mode_controllerData.currentRunningMode = heatpumpMode;
     app_active_mode_controllerData.previousRunningMode  = heatpumpMode;
     app_active_mode_controllerData.setPoint = 0;
     
+    // Reset the system stuck protection counter
     setSystemStuckProtectionCounter(0);
     
+    // Initialize every active mode
     HEATING_MODE_Initialize();
     HOT_WATER_MODE_Initialize();
     COOLING_MODE_Initialize();
@@ -236,6 +278,14 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
     if (getSystemStuckProtectionCounter() >= SYS_STUCK_TIMER_MAX_LIMIT) {
         SYS_RESET_SoftwareReset();
     }    
+ 
+        
+    /*
+     *
+     *  Checks if the system should return to the bootloader
+     *
+     */
+    checkIfSoftwareResetNeeded();   
     
     
     /*

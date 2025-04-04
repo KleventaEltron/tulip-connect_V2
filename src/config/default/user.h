@@ -39,7 +39,7 @@ extern "C" {
 //     
 #define THIS_FIRMWARE_VERSION 1001006 // 1.1.6
     
-#define SECONDS_IN_DAY 86400 // 1 day
+//#define SECONDS_IN_DAY 86400 // 1 day
 //#define SECONDS_IN_DAY 60 // 1 minute
 //#define SECONDS_IN_DAY 300 // 5 minutes
     
