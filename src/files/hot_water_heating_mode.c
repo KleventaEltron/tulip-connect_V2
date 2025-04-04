@@ -60,6 +60,24 @@ void adjustSetpointOffset()
     }
 }
 
+int16_t determineCorrectSetpoint() {
+    if ((hot_water_heating_mode_data.state == HOT_WATER_HEATING_INITIALIZE_HEATING) ||
+        (hot_water_heating_mode_data.state == HOT_WATER_HEATING_IDLE_HEATING) ||
+        (hot_water_heating_mode_data.state == HOT_WATER_HEATING_RUNNING_ON_HEATING) ||
+        (hot_water_heating_mode_data.state == HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON) ) {
+        return getHeatingSetpoint();
+    }
+    
+    if ((hot_water_heating_mode_data.state == HOT_WATER_HEATING_INITIALIZE_HOT_WATER) ||
+        (hot_water_heating_mode_data.state == HOT_WATER_HEATING_STATE_WAIT_FOR_MINIMAL_TIME_IN_HOT_WATER) ||
+        (hot_water_heating_mode_data.state == HOT_WATER_HEATING_STATE_RUNNING_IN_HOT_WATER) ||
+        (hot_water_heating_mode_data.state == HOT_WATER_HEATING_STATE_RUNNING_WITH_ELEMENT_ON_IN_HOT_WATER) ) {
+        return (getHotwaterSetpoint() + app_Data.setpointHotWaterOffset);
+    }
+    
+    return TEMPERATURE_ALARM_VALUE;
+}
+
 void HOT_WATER_HEATING_MODE_Initialize ( void )
 {
     //TurnOffHeatingElementHeatingBuffer();
@@ -119,6 +137,10 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HOT_WATER;
         return;
     }
+    
+    
+    //setActiveModeControllerHeatpumpSetpoint(int16_t newSetpoint);
+    setActiveModeControllerHeatpumpSetpoint(determineCorrectSetpoint());
 
     switch ( hot_water_heating_mode_data.state )
     {

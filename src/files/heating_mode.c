@@ -45,6 +45,8 @@ void HEATING_MODE_Tasks ( void )
     }
     */
     
+    setActiveModeControllerHeatpumpSetpoint(getHeatingSetpoint());
+    
     switch ( heating_mode_data.state )
     {
         case HEATING_INITIALIZE:{

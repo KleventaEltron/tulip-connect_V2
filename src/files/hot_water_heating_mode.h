@@ -22,8 +22,6 @@ bool getHeatingElementBoolFromHotwaterHeatingMode();
 bool getHotwaterElementBoolFromHotwaterHeatingMode();
    
     
-    
-
 #ifdef __cplusplus
 }
 #endif
