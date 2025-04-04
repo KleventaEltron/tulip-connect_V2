@@ -14,6 +14,13 @@
 
 uint32_t sterilizationReachedTemperatureTimeStamp = UINT32_MAX;
 uint16_t sterilizationTemperatureOffset = TEMPERATURE_ALARM_VALUE;
+bool sterilizationHotwaterElementOn = false;
+
+bool getSterilizationElementOnState()
+{
+    return sterilizationHotwaterElementOn;
+}
+
 STERILIZATION_MODE sterilisationMode = OFF;
 
 
@@ -83,7 +90,8 @@ bool sterilisationIsActivelyRunning() {
             return true;
         }
 
-        TurnOffHeatingElementHotWaterBuffer();
+        //TurnOffHeatingElementHotWaterBuffer();
+        sterilizationHotwaterElementOn = false;
         setSecondCounterLegionella(0);    
         sterilizationTemperatureOffset = ReadSmartEeprom16(SEEP_ADDR_STERILIZATION_SETPOINT_OFFSET_START);  
     }        
@@ -113,7 +121,8 @@ bool sterilisationIsActivelyRunning() {
         }
             
         // Sterilization is done
-        TurnOffHeatingElementHotWaterBuffer();
+        //TurnOffHeatingElementHotWaterBuffer();
+        sterilizationHotwaterElementOn = false;
         setSecondCounterLegionella(UINT32_MAX);
         sterilizationReachedTemperatureTimeStamp = UINT32_MAX;
         WriteSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION, 0);
@@ -136,7 +145,8 @@ bool sterilisationIsActivelyRunning() {
             
     // 120 minutes in ACTIVE sterilization mode passed, but still not finished, set sterilisation to PASSIVE mode
     setSecondCounterLegionella(0);
-    TurnOnHeatingElementHotWaterBuffer();   // Set heating element on
+    //TurnOnHeatingElementHotWaterBuffer();   // Set heating element on
+    sterilizationHotwaterElementOn = true;
     sterilizationTemperatureOffset = TEMPERATURE_ALARM_VALUE;
             
     setSterilisationMode(PASSIVE); 

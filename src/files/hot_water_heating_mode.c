@@ -16,6 +16,14 @@
 
 extern HOT_WATER_HEATING_MODE_DATA hot_water_heating_mode_data;
 
+bool getHeatingElementBoolFromHotwaterHeatingMode() {
+    return hot_water_heating_mode_data.HeatingElementOn;
+}
+
+bool getHotwaterElementBoolFromHotwaterHeatingMode() {
+    return hot_water_heating_mode_data.HotwaterElementOn;
+}
+
 bool areWeOnHotWaterMode()
 {
     if (hot_water_heating_mode_data.state == HOT_WATER_HEATING_INITIALIZE_HOT_WATER){

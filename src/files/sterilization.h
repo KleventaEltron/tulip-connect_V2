@@ -14,6 +14,7 @@ STERILIZATION_MODE getSterilisationMode();
 void setSterilisationMode(STERILIZATION_MODE newMode);
 void checkNeedForSterilization();
 const char * getSterilizationState(STERILIZATION_MODE state);
+bool getSterilizationElementOnState();
     
 #ifdef __cplusplus
 }

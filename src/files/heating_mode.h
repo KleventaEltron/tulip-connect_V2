@@ -17,7 +17,7 @@ extern "C" {
 void HEATING_MODE_Initialize ( void );
 void HEATING_MODE_Tasks ( void );
    
-    
+bool getHeatingElementBoolFromHeatingMode();
     
 
 #ifdef __cplusplus

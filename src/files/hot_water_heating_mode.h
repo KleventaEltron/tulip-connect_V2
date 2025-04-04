@@ -17,6 +17,9 @@ extern "C" {
        
 void HOT_WATER_HEATING_MODE_Initialize ( void );
 void HOT_WATER_HEATING_MODE_Tasks ( void );
+
+bool getHeatingElementBoolFromHotwaterHeatingMode();
+bool getHotwaterElementBoolFromHotwaterHeatingMode();
    
     
     

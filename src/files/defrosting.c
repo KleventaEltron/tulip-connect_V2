@@ -12,13 +12,13 @@
 #include "modbus/heatpump_parameters.h"
 
 bool defrostingActiveInHeatpump = false;
-bool defrostingHeatingElementOn = false;
+bool defrostingHotwaterElementOn = false;
 
 int16_t initialDefrostingTemperature = TEMPERATURE_ALARM_VALUE;
 
 bool getDefrostingElementOnState()
 {
-    return defrostingHeatingElementOn;
+    return defrostingHotwaterElementOn;
 }
 
 bool isDefrostingActive()
@@ -42,7 +42,7 @@ void CheckDefrosting(HOT_WATER_HEATING_MODE_STATES currentHotWaterHeatingModeSta
         (currentHotWaterHeatingModeState == HOT_WATER_HEATING_RUNNING_ON_HEATING) || 
         (currentHotWaterHeatingModeState == HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON))  ){
         
-        defrostingHeatingElementOn = false;
+        defrostingHotwaterElementOn = false;
         initialDefrostingTemperature = TEMPERATURE_ALARM_VALUE;
         return;
     }
@@ -59,13 +59,13 @@ void CheckDefrosting(HOT_WATER_HEATING_MODE_STATES currentHotWaterHeatingModeSta
         if (GetNtcTemperature(NTC_HOT_WATER_BUFFER) <= (initialDefrostingTemperature - ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_FALL_BEFORE_ELEMENT_ON))){
             // Temperature decreased under threshold, turn on heating element
             //TurnOnHeatingElementHotWaterBuffer();
-            defrostingHeatingElementOn = true;
+            defrostingHotwaterElementOn = true;
         }
         
         if (GetNtcTemperature(NTC_HOT_WATER_BUFFER) >= (initialDefrostingTemperature - ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_FALL_BEFORE_ELEMENT_ON)+ ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_RISE_BEFORE_ELEMENT_OFF)))
         {   // Temperature rised above threshold, turn off heating element
             //TurnOffHeatingElementHotWaterBuffer();
-            defrostingHeatingElementOn = false;
+            defrostingHotwaterElementOn = false;
         }
         return;
     }
@@ -81,7 +81,7 @@ void CheckDefrosting(HOT_WATER_HEATING_MODE_STATES currentHotWaterHeatingModeSta
         if (app_Data.currentHotWaterBufferTemp >= (initialDefrostingTemperature - ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_FALL_BEFORE_ELEMENT_ON) + ReadSmartEeprom16(SEEP_ADDR_DEFROSTING_TEMP_RISE_BEFORE_ELEMENT_OFF))){ 
             // Element is on and heating rised enough for element to go off again
             //TurnOffHeatingElementHotWaterBuffer();
-            defrostingHeatingElementOn = false;
+            defrostingHotwaterElementOn = false;
             initialDefrostingTemperature = TEMPERATURE_ALARM_VALUE;
         }                     
 

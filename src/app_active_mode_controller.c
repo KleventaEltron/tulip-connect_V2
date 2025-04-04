@@ -65,16 +65,26 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
  
  
  void checkHeatingElementStates() {
-     if(hot_water_heating_mode_data.HeatingElementOn ) {
-         
-     }
+    
+     // Heating element
+    if ((getHeatingElementBoolFromHotwaterHeatingMode() == true) || 
+            (getHeatingElementBoolFromHeatingMode() == true)) {
+        TurnOnHeatingElementHeatingBuffer();
+    }
+    else{
+        TurnOffHeatingElementHeatingBuffer();
+    }
+
+    // Hot water element
+    if ((getHotwaterElementBoolFromHotwaterHeatingMode() == true) ||
+            (getDefrostingElementOnState() == true) ||
+            (getSterilizationElementOnState() == true)) {
+        TurnOnHeatingElementHotWaterBuffer();
+    } else {
+        TurnOffHeatingElementHotWaterBuffer();
+    }
      
-     if (hot_water_heating_mode_data.HotwaterElementOn) {
-         TurnOffHeatingElementHotWaterBuffer();
-     } else {
-         
-     }
-     return;
+    return;
  }
  
  void checkHeatpumpSetpoint() {

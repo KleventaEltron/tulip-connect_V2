@@ -71,6 +71,7 @@ typedef enum{
 typedef struct{
     HEATING_MODE_STATES state;
     int16_t initialBufferTemp;
+    bool HeatingElementOn;
 } HEATING_MODE_DATA;
 
 
