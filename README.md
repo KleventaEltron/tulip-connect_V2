@@ -22,3 +22,28 @@ Na het clonen van het repository zal het ```credentials.h``` bestand niet herken
 #endif
 ```
 ✨Na dit gedaan te hebben zou het project succesvol moeten kunnen builden en runnen!✨
+
+## Heatpump Setpoint Control
+Voor het instellen van het setpoint in de warmtepomp is de volgende functie in ```files/states.c``` Aanwezig. 
+
+```c
+void setActiveModeControllerHeatpumpSetpoint(int16_t newSetpoint) {
+    app_active_mode_controllerData.setPoint = newSetpoint;
+}
+```
+
+Het correcte setpoint wordt elke 10 seconden geverifieerd in de hoofdloop van het programma met de functie ```checkHeatpumpSetpoint()```. Indien deze niet overeen komt wordt de nieuwe instelling weggeschreven. 10 Seconden later wordt deze weer geverifieerd.
+
+```c
+ void checkHeatpumpSetpoint() {
+    if (getWriteNewSetPointHeatpumpCounter() < 10) {
+        return;
+    }
+    
+    if (app_active_mode_controllerData.setPoint != (UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] * 10)) {   
+        // Setpoint in heatpump is not correct, send the correct one
+        ChangeHeatpumpSetting(ADDRESS_HEATING_SET_TEMPERATURE, (app_active_mode_controllerData.setPoint / 10));
+    }
+    getWriteNewSetPointHeatpumpCounter(0); 
+ }
+```
