@@ -63,6 +63,18 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
  }
  
  
+ void checkHeatingElementStates() {
+     if(hot_water_heating_mode_data.HeatingElementOn ) {
+         
+     }
+     
+     if (hot_water_heating_mode_data.HotwaterElementOn) {
+         TurnOffHeatingElementHotWaterBuffer();
+     } else {
+         
+     }
+     return;
+ }
  
  
 void callActiveModeTaskHandler() {

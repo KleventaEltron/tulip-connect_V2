@@ -34,15 +34,16 @@ bool isDefrostingActive()
 
 void CheckDefrosting(HOT_WATER_HEATING_MODE_STATES currentHotWaterHeatingModeState, STERILIZATION_MODE currentSterilizationModeState)
 {    
-    if ((currentSterilizationModeState == OFF) || 
-        (currentSterilizationModeState == PASSIVE)){
-        return;
-    }
-    
-    if ((currentHotWaterHeatingModeState == HOT_WATER_HEATING_INITIALIZE_HEATING) || 
+    if (((currentSterilizationModeState == OFF) || 
+        (currentSterilizationModeState == PASSIVE))
+         &&
+        ((currentHotWaterHeatingModeState == HOT_WATER_HEATING_INITIALIZE_HEATING) || 
         (currentHotWaterHeatingModeState == HOT_WATER_HEATING_IDLE_HEATING) ||
         (currentHotWaterHeatingModeState == HOT_WATER_HEATING_RUNNING_ON_HEATING) || 
-        (currentHotWaterHeatingModeState == HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON)){
+        (currentHotWaterHeatingModeState == HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON))  ){
+        
+        defrostingHeatingElementOn = false;
+        initialDefrostingTemperature = TEMPERATURE_ALARM_VALUE;
         return;
     }
     

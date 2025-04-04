@@ -54,11 +54,14 @@ void adjustSetpointOffset()
 
 void HOT_WATER_HEATING_MODE_Initialize ( void )
 {
-    TurnOffHeatingElementHeatingBuffer();
-    TurnOffHeatingElementHotWaterBuffer();
+    //TurnOffHeatingElementHeatingBuffer();
+    //TurnOffHeatingElementHotWaterBuffer();
     
     setSecondCounterHeatingTask(UINT32_MAX);
     setSecondCounterHotwaterTask(UINT32_MAX);
+    
+    hot_water_heating_mode_data.HeatingElementOn = false;
+    hot_water_heating_mode_data.HotwaterElementOn = false;
     
     hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
     hot_water_heating_mode_data.hotwaterPassive = false;
@@ -88,7 +91,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         if (GetNtcTemperature(NTC_HOT_WATER_BUFFER) >= getHotwaterSetpoint()){
             // Setpoint reached in passive mode, now turn off
             setSecondCounterHotwaterTask(UINT32_MAX);
-            TurnOffHeatingElementHotWaterBuffer();
+            //TurnOffHeatingElementHotWaterBuffer();
+            hot_water_heating_mode_data.HotwaterElementOn = false;
             
             hot_water_heating_mode_data.hotwaterPassive = false;
             hot_water_heating_mode_data.setpointHotWaterOffset = TEMPERATURE_ALARM_VALUE;
@@ -121,7 +125,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
 
         case HOT_WATER_HEATING_INITIALIZE_HEATING:{
             
-            TurnOffHeatingElementHeatingBuffer();
+            //TurnOffHeatingElementHeatingBuffer();
+            hot_water_heating_mode_data.HeatingElementOn = false;
             setSecondCounterHeatingTask(UINT32_MAX);
             
             hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
@@ -147,7 +152,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             
             if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
                 // Compressor is not running and is also not in defrosting
-                TurnOffHeatingElementHeatingBuffer();
+                //TurnOffHeatingElementHeatingBuffer();
+                hot_water_heating_mode_data.HeatingElementOn = false;
                 hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
 
@@ -166,7 +172,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                 // Temperature not rised a set temperature in a set time
                 setSecondCounterHeatingTask(0);
                 hot_water_heating_mode_data.initialHeatingBufferTemp = GetNtcTemperature(NTC_HEATING_BUFFER);
-                TurnOnHeatingElementHeatingBuffer();
+                //TurnOnHeatingElementHeatingBuffer();
+                hot_water_heating_mode_data.HeatingElementOn = true;
                 
                 hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON;
                 break;
@@ -179,7 +186,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             
             if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
                 // Compressor is not running and is also not in defrosting
-                TurnOffHeatingElementHeatingBuffer();
+                //TurnOffHeatingElementHeatingBuffer();
+                hot_water_heating_mode_data.HeatingElementOn = false;
                 hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
 
@@ -198,7 +206,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                 // Temperature not rised a set temperature in a set time
                 setSecondCounterHeatingTask(0);
                 hot_water_heating_mode_data.initialHeatingBufferTemp = GetNtcTemperature(NTC_HEATING_BUFFER);
-                TurnOffHeatingElementHeatingBuffer();
+                //TurnOffHeatingElementHeatingBuffer();
+                hot_water_heating_mode_data.HeatingElementOn = false;
                 
                 hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING;
                 break;
@@ -220,8 +229,10 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             setSecondCounterHeatingTask(UINT32_MAX);
             setSecondCounterHotwaterTask(0);
             
-            TurnOffHeatingElementHeatingBuffer();
-            TurnOffHeatingElementHotWaterBuffer();
+            //TurnOffHeatingElementHeatingBuffer();
+            //TurnOffHeatingElementHotWaterBuffer();
+            hot_water_heating_mode_data.HeatingElementOn = false;
+            hot_water_heating_mode_data.HotwaterElementOn = false;
             
             hot_water_heating_mode_data.hotwaterPassive = false;
             hot_water_heating_mode_data.setpointHotWaterOffset = ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT_OFFSET_START);
@@ -247,7 +258,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             
             if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
                 // Compressor is not running and is also not in defrosting, so go back to heating
-                TurnOffHeatingElementHotWaterBuffer();
+                //TurnOffHeatingElementHotWaterBuffer();
+                hot_water_heating_mode_data.HotwaterElementOn = false;
                 setSecondCounterHotwaterTask(UINT32_MAX);
                 
                 hot_water_heating_mode_data.hotwaterPassive = false;
@@ -258,7 +270,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             
             if (getSecondCounterHotwaterTask() >= ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_RUNNING_TIME_BEFORE_TURNING_ON_HEATING_ELEMENT)){
                 // 2 hours passed in hot water and not reached setpoint, turn on element, time counter not needed anymore
-                TurnOnHeatingElementHotWaterBuffer();
+                //TurnOnHeatingElementHotWaterBuffer();
+                hot_water_heating_mode_data.HotwaterElementOn = true;
                 setSecondCounterHotwaterTask(UINT32_MAX);
                 hot_water_heating_mode_data.state = HOT_WATER_HEATING_STATE_RUNNING_WITH_ELEMENT_ON_IN_HOT_WATER;
                 break;
@@ -272,7 +285,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             
             if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
                 // Compressor is not running and is also not in defrosting, so go back to heating
-                TurnOffHeatingElementHotWaterBuffer();
+                //TurnOffHeatingElementHotWaterBuffer();
+                hot_water_heating_mode_data.HotwaterElementOn = false;
                 setSecondCounterHotwaterTask(UINT32_MAX);
                 
                 hot_water_heating_mode_data.hotwaterPassive = false;

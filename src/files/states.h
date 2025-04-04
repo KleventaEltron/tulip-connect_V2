@@ -196,6 +196,8 @@ typedef struct{
     
     bool hotwaterPassive;
     int16_t  setpointHotWaterOffset;
+    bool HeatingElementOn;
+    bool HotwaterElementOn;
 } HOT_WATER_HEATING_MODE_DATA;
 
 
