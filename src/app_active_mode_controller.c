@@ -42,6 +42,7 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
  
  void printDebugInfo() {
     if (DebugDipSwitch() == true) {
+        /*
         SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
         SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
         SYS_CONSOLE_PRINT(" 3-way valve mode:     %s\n", getThreeWayValveState(getStatus3WayValve()));
@@ -59,6 +60,44 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
         SYS_CONSOLE_PRINT(" Buffer:               %d\n", GetNtcTemperature(NTC_HEATING_BUFFER));
         SYS_CONSOLE_PRINT(" Temp too low:         %d\n", getCircPumpData().temperatureTooLowForPumpToBeOn);
         SYS_CONSOLE_PRINT(" Counter:              %d\n", (int)getSecondCounterCirculationPumpTask());
+        */
+        
+            
+        SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
+        SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
+        SYS_CONSOLE_PRINT(" Heatpump ON:          %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
+        SYS_CONSOLE_PRINT(" Display pump on:      %s\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
+        SYS_CONSOLE_PRINT(" Sys stuck protection: %i\n\n", getSystemStuckProtectionCounter());
+        
+        SYS_CONSOLE_PRINT("\r\nHEATPUMP:\n");
+        SYS_CONSOLE_PRINT(" Setpoint:             %i\n", getHeatpumpSetpoint());
+        SYS_CONSOLE_PRINT(" Compressor:           %i\n", getHeatpumpCompressorFrequency());
+        SYS_CONSOLE_PRINT(" Waterflow:            %i\n", getHeatpumpWaterFlow());
+        SYS_CONSOLE_PRINT(" Retour temp.:         %i\n\n", getHeatpumpReturnWaterTemperature());
+        
+        SYS_CONSOLE_PRINT("\r\3-WAY VALVE:\n");
+        SYS_CONSOLE_PRINT(" 3-way valve mode:     %s\n", getThreeWayValveState(getStatus3WayValve()));
+        SYS_CONSOLE_PRINT(" 3-way needed state:   %s\n", getThreeWayValveState(getNeededValvePosition()));
+        SYS_CONSOLE_PRINT(" Time counter:         %i\n", getWaitingThreeWayValveSwitch());
+        
+        SYS_CONSOLE_PRINT("\r\nSTERILIZATION:\n");
+        SYS_CONSOLE_PRINT(" Sterilisation active: %s\n", getSterilizationState(getSterilisationMode()));
+        SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterLegionella());
+        SYS_CONSOLE_PRINT(" Day counter:          %i\n", ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION));
+        
+        SYS_CONSOLE_PRINT("\r\nCIRCULATION PUMP:\n");
+        SYS_CONSOLE_PRINT(" State:                %s\n", getCirculationPumpStateToString());
+        SYS_CONSOLE_PRINT(" Pump ON:              %s\n", getStatusCirculationPump() ? "True" : "False");
+        SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterCirculationPumpTask());
+        SYS_CONSOLE_PRINT(" Temp. too low:        %s\n", getCirculationPumpData().temperatureTooLowForPumpToBeOn ? "True" : "False");
+        
+        SYS_CONSOLE_PRINT("\r\nHEATING MODE:\n");
+        SYS_CONSOLE_PRINT(" State:                %s\n", getHeatingStateToString());
+        SYS_CONSOLE_PRINT(" Element ON:           %s\n", getStatusHeatingElementHeatingBuffer() ? "True" : "False");
+        SYS_CONSOLE_PRINT(" Buffer:               %d\n", GetNtcTemperature(NTC_HEATING_BUFFER));
+        SYS_CONSOLE_PRINT(" Initial buffer temp.: %d\n", getHeatingModeData().initialBufferTemp);
+        SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterHeatingTask());
+
     }
     return;
  }
@@ -238,6 +277,10 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
      */
     if (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) == false) {
         // Guard against system reset, because it is not actually stuck
+        CIRCULATION_PUMP_Initialize();
+        TurnOffHeatingElementHeatingBuffer();
+        TurnOffHeatingElementHotWaterBuffer();
+        
         setSystemStuckProtectionCounter(0);
         return;
     }
@@ -252,6 +295,15 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
     if(!validateThreeWayValveStateOkay(app_active_mode_controllerData.currentRunningMode)) {
         return;
     }
+    
+    
+    /*
+     * 
+     * Check if the heating and/or hot water heating elements must be on or off
+     * 
+     *
+     */
+    checkHeatingElementStates();
     
     
     /* 

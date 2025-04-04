@@ -12,13 +12,13 @@ extern "C" {
 #include <string.h>
 #include <stdio.h>
 #include "definitions.h"   
-
-       
+    
+    
 void HEATING_MODE_Initialize ( void );
 void HEATING_MODE_Tasks ( void );
    
 bool getHeatingElementBoolFromHeatingMode();
-    
+const char * getHeatingStateToString();
 
 #ifdef __cplusplus
 }

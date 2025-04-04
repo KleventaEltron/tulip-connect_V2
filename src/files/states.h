@@ -256,6 +256,8 @@ void resetActiveModeStates();
 const char * getActiveModeToString(RUNNING_MODES state);
 bool isDefrostingActive();
 uint16_t getHeatpumpCompressorFrequency();
+int16_t getHeatpumpSetpoint();
+uint16_t getHeatpumpWaterFlow();
 int16_t getHeatpumpReturnWaterTemperature();
 const char * getThreeWayValveState(int state);
 

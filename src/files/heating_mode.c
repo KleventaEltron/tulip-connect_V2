@@ -30,6 +30,38 @@ void HEATING_MODE_Initialize ( void )
     return;
 }
 
+const char * getHeatingStateToString()
+{
+    switch (heating_mode_data.state)
+    {
+        case(HEATING_INITIALIZE): {
+            return "0, Init";
+            break;
+        }
+        
+        case(HEATING_IDLE): {
+            return "1, Idle";
+            break;
+        }
+        
+        case(HEATING_RUNNING): {
+            return "2, Running";
+            break;
+        }
+        
+        case(HEATING_RUNNING_WITH_ELEMENT_ON): {
+            return "3, Running with element on";
+            break;
+        }
+        
+        default:{
+            return "-1, Unkown";
+            break;
+        }
+        return "-1, Unkown";
+    }
+}
+
 
 
 void HEATING_MODE_Tasks ( void )

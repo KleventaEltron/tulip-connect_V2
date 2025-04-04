@@ -42,8 +42,16 @@ extern CIRCULATION_PUMP_DATA circulation_pump_data;
 
 void CIRCULATION_PUMP_Initialize()
 {
+    TurnOffCirculationPump();
+    setSecondCounterCirculationPumpTask(0);
+    
+    circulation_pump_data.temperatureTooLowForPumpToBeOn = false;
     circulation_pump_data.state = CIRCULATION_PUMP_INITIALIZE;
     return;
+}
+
+CIRCULATION_PUMP_DATA getCirculationPumpData() {
+    return circulation_pump_data;
 }
 
 const char * getCirculationPumpStateToString()
@@ -98,9 +106,12 @@ void checkBufferTemperature(int16_t currentTemperature, int16_t setpoint, int16_
     }
 }
 
-bool canPumpRunInThisHeatingState(HEATING_MODE_DATA heatingModeData)
+bool canPumpRunInThisHeatingState(HEATING_MODE_DATA heatingModeData, HOT_WATER_HEATING_MODE_DATA hotwaterHeatingModeData)
 {
-    if ((heatingModeData.state == HEATING_IDLE) || (heatingModeData.state == HEATING_RUNNING)){
+    if ((heatingModeData.state == HEATING_IDLE) || 
+            (heatingModeData.state == HEATING_RUNNING) || 
+            (hotwaterHeatingModeData.state == HOT_WATER_HEATING_IDLE_HEATING) || 
+            (hotwaterHeatingModeData.state == HOT_WATER_HEATING_RUNNING_ON_HEATING)){
         // Pump can run
         return true;
     }
@@ -123,7 +134,7 @@ bool circulationPumpConditions()
         return false;
     }
     
-    if (canPumpRunInThisHeatingState(getHeatingModeData()) == false){
+    if (canPumpRunInThisHeatingState(getHeatingModeData(), getHotWaterHeatingModeData()) == false){
         // Pump can not run in this state
         return false;
     }
@@ -153,8 +164,10 @@ void CIRCULATION_PUMP_Tasks()
     {
         // 0: Circulation pump init
         case CIRCULATION_PUMP_INITIALIZE:{
-
+            TurnOffCirculationPump();
             setSecondCounterCirculationPumpTask(0);
+
+            circulation_pump_data.temperatureTooLowForPumpToBeOn = false;
             circulation_pump_data.state = CIRCULATION_PUMP_OFF;
             break;
         }
