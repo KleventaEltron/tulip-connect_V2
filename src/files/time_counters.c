@@ -15,6 +15,7 @@ uint32_t SecondCounterLogging = UINT32_MAX;
 uint32_t SecondCounterLoggingSDCard = UINT32_MAX;
 
 // Time counters, when MAX value the counter is off, when 0 counter is on
+uint32_t systemOnCounter = UINT32_MAX;
 uint32_t secondCounterLegionella = UINT32_MAX;
 uint32_t waitingThreeWayValveSwitch = UINT32_MAX;
 uint32_t systemStuckProtectionCounter = UINT32_MAX;
@@ -110,6 +111,10 @@ void UpdateCounters ( void )
             if (writeNewSetPointHeatpumpCounter >= 0 && writeNewSetPointHeatpumpCounter < UINT32_MAX) {
                 writeNewSetPointHeatpumpCounter++;
             }
+            
+            if (systemOnCounter >= 0 && systemOnCounter < UINT32_MAX) {
+                systemOnCounter++;
+            }
         }   
 
         if (SecondCounterLeds >= 0 && SecondCounterLeds < UINT32_MAX)
@@ -168,6 +173,15 @@ uint32_t getWriteNewSetPointHeatpumpCounter() {
 void setWriteNewSetPointHeatpumpCounter(uint32_t value) {
     writeNewSetPointHeatpumpCounter = value;
 }
+
+uint32_t getsystemOnCounter() {
+    return systemOnCounter;
+}
+
+void setSystemOnCounter(uint32_t value) {
+    systemOnCounter = value;
+}
+
 
 bool LedsTimerExpired ( void )
 {
