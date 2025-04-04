@@ -18,6 +18,7 @@ uint32_t SecondCounterLoggingSDCard = UINT32_MAX;
 uint32_t secondCounterLegionella = UINT32_MAX;
 uint32_t waitingThreeWayValveSwitch = UINT32_MAX;
 uint32_t systemStuckProtectionCounter = UINT32_MAX;
+uint32_t writeNewSetPointHeatpumpCounter = UINT32_MAX;
 
 //static uint32_t SecondCounterFtp = UINT32_MAX;
 //static uint32_t SecondCounterResetSoftware = UINT32_MAX;
@@ -119,6 +120,10 @@ void UpdateCounters ( void )
             if (systemStuckProtectionCounter >= 0 && systemStuckProtectionCounter < UINT32_MAX) {
                 systemStuckProtectionCounter++;
             }            
+            
+            if (writeNewSetPointHeatpumpCounter >= 0 && writeNewSetPointHeatpumpCounter < UINT32_MAX) {
+                writeNewSetPointHeatpumpCounter++;
+            }
         }   
 
         if (SecondCounterLeds >= 0 && SecondCounterLeds < UINT32_MAX)
@@ -168,6 +173,14 @@ uint32_t getSystemStuckProtectionCounter() {
 
 void setSystemStuckProtectionCounter(uint32_t value) {
     systemStuckProtectionCounter = value;
+}
+
+uint32_t getWriteNewSetPointHeatpumpCounter() {
+    return writeNewSetPointHeatpumpCounter;
+}
+
+void setWriteNewSetPointHeatpumpCounter(uint32_t value) {
+    writeNewSetPointHeatpumpCounter = value;
 }
 
 bool LedsTimerExpired ( void )

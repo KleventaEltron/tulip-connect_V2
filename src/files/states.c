@@ -25,6 +25,11 @@ HOT_WATER_FLOOR_HEATING_MODE_DATA hot_water_floor_heating_mode_data;
 CIRCULATION_PUMP_DATA circulation_pump_data;
 
 
+void setActiveModeControllerHeatpumpSetpoint(int16_t newSetpoint) {
+    app_active_mode_controllerData.setPoint = newSetpoint;
+}
+
+
 void resetActiveModeStates() {
     heating_mode_data.state = HEATING_INITIALIZE;
     hot_water_mode_data.state = HOT_WATER_INITIALIZE;
