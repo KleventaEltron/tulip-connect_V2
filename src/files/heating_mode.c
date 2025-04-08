@@ -15,14 +15,51 @@
 
 extern HEATING_MODE_DATA heating_mode_data;
 
+bool getHeatingElementBoolFromHeatingMode() {
+    return heating_mode_data.HeatingElementOn;
+}
+
 void HEATING_MODE_Initialize ( void )
 {
     setSecondCounterHeatingTask(UINT32_MAX);
     heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
-    TurnOffHeatingElementHeatingBuffer();
+    //TurnOffHeatingElementHeatingBuffer();
+    heating_mode_data.HeatingElementOn = false;
     
     heating_mode_data.state = HEATING_INITIALIZE;
     return;
+}
+
+const char * getHeatingStateToString()
+{
+    switch (heating_mode_data.state)
+    {
+        case(HEATING_INITIALIZE): {
+            return "0, Init";
+            break;
+        }
+        
+        case(HEATING_IDLE): {
+            return "1, Idle";
+            break;
+        }
+        
+        case(HEATING_RUNNING): {
+            return "2, Running";
+            break;
+        }
+        
+        case(HEATING_RUNNING_WITH_ELEMENT_ON): {
+            return "3, Running with element on";
+            break;
+        }
+        
+        default:{
+            return "-1, Unkown";
+            break;
+        }
+        return "-1, Unkown";
+    }
 }
 
 
@@ -40,11 +77,14 @@ void HEATING_MODE_Tasks ( void )
     }
     */
     
+    setActiveModeControllerHeatpumpSetpoint(getHeatingSetpoint());
+    
     switch ( heating_mode_data.state )
     {
         case HEATING_INITIALIZE:{
             
-            TurnOffHeatingElementHeatingBuffer();
+            //TurnOffHeatingElementHeatingBuffer();
+            heating_mode_data.HeatingElementOn = false;
             heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
             setSecondCounterHeatingTask(UINT32_MAX);
             
@@ -70,7 +110,8 @@ void HEATING_MODE_Tasks ( void )
             
             if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
                 // Compressor is not running and is also not in defrosting
-                TurnOffHeatingElementHeatingBuffer();
+                //TurnOffHeatingElementHeatingBuffer();
+                heating_mode_data.HeatingElementOn = false;
                 heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
 
@@ -89,7 +130,8 @@ void HEATING_MODE_Tasks ( void )
                 // Temperature not rised a set temperature in a set time
                 setSecondCounterHeatingTask(0);
                 heating_mode_data.initialBufferTemp = GetNtcTemperature(NTC_HEATING_BUFFER);
-                TurnOnHeatingElementHeatingBuffer();
+                //TurnOnHeatingElementHeatingBuffer();
+                heating_mode_data.HeatingElementOn = true;
                 
                 heating_mode_data.state = HEATING_RUNNING_WITH_ELEMENT_ON;
                 break;
@@ -102,7 +144,8 @@ void HEATING_MODE_Tasks ( void )
             
             if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
                 // Compressor is not running and is also not in defrosting
-                TurnOffHeatingElementHeatingBuffer();
+                //TurnOffHeatingElementHeatingBuffer();
+                heating_mode_data.HeatingElementOn = false;
                 heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
 
@@ -121,7 +164,8 @@ void HEATING_MODE_Tasks ( void )
                 // Temperature not rised a set temperature in a set time
                 setSecondCounterHeatingTask(0);
                 heating_mode_data.initialBufferTemp = GetNtcTemperature(NTC_HEATING_BUFFER);
-                TurnOffHeatingElementHeatingBuffer();
+                //TurnOffHeatingElementHeatingBuffer();
+                heating_mode_data.HeatingElementOn = false;
                 
                 heating_mode_data.state = HEATING_RUNNING;
                 break;

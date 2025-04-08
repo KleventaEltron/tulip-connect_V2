@@ -50,7 +50,7 @@ typedef struct
 } APP_ACTIVE_MODE_CONTROLLER_DATA;    
     
 void setActiveModeControllerHeatpumpSetpoint(int16_t newSetpoint);
-
+RUNNING_MODES getActiveStateValue();
 /*********
 ,--.  ,--.,------.  ,---. ,--------.,--.,--.  ,--. ,----.       ,--.   ,--. ,-----. ,------.  ,------. 
 |  '--'  ||  .---' /  O  \'--.  .--'|  ||  ,'.|  |'  .-./       |   `.'   |'  .-.  '|  .-.  \ |  .---' 
@@ -71,6 +71,7 @@ typedef enum{
 typedef struct{
     HEATING_MODE_STATES state;
     int16_t initialBufferTemp;
+    bool HeatingElementOn;
 } HEATING_MODE_DATA;
 
 
@@ -176,15 +177,30 @@ typedef struct{
  */
 
 typedef enum{
-    HOT_WATER_HEATING_INITIALIZE,
-    HOT_WATER_HEATING_IDLE,
-    HOT_WATER_HEATING_MODE
+    // Heating modes:
+    HOT_WATER_HEATING_INITIALIZE_HEATING=0,
+    HOT_WATER_HEATING_IDLE_HEATING,
+    HOT_WATER_HEATING_RUNNING_ON_HEATING,
+    HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON,
+            
+    // Hot water modes: 
+    HOT_WATER_HEATING_INITIALIZE_HOT_WATER,   
+    HOT_WATER_HEATING_STATE_WAIT_FOR_MINIMAL_TIME_IN_HOT_WATER,
+    HOT_WATER_HEATING_STATE_RUNNING_IN_HOT_WATER,
+    HOT_WATER_HEATING_STATE_RUNNING_WITH_ELEMENT_ON_IN_HOT_WATER
 } HOT_WATER_HEATING_MODE_STATES;
 
 
 
 typedef struct{
     HOT_WATER_HEATING_MODE_STATES state;
+    
+    int16_t initialHeatingBufferTemp;
+    
+    bool hotwaterPassive;
+    int16_t setpointHotWaterOffset;
+    bool HeatingElementOn;
+    bool HotwaterElementOn;
 } HOT_WATER_HEATING_MODE_DATA;
 
 
@@ -240,11 +256,17 @@ void resetActiveModeStates();
 const char * getActiveModeToString(RUNNING_MODES state);
 bool isDefrostingActive();
 uint16_t getHeatpumpCompressorFrequency();
+int16_t getHeatpumpSetpoint();
+uint16_t getHeatpumpWaterFlow();
+int16_t getHeatpumpReturnWaterTemperature();
 const char * getThreeWayValveState(int state);
 
 CIRCULATION_PUMP_DATA getCircPumpData();
 HEATING_MODE_DATA getHeatingModeData();
+HOT_WATER_HEATING_MODE_DATA getHotWaterHeatingModeData();
 int16_t getHeatingSetpoint();
+int16_t getHotwaterSetpoint();
+int16_t getHotwaterDelta();
 
 #ifdef __cplusplus
 }

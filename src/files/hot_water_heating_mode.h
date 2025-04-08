@@ -7,14 +7,22 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+    
+#include <stddef.h>                    
+#include <stdbool.h>                   
+#include <stdlib.h>                   
+#include <string.h>
+#include <stdio.h>
+#include "definitions.h" 
        
 void HOT_WATER_HEATING_MODE_Initialize ( void );
 void HOT_WATER_HEATING_MODE_Tasks ( void );
+
+bool getHeatingElementBoolFromHotwaterHeatingMode();
+bool getHotwaterElementBoolFromHotwaterHeatingMode();
+const char * getHotwaterHeatingStateToString();
    
     
-    
-
 #ifdef __cplusplus
 }
 #endif

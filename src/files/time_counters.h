@@ -24,6 +24,8 @@ void InitTimerCounters ( void );
 void UpdateCounters ( void );
 uint32_t getSecondCounterHeatingTask();
 void setSecondCounterHeatingTask(uint32_t count);
+uint32_t getSecondCounterHotwaterTask();
+void setSecondCounterHotwaterTask(uint32_t count);
 uint32_t getSecondCounterCirculationPumpTask();
 void setSecondCounterCirculationPumpTask(uint32_t count);
 

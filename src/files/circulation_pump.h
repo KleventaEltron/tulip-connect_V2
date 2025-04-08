@@ -7,9 +7,12 @@
 #include <string.h>
 #include <stdio.h>
 #include "definitions.h" 
+
+#include "states.h"
        
 void CIRCULATION_PUMP_Initialize();
 void CIRCULATION_PUMP_Tasks();
 const char * getCirculationPumpStateToString();
+CIRCULATION_PUMP_DATA getCirculationPumpData();
 
 #endif 

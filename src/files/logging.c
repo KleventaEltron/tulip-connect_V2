@@ -19,6 +19,7 @@
 #include "osal/osal.h"
 #include "tcpip/tcpip.h"
 #include "credentials.h"
+#include "states.h"
 //#include "delay.h"
 
 /* Used in sending and receiving data to and from the server */
@@ -429,7 +430,7 @@ void setLoggingDataPerDeviceType ( char* requestBuilder, char device[]) {
             setLogValue_NUMBER(requestBuilder, "WL56", (int16_t)getDataFromMemoryCallable(ADDRESS_EXTERNAL_ENVIRONMENT_TEMPERATURE));
             setLogValue_NUMBER(requestBuilder, "WL57", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_TANK_TEMPERATURE_2));
             
-            setLogValue_NUMBER(requestBuilder, "WL58", (int16_t)app_Data.appState);
+            setLogValue_NUMBER(requestBuilder, "WL58", (int16_t)getActiveStateValue());
             setLogValue_NUMBER(requestBuilder, "WL59", UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
             setLogValue_NUMBER(requestBuilder, "WL60", ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT));
             setLogValue_NUMBER(requestBuilder, "WL61", ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT));

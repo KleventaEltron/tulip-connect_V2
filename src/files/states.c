@@ -9,6 +9,7 @@
 
 #include "modbus/heatpump_parameters.h"
 #include "eeprom.h"
+#include "time_counters.h"
 
 APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
 APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
@@ -36,9 +37,31 @@ void resetActiveModeStates() {
     cooling_mode_data.state = COOLING_INITIALIZE;
     floor_heating_mode_data.state = FLOOR_HEATING_INITIALIZE;
     hot_water_cooling_mode_data.state = HOT_WATER_COOLING_INITIALIZE;
-    hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE;
+    hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HEATING;
     hot_water_floor_heating_mode_data.state = HOT_WATER_FLOOR_HEATING_INITIALIZE;
+    
+    // Reset Heating mode data
+    setSecondCounterHeatingTask(UINT32_MAX);
+    heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
+    heating_mode_data.HeatingElementOn = false;
+    
+    // Reset Hotwater and Heating mode data
+    setSecondCounterHeatingTask(UINT32_MAX);
+    setSecondCounterHotwaterTask(UINT32_MAX);
+    
+    hot_water_heating_mode_data.HeatingElementOn = false;
+    hot_water_heating_mode_data.HotwaterElementOn = false;
+    
+    hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
+    hot_water_heating_mode_data.hotwaterPassive = false;
+    hot_water_heating_mode_data.setpointHotWaterOffset = TEMPERATURE_ALARM_VALUE;
+            
+    
     return;
+}
+
+RUNNING_MODES getActiveStateValue() {
+    return app_active_mode_controllerData.currentRunningMode;
 }
 
 const char * getActiveModeToString(RUNNING_MODES state){
@@ -116,22 +139,31 @@ const char * getThreeWayValveState(int state) {
     return "-1, Unkown";
 }
 
-
-
-bool isDefrostingActive()
-{
-    if (RealTimeDataStatussen[ADDRESS_RUNNING_STATUS_1 - START_ADDRESS_REAL_TIME_DATA_STATUSSEN][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] & (1 << RUNNING_STATUS_1_SYSTEM_DEFROST_BIT)){
-        // Defrosting bit high and thus active
-        return true;
-    }
-    else{
-        return false;
-    }
-}
-
 uint16_t getHeatpumpCompressorFrequency()
 {
     return RealTimeData[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+}
+
+int16_t getHeatpumpSetpoint()
+{
+    return UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+}
+uint16_t getHeatpumpWaterFlow()
+{
+    return RealTimeData[ADDRESS_WATER_FLOW - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+}
+
+
+int16_t getHeatpumpReturnWaterTemperature()
+{
+    int16_t returnWaterTemperature = RealTimeData[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    
+    if (returnWaterTemperature != TEMPERATURE_ALARM_VALUE){
+        // If temperature is not an alarm value, do times 10
+        returnWaterTemperature *= 10;
+    }
+    
+    return returnWaterTemperature;
 }
 
 CIRCULATION_PUMP_DATA getCircPumpData(){
@@ -140,6 +172,10 @@ CIRCULATION_PUMP_DATA getCircPumpData(){
 
 HEATING_MODE_DATA getHeatingModeData(){
     return heating_mode_data;
+}
+
+HOT_WATER_HEATING_MODE_DATA getHotWaterHeatingModeData(){
+    return hot_water_heating_mode_data;
 }
 
 int16_t getHeatingSetpoint()
@@ -152,4 +188,28 @@ int16_t getHeatingSetpoint()
     }
     
     return setpointHeating;
+}
+
+int16_t getHotwaterSetpoint()
+{
+    // Get hot water setpoint out of smart eeprom
+    int16_t setpointHotwater = ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT);
+    
+    if (setpointHotwater != TEMPERATURE_ALARM_VALUE){
+        setpointHotwater *= 10;
+    }
+    
+    return setpointHotwater;
+}
+
+int16_t getHotwaterDelta()
+{
+    int16_t delta = UnitSystemParameters[ADDRESS_HOT_WATER_RETURN_DIFFERENCE - START_ADDRESS_UNIT_SYSTEM_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    
+    if (delta != TEMPERATURE_ALARM_VALUE){
+        // Is not alarm value, so do times 10
+        delta *= 10;
+    }
+    
+    return delta;
 }
