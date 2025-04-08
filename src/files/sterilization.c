@@ -16,13 +16,22 @@ uint32_t sterilizationReachedTemperatureTimeStamp = UINT32_MAX;
 uint16_t sterilizationTemperatureOffset = TEMPERATURE_ALARM_VALUE;
 bool sterilizationHotwaterElementOn = false;
 
+STERILIZATION_MODE sterilisationMode = OFF;
+
 bool getSterilizationElementOnState()
 {
     return sterilizationHotwaterElementOn;
 }
 
-STERILIZATION_MODE sterilisationMode = OFF;
+uint16_t getSterilizationTemperatureOffset()
+{
+    return sterilizationTemperatureOffset;
+}
 
+uint32_t getSterilizationReachedTemperatureTimeStamp()
+{
+    return sterilizationReachedTemperatureTimeStamp;
+}
 
 STERILIZATION_MODE getSterilisationMode() {
     return sterilisationMode;
@@ -41,7 +50,7 @@ void checkNeedForSterilization() {
 
 
 bool goToActiveSterilization() {
-    uint16_t currentHotWaterBufferTemp = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
+    int16_t currentHotWaterBufferTemp = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
     uint16_t sterilizationStartTime = UnitSystemParameterL[ADDRESS_STERILIZATION_START_TIME - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
     uint16_t sterilizationFunction = UnitSystemParameterL[ADDRESS_HIGH_TEMPERATURE_STERILIZATION_FUNCTION - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
     uint16_t sterilizationIntervalDays = UnitSystemParameterL[ADDRESS_STERILIZATION_INTERVAL_DAYS - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
@@ -52,7 +61,8 @@ bool goToActiveSterilization() {
 
     // Passive sterilization check, if this triggers we need to return to active sterilization    
     //if (secondCounterLegionella != UINT32_MAX && (secondCounterLegionella > maxTimeOutOfSterilizationMode) && (heatingElementStatus == true)) {   
-    if(sterilisationMode == PASSIVE && (getSecondCounterLegionella() >= maxTimeOutOfSterilizationMode)) {
+    if(sterilisationMode == PASSIVE && (getSecondCounterLegionella() >= maxTimeOutOfSterilizationMode) && (getSecondCounterLegionella() != UINT32_MAX)) {
+        setSecondCounterLegionella(UINT32_MAX);
         // Sterilization hot water element was already on
         return true;
     }
@@ -67,6 +77,7 @@ bool goToActiveSterilization() {
     
     if ((currentDisplayTimeHours == sterilizationStartTime) && (currentDisplayTimeMinutes == 0)) {   
         // Current time is the set time for sterilization
+        setSecondCounterLegionella(UINT32_MAX);
         return true;
     }
 
@@ -96,7 +107,7 @@ bool sterilisationIsActivelyRunning() {
         sterilizationTemperatureOffset = ReadSmartEeprom16(SEEP_ADDR_STERILIZATION_SETPOINT_OFFSET_START);  
     }        
                
-    uint16_t retourWaterTemperature = (RealTimeData[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] * 10);
+    uint16_t retourWaterTemperature = getHeatpumpReturnWaterTemperature();
     int16_t sterilizationTemperature = (UnitSystemParameterL[ADDRESS_STERILIZATION_TEMPERATURE_SETTING - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] * 10);        
        
     if ((retourWaterTemperature >= (sterilizationTemperature + sterilizationTemperatureOffset - 20)) && (sterilizationTemperatureOffset != 0) && (sterilizationTemperatureOffset != TEMPERATURE_ALARM_VALUE)) {   
@@ -110,6 +121,7 @@ bool sterilisationIsActivelyRunning() {
         
     int16_t currentHotWaterBufferTemp = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
     if(currentHotWaterBufferTemp >= sterilizationTemperature){
+        // Sterilization reached the set temperature
         if (sterilizationReachedTemperatureTimeStamp == UINT32_MAX) {
             // Sterilization reached the temperature for the first time, so store the timestamp
             sterilizationReachedTemperatureTimeStamp = getSecondCounterLegionella();

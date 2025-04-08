@@ -20,6 +20,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void );
 
 bool getHeatingElementBoolFromHotwaterHeatingMode();
 bool getHotwaterElementBoolFromHotwaterHeatingMode();
+const char * getHotwaterHeatingStateToString();
    
     
 #ifdef __cplusplus

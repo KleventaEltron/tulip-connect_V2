@@ -9,6 +9,7 @@
 
 #include "modbus/heatpump_parameters.h"
 #include "eeprom.h"
+#include "time_counters.h"
 
 APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
 APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
@@ -38,7 +39,29 @@ void resetActiveModeStates() {
     hot_water_cooling_mode_data.state = HOT_WATER_COOLING_INITIALIZE;
     hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HEATING;
     hot_water_floor_heating_mode_data.state = HOT_WATER_FLOOR_HEATING_INITIALIZE;
+    
+    // Reset Heating mode data
+    setSecondCounterHeatingTask(UINT32_MAX);
+    heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
+    heating_mode_data.HeatingElementOn = false;
+    
+    // Reset Hotwater and Heating mode data
+    setSecondCounterHeatingTask(UINT32_MAX);
+    setSecondCounterHotwaterTask(UINT32_MAX);
+    
+    hot_water_heating_mode_data.HeatingElementOn = false;
+    hot_water_heating_mode_data.HotwaterElementOn = false;
+    
+    hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
+    hot_water_heating_mode_data.hotwaterPassive = false;
+    hot_water_heating_mode_data.setpointHotWaterOffset = TEMPERATURE_ALARM_VALUE;
+            
+    
     return;
+}
+
+RUNNING_MODES getActiveStateValue() {
+    return app_active_mode_controllerData.currentRunningMode;
 }
 
 const char * getActiveModeToString(RUNNING_MODES state){

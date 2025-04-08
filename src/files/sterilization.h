@@ -15,6 +15,8 @@ void setSterilisationMode(STERILIZATION_MODE newMode);
 void checkNeedForSterilization();
 const char * getSterilizationState(STERILIZATION_MODE state);
 bool getSterilizationElementOnState();
+uint16_t getSterilizationTemperatureOffset();
+uint32_t getSterilizationReachedTemperatureTimeStamp();
     
 #ifdef __cplusplus
 }

@@ -18,6 +18,8 @@ extern "C" {
     
 bool getDefrostingElementOnState();
 void CheckDefrosting(HOT_WATER_HEATING_MODE_STATES currentHotWaterHeatingModeState, STERILIZATION_MODE currentSterilizationModeState);
+bool isDefrostingActive();
+int16_t getInitialDefrostingTemperature();
 
 #ifdef __cplusplus
 }

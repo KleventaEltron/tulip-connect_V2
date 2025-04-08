@@ -56,7 +56,21 @@ bool neededThreeWayValveState(RUNNING_MODES selectedRunningMode) {
         
         
         case HOT_WATER_HEATING:{
-            valvePositionForActiveState = VALVE_IS_ON_HOT_WATER_CIRCUIT;
+            if ((getHotWaterHeatingModeData().state == HOT_WATER_HEATING_INITIALIZE_HEATING) || 
+                    (getHotWaterHeatingModeData().state == HOT_WATER_HEATING_IDLE_HEATING) ||
+                    (getHotWaterHeatingModeData().state == HOT_WATER_HEATING_RUNNING_ON_HEATING) ||
+                    (getHotWaterHeatingModeData().state == HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON)) {
+                valvePositionForActiveState = VALVE_IS_ON_HEATING_CIRCUIT;
+                break;
+            }
+            
+            if ((getHotWaterHeatingModeData().state == HOT_WATER_HEATING_INITIALIZE_HOT_WATER) || 
+                    (getHotWaterHeatingModeData().state == HOT_WATER_HEATING_STATE_WAIT_FOR_MINIMAL_TIME_IN_HOT_WATER) ||
+                    (getHotWaterHeatingModeData().state == HOT_WATER_HEATING_STATE_RUNNING_IN_HOT_WATER) ||
+                    (getHotWaterHeatingModeData().state == HOT_WATER_HEATING_STATE_RUNNING_WITH_ELEMENT_ON_IN_HOT_WATER)) {
+                valvePositionForActiveState = VALVE_IS_ON_HOT_WATER_CIRCUIT;
+                break;
+            } 
             // TODO: LATER OP TERUG KOMEN
             break;
         }

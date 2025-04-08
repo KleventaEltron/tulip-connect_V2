@@ -50,7 +50,7 @@ typedef struct
 } APP_ACTIVE_MODE_CONTROLLER_DATA;    
     
 void setActiveModeControllerHeatpumpSetpoint(int16_t newSetpoint);
-
+RUNNING_MODES getActiveStateValue();
 /*********
 ,--.  ,--.,------.  ,---. ,--------.,--.,--.  ,--. ,----.       ,--.   ,--. ,-----. ,------.  ,------. 
 |  '--'  ||  .---' /  O  \'--.  .--'|  ||  ,'.|  |'  .-./       |   `.'   |'  .-.  '|  .-.  \ |  .---' 
@@ -178,7 +178,7 @@ typedef struct{
 
 typedef enum{
     // Heating modes:
-    HOT_WATER_HEATING_INITIALIZE_HEATING,
+    HOT_WATER_HEATING_INITIALIZE_HEATING=0,
     HOT_WATER_HEATING_IDLE_HEATING,
     HOT_WATER_HEATING_RUNNING_ON_HEATING,
     HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON,
@@ -198,7 +198,7 @@ typedef struct{
     int16_t initialHeatingBufferTemp;
     
     bool hotwaterPassive;
-    int16_t  setpointHotWaterOffset;
+    int16_t setpointHotWaterOffset;
     bool HeatingElementOn;
     bool HotwaterElementOn;
 } HOT_WATER_HEATING_MODE_DATA;

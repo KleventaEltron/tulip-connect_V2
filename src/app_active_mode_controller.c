@@ -68,37 +68,82 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
         SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
         SYS_CONSOLE_PRINT(" Heatpump ON:          %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
         SYS_CONSOLE_PRINT(" Display pump on:      %s\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Sys stuck protection: %i\n\n", getSystemStuckProtectionCounter());
+        SYS_CONSOLE_PRINT(" Sys stuck protection: %i\n", getSystemStuckProtectionCounter());
         
         SYS_CONSOLE_PRINT("\r\nHEATPUMP:\n");
         SYS_CONSOLE_PRINT(" Setpoint:             %i\n", getHeatpumpSetpoint());
         SYS_CONSOLE_PRINT(" Compressor:           %i\n", getHeatpumpCompressorFrequency());
-        SYS_CONSOLE_PRINT(" Waterflow:            %i\n", getHeatpumpWaterFlow());
+        //SYS_CONSOLE_PRINT(" Waterflow:            %i\n", getHeatpumpWaterFlow());
         SYS_CONSOLE_PRINT(" Retour temp.:         %i\n\n", getHeatpumpReturnWaterTemperature());
-        
-        SYS_CONSOLE_PRINT("\r\3-WAY VALVE:\n");
-        SYS_CONSOLE_PRINT(" 3-way valve mode:     %s\n", getThreeWayValveState(getStatus3WayValve()));
-        SYS_CONSOLE_PRINT(" 3-way needed state:   %s\n", getThreeWayValveState(getNeededValvePosition()));
-        SYS_CONSOLE_PRINT(" Time counter:         %i\n", getWaitingThreeWayValveSwitch());
-        
-        SYS_CONSOLE_PRINT("\r\nSTERILIZATION:\n");
-        SYS_CONSOLE_PRINT(" Sterilisation active: %s\n", getSterilizationState(getSterilisationMode()));
-        SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterLegionella());
-        SYS_CONSOLE_PRINT(" Day counter:          %i\n", ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION));
         
         SYS_CONSOLE_PRINT("\r\nCIRCULATION PUMP:\n");
         SYS_CONSOLE_PRINT(" State:                %s\n", getCirculationPumpStateToString());
         SYS_CONSOLE_PRINT(" Pump ON:              %s\n", getStatusCirculationPump() ? "True" : "False");
         SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterCirculationPumpTask());
-        SYS_CONSOLE_PRINT(" Temp. too low:        %s\n", getCirculationPumpData().temperatureTooLowForPumpToBeOn ? "True" : "False");
+        SYS_CONSOLE_PRINT(" Temp. too low:        %s\n\n", getCirculationPumpData().temperatureTooLowForPumpToBeOn ? "True" : "False");
         
-        SYS_CONSOLE_PRINT("\r\nHEATING MODE:\n");
-        SYS_CONSOLE_PRINT(" State:                %s\n", getHeatingStateToString());
-        SYS_CONSOLE_PRINT(" Element ON:           %s\n", getStatusHeatingElementHeatingBuffer() ? "True" : "False");
-        SYS_CONSOLE_PRINT(" Buffer:               %d\n", GetNtcTemperature(NTC_HEATING_BUFFER));
-        SYS_CONSOLE_PRINT(" Initial buffer temp.: %d\n", getHeatingModeData().initialBufferTemp);
-        SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterHeatingTask());
+        SYS_CONSOLE_PRINT("\r\nDefrosting:\n");
+        SYS_CONSOLE_PRINT(" Defrosting active:    %s\n", isDefrostingActive() ? "True" : "False");
+        SYS_CONSOLE_PRINT(" Hotwater buffer:      %i\n", GetNtcTemperature(NTC_HOT_WATER_BUFFER));
+        SYS_CONSOLE_PRINT(" Initial defrost temp :%i\n", getInitialDefrostingTemperature());
+        SYS_CONSOLE_PRINT(" Defrosting element:   %s\n\n", getDefrostingElementOnState() ? "True" : "False");
+        
+        SYS_CONSOLE_PRINT("\r\n3-WAY VALVE:\n");
+        SYS_CONSOLE_PRINT(" 3-way valve mode:     %s\n", getThreeWayValveState(getStatus3WayValve()));
+        SYS_CONSOLE_PRINT(" 3-way needed state:   %s\n", getThreeWayValveState(getNeededValvePosition()));
+        SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getWaitingThreeWayValveSwitch());
+        
+        if (getSterilisationMode() != OFF) {
+            SYS_CONSOLE_PRINT("\r\nSTERILIZATION:\n");
+            SYS_CONSOLE_PRINT(" Sterilisation active: %s\n", getSterilizationState(getSterilisationMode()));
+            SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterLegionella());
+            SYS_CONSOLE_PRINT(" Temp reached time:    %i\n", getSterilizationReachedTemperatureTimeStamp());
+            SYS_CONSOLE_PRINT(" Hotwater buffer:      %i\n", GetNtcTemperature(NTC_HOT_WATER_BUFFER));
+            SYS_CONSOLE_PRINT(" Ster. temp.:          %i\n", UnitSystemParameterL[ADDRESS_STERILIZATION_TEMPERATURE_SETTING - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
+            SYS_CONSOLE_PRINT(" Ster. offset:         %i\n", getSterilizationTemperatureOffset());
+            SYS_CONSOLE_PRINT(" Ster. element:        %s\n", getSterilizationElementOnState() ? "True" : "False");
+            SYS_CONSOLE_PRINT(" Day counter:          %i\n\n", ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION));
 
+            //SYS_CONSOLE_PRINT(" Day counter:          %i\n", ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION));
+            //SYS_CONSOLE_PRINT(" Ster. run time:       %i\n", UnitSystemParameterL[ADDRESS_STERILIZATION_RUN_TIME - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
+            //SYS_CONSOLE_PRINT(" Ster. function:       %i\n", UnitSystemParameterL[ADDRESS_HIGH_TEMPERATURE_STERILIZATION_FUNCTION - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
+            //SYS_CONSOLE_PRINT(" Ster. start time:     %i\n", UnitSystemParameterL[ADDRESS_STERILIZATION_START_TIME - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
+            //SYS_CONSOLE_PRINT(" Ster. interval days:  %i\n", UnitSystemParameterL[ADDRESS_STERILIZATION_INTERVAL_DAYS - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
+            //SYS_CONSOLE_PRINT(" Current hour:         %i\n", (uint8_t)(UserParameters[ADDRESS_DISPLAY_TIME - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] >> 8));
+            //SYS_CONSOLE_PRINT(" Current minute:       %i\n\n", (uint8_t)UserParameters[ADDRESS_DISPLAY_TIME - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
+        }
+        else {
+            int16_t heatpumpMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
+
+            if (heatpumpMode == HEATING) {
+
+                SYS_CONSOLE_PRINT("\r\nHEATING:\n");
+                SYS_CONSOLE_PRINT(" State:                %s\n", getHeatingStateToString());
+                SYS_CONSOLE_PRINT(" Element ON:           %s\n", getStatusHeatingElementHeatingBuffer() ? "True" : "False");
+                SYS_CONSOLE_PRINT(" Buffer:               %i\n", GetNtcTemperature(NTC_HEATING_BUFFER));
+                SYS_CONSOLE_PRINT(" Initial buffer temp.: %i\n", getHeatingModeData().initialBufferTemp);
+                SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getSecondCounterHeatingTask());
+            }
+
+            if (heatpumpMode == HOT_WATER_HEATING) {
+                SYS_CONSOLE_PRINT("\r\nHOTWATER AND HEATING:\n");
+                SYS_CONSOLE_PRINT(" State:                %s\n\n", getHotwaterHeatingStateToString());
+                /*
+                SYS_CONSOLE_PRINT(" Heating setpoint:     %i\n", getHeatingSetpoint());
+                SYS_CONSOLE_PRINT(" Heating buffer:       %i\n", GetNtcTemperature(NTC_HEATING_BUFFER));
+                SYS_CONSOLE_PRINT(" Initial buffer temp.: %i\n", getHotWaterHeatingModeData().initialHeatingBufferTemp);
+                SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterHeatingTask());
+                SYS_CONSOLE_PRINT(" Heating element:      %s\n\n", getStatusHeatingElementHeatingBuffer() ? "True" : "False");
+
+                SYS_CONSOLE_PRINT(" Hotwater setpoint:    %i\n", getHotwaterSetpoint());
+                SYS_CONSOLE_PRINT(" Hotwater buffer:      %i\n", GetNtcTemperature(NTC_HOT_WATER_BUFFER));
+                SYS_CONSOLE_PRINT(" Offset setpoint:      %i\n", getHotWaterHeatingModeData().setpointHotWaterOffset);
+                SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterHotwaterTask());
+                SYS_CONSOLE_PRINT(" Hotwater element:     %s\n", getStatusHeatingElementHotWaterBuffer() ? "True" : "False");
+                SYS_CONSOLE_PRINT(" Hot water passive:    %s\n\n", getHotWaterHeatingModeData().hotwaterPassive ? "True" : "False");
+                */
+            }
+        }
     }
     return;
  }
@@ -132,11 +177,11 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
         return;
     }
     
-    if (app_active_mode_controllerData.setPoint != (UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] * 10)) {   
+    if (app_active_mode_controllerData.setPoint != (getHeatpumpSetpoint() * 10)) {   
         // Setpoint in heatpump is not correct, send the correct one
         ChangeHeatpumpSetting(ADDRESS_HEATING_SET_TEMPERATURE, (app_active_mode_controllerData.setPoint / 10));
     }
-    getWriteNewSetPointHeatpumpCounter(0); 
+    setWriteNewSetPointHeatpumpCounter(0); 
  }
  
  
@@ -254,6 +299,9 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     // Reset the system stuck protection counter
     setSystemStuckProtectionCounter(0);
     
+    // Start the counter for checking and writing the correct setpoint
+    setWriteNewSetPointHeatpumpCounter(0); 
+    
     // Initialize every active mode
     HEATING_MODE_Initialize();
     HOT_WATER_MODE_Initialize();
@@ -345,7 +393,6 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
     if(!validateThreeWayValveStateOkay(app_active_mode_controllerData.currentRunningMode)) {
         return;
     }
-    
     
     /*
      * 
