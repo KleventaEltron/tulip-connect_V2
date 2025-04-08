@@ -128,7 +128,7 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
             if (heatpumpMode == HOT_WATER_HEATING) {
                 SYS_CONSOLE_PRINT("\r\nHOTWATER AND HEATING:\n");
                 SYS_CONSOLE_PRINT(" State:                %s\n\n", getHotwaterHeatingStateToString());
-                /*
+                
                 SYS_CONSOLE_PRINT(" Heating setpoint:     %i\n", getHeatingSetpoint());
                 SYS_CONSOLE_PRINT(" Heating buffer:       %i\n", GetNtcTemperature(NTC_HEATING_BUFFER));
                 SYS_CONSOLE_PRINT(" Initial buffer temp.: %i\n", getHotWaterHeatingModeData().initialHeatingBufferTemp);
@@ -141,7 +141,6 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
                 SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterHotwaterTask());
                 SYS_CONSOLE_PRINT(" Hotwater element:     %s\n", getStatusHeatingElementHotWaterBuffer() ? "True" : "False");
                 SYS_CONSOLE_PRINT(" Hot water passive:    %s\n\n", getHotWaterHeatingModeData().hotwaterPassive ? "True" : "False");
-                */
             }
         }
     }
