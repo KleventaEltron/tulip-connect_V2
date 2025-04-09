@@ -96,7 +96,6 @@
 #include "system/console/src/sys_console_uart_definitions.h"
 #include "app_heatpump_comm.h"
 #include "app_display_comm.h"
-#include "app_heating_and_hot_water.h"
 #include "app_in_outputs.h"
 #include "app_i2c_tasks.h"
 #include "app_logging_tasks.h"
