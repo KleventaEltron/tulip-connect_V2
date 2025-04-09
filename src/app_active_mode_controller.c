@@ -69,6 +69,7 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
         SYS_CONSOLE_PRINT(" Heatpump ON:          %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
         SYS_CONSOLE_PRINT(" Display pump on:      %s\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
         SYS_CONSOLE_PRINT(" Sys stuck protection: %i\n", getSystemStuckProtectionCounter());
+        SYS_CONSOLE_PRINT(" Sys on time:          %i\n", getsystemOnCounter());
         
         SYS_CONSOLE_PRINT("\r\nHEATPUMP:\n");
         SYS_CONSOLE_PRINT(" Setpoint:             %i\n", getHeatpumpSetpoint());
@@ -170,6 +171,8 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
      
     return;
  }
+ 
+ 
  
  void checkHeatpumpSetpoint() {
     if (getWriteNewSetPointHeatpumpCounter() < 10) {

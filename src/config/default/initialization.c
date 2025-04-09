@@ -776,7 +776,6 @@ void SYS_Initialize ( void* data )
     /* MISRAC 2012 deviation block end */
     APP_HEATPUMP_COMM_Initialize();
     APP_DISPLAY_COMM_Initialize();
-    APP_HEATING_AND_HOT_WATER_Initialize();
     APP_IN_OUTPUTS_Initialize();
     APP_I2C_TASKS_Initialize();
     APP_LOGGING_TASKS_Initialize();
