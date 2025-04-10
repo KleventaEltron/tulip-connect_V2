@@ -20,6 +20,7 @@ uint32_t secondCounterLegionella = UINT32_MAX;
 uint32_t waitingThreeWayValveSwitch = UINT32_MAX;
 uint32_t systemStuckProtectionCounter = UINT32_MAX;
 uint32_t writeNewSetPointHeatpumpCounter = UINT32_MAX;
+uint32_t waitForSettingEchoProtection = UINT32_MAX;
 
 //static uint32_t SecondCounterFtp = UINT32_MAX;
 //static uint32_t SecondCounterResetSoftware = UINT32_MAX;
@@ -81,6 +82,15 @@ void setSecondCounterCirculationPumpTask(uint32_t count)
     SecondCounterCirculationPumpTask = count;
 }
     
+uint32_t getWaitForSettingEchoProtection()
+{
+    return waitForSettingEchoProtection;
+}
+void setWaitForSettingEchoProtection(uint32_t count)
+{
+    waitForSettingEchoProtection = count;
+}
+    
 /******************************************************************************
   Function:
     void UpdateCounters ( void )
@@ -128,6 +138,10 @@ void UpdateCounters ( void )
             
             if (systemOnCounter >= 0 && systemOnCounter < UINT32_MAX) {
                 systemOnCounter++;
+            }
+            
+            if (waitForSettingEchoProtection >= 0 && waitForSettingEchoProtection < UINT32_MAX) {
+                waitForSettingEchoProtection++;
             }
         }   
 
