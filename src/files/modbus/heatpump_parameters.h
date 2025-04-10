@@ -520,7 +520,7 @@
 #define START_ADDRESS_UNKNOWN_PARAMTERS_9   0x0880
 
 
-#define MAX_SETTINGS 20
+#define MAX_SETTINGS 5
 
 
 extern uint16_t RealTimeDataStatussen  [REGISTERS_AMOUNT_REAL_TIME_DATA_STATUSSEN] [PARAMETERS_ARRAY_LENGTH]; 
@@ -578,5 +578,8 @@ void SetDataInDisplayArray(uint16_t address, uint16_t data);
 MANUAL_SETTING PopFirstSetting(void);
 void ChangeFirstSettingStatus(SETTING_SEND_STATUS newStatus);
 void SetDataInArraysAtStartup(void);
+void printHeadOfStringBuffer();
+bool compareEmptySetting(MANUAL_SETTING setting);
+uint8_t getSettingsQueuedAmount();
 
 #endif 

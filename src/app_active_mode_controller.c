@@ -71,6 +71,8 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
         SYS_CONSOLE_PRINT(" Sys stuck protection: %i\n", getSystemStuckProtectionCounter());
         SYS_CONSOLE_PRINT(" Sys on time:          %i\n", getsystemOnCounter());
         
+        printHeadOfStringBuffer();
+        
         SYS_CONSOLE_PRINT("\r\nHEATPUMP:\n");
         SYS_CONSOLE_PRINT(" Setpoint:             %i\n", getHeatpumpSetpoint());
         SYS_CONSOLE_PRINT(" Compressor:           %i\n", getHeatpumpCompressorFrequency());

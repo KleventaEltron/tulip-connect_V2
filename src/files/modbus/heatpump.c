@@ -8,6 +8,7 @@
 #include "modbus.h"
 #include "heatpump_parameters.h"
 #include "files\eeprom.h"
+#include "../time_counters.h"
 
 static uint8_t CommunicationArray[17][8] = 
 {
@@ -222,10 +223,10 @@ void FillTxBuffer(uint8_t * txBuffer)
 {
     static uint8_t i = 0;
     
-    MANUAL_SETTING setting = (MANUAL_SETTING)PopFirstSetting();
-    
-    if (setting.settingStatus == SETTING_SEND_STATUS_SETTING_FILLED)
+    //if (setting.settingStatus == SETTING_SEND_STATUS_SETTING_FILLED)
+    if(getSettingsQueuedAmount() > 0)
     {
+        MANUAL_SETTING setting = (MANUAL_SETTING)PopFirstSetting();
         txBuffer[MODBUS_ADDRESS_INDEX] =            setting.modbusDeviceAddress;
         txBuffer[MODBUS_COMMAND_INDEX] =            setting.modbusCommand;
         txBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] =    (uint8_t)(setting.modbusWriteRegister >> 8);
@@ -238,6 +239,7 @@ void FillTxBuffer(uint8_t * txBuffer)
         txBuffer[MODBUS_CHECKSUM_MSB_INDEX] = (uint8_t)(checksum >> 8);
         
         ChangeFirstSettingStatus(SETTING_SEND_STATUS_SETTING_IS_SENT);
+        setWaitForSettingEchoProtection(0);
     }
     else
     {
@@ -261,6 +263,7 @@ void FillTxBuffer(uint8_t * txBuffer)
 
 uint8_t FillBufferWithStartupSettings(bool doFirstTimeHeatpumpCommunicationSettings)
 {
+    //static uint8_t i = UINT8_MAX;
     static uint8_t i = 0;
     switch (i)
     {

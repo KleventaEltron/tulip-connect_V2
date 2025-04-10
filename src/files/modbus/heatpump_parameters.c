@@ -5,6 +5,7 @@
 #include "definitions.h"
 #include "heatpump_parameters.h"
 #include "modbus.h"
+#include "../time_counters.h"
 
 // Known parameters
 uint16_t RealTimeDataStatussen  [REGISTERS_AMOUNT_REAL_TIME_DATA_STATUSSEN] [PARAMETERS_ARRAY_LENGTH]; 
@@ -33,27 +34,46 @@ uint16_t UnknownParameters9     [REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_9] [PARAMETE
 MANUAL_SETTING settings[MAX_SETTINGS];
 uint8_t currentSizeSettingsArray = 0;
 
+
+
+void printHeadOfStringBuffer() {
+    SYS_CONSOLE_PRINT("\r\nSETTINGS:\n");             
+    SYS_CONSOLE_PRINT(" Settings in queue:          %i\n", currentSizeSettingsArray);
+    SYS_CONSOLE_PRINT(" 1st Setting status:         %i\n", settings[0].settingStatus);
+    SYS_CONSOLE_PRINT(" 1st modbus device addr:     %i\n", settings[0].modbusDeviceAddress);
+    SYS_CONSOLE_PRINT(" 1st modbus command:         %i\n", settings[0].modbusCommand);
+    SYS_CONSOLE_PRINT(" 1st write reg:              %i\n", settings[0].modbusWriteRegister);
+    SYS_CONSOLE_PRINT(" 1st modbus data:            %i\n", settings[0].modbusWriteData);  
+    SYS_CONSOLE_PRINT(" Wait for echo protection:   %i\n\n", getWaitForSettingEchoProtection());  
+}
+
+
 bool addSetting(MANUAL_SETTING newSetting) 
 {
     if (currentSizeSettingsArray < MAX_SETTINGS) 
     {
+        //SYS_CONSOLE_PRINT("\nAdd setting %i, %i, %i, %i, %i\n", newSetting.settingStatus, newSetting.modbusDeviceAddress, newSetting.modbusCommand, newSetting.modbusWriteRegister, newSetting.modbusWriteData);
         settings[currentSizeSettingsArray++] = newSetting;
         return true;
     } 
     else 
     {
+          
+        //SYS_CONSOLE_PRINT("\n!!!!! COULD NOT ADD SETTING %i, %i, %i, %i, %i !!!!!\n", newSetting.settingStatus, newSetting.modbusDeviceAddress, newSetting.modbusCommand, newSetting.modbusWriteRegister, newSetting.modbusWriteData);
         //printf("Error: The list is full.\n");
         return false;
     }
 }
 
 bool removeSetting(void) 
-{   
+{     
     if (currentSizeSettingsArray == 0) 
     {   // Is size is 0, cant remove anything
         //printf("Error: The list is empty.\n");
         return false;
     }
+    
+    //SYS_CONSOLE_PRINT("\nRemove setting: %i, %i, %i, %i, %i\n", settings[0].settingStatus, settings[0].modbusDeviceAddress, settings[0].modbusCommand, settings[0].modbusWriteRegister, settings[0].modbusWriteData);
 
     for (int i = 0; i < (currentSizeSettingsArray - 1); i++) 
     {   // Shift all elements one step forward
@@ -74,35 +94,59 @@ void ChangeFirstSettingStatus(SETTING_SEND_STATUS newStatus)
         return;
     }
 
+    //SYS_CONSOLE_PRINT("\nchange status: %i, %i\n", settings[0].settingStatus, newStatus);    
     settings[0].settingStatus = newStatus;
 }
 
-MANUAL_SETTING PopFirstSetting(void) 
-{   // Function to return the first setting without removing it
+
+bool compareEmptySetting(MANUAL_SETTING setting) {
+    if(setting.modbusCommand == 0 &&
+            setting.modbusDeviceAddress == 0 &&
+            setting.modbusWriteData == 0 &&
+            setting.modbusWriteRegister == 0 &&
+            setting.settingStatus == SETTING_SEND_STATUS_EMPTY) {
+        return true;
+    }
+    return false;
+}
+
+uint8_t getSettingsQueuedAmount() {
+    return currentSizeSettingsArray;
+}
+
+
+MANUAL_SETTING PopFirstSetting(void)  {
+    
+    if (getWaitForSettingEchoProtection() > 5 && getWaitForSettingEchoProtection() != UINT32_MAX) {
+        ChangeFirstSettingStatus(SETTING_SEND_STATUS_SETTING_FILLED);
+    }
+    
     if (currentSizeSettingsArray == 0) {
         //printf("Error: The list is empty. Returning a default setting.\n");
+        setWaitForSettingEchoProtection(UINT32_MAX);
         return (MANUAL_SETTING){SETTING_SEND_STATUS_EMPTY, 0, 0, 0, 0}; // Default empty setting
     }
 
+    
+    
+    //SYS_CONSOLE_PRINT("\nPop first setting: %i, %i, %i, %i, %i\n", settings[0].settingStatus, settings[0].modbusDeviceAddress, settings[0].modbusCommand, settings[0].modbusWriteRegister, settings[0].modbusWriteData);
     return settings[0]; // Return the first setting without removing it
 }
 
 void ConfirmSettingIsEchoed(uint16_t reg, uint16_t data)
 {
     MANUAL_SETTING setting = (MANUAL_SETTING)PopFirstSetting();
-    
-    if (setting.settingStatus == SETTING_SEND_STATUS_SETTING_IS_SENT)
-    {
+    //if (setting.settingStatus == SETTING_SEND_STATUS_SETTING_IS_SENT) {
         if (reg == setting.modbusWriteRegister && data == setting.modbusWriteData)
         {
             //setting.settingStatus = SETTING_SEND_STATUS_SETTING_IS_ECHOED;
             //setting.settingStatus = SETTING_SEND_STATUS_IDLE;
-            
+            setWaitForSettingEchoProtection(UINT32_MAX);
             removeSetting();
             
             //SetDataInArrays(reg, data);
-        }
-    }
+        } 
+    //}
 }
 
 /*
