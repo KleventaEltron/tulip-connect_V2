@@ -127,7 +127,7 @@ MANUAL_SETTING PopFirstSetting(void)  {
         return (MANUAL_SETTING){SETTING_SEND_STATUS_EMPTY, 0, 0, 0, 0}; // Default empty setting
     }
 
-    
+    SYS_CONSOLE_PRINT("Popping setting %i, %i\n", settings[0].modbusWriteRegister, settings[0].modbusWriteData); 
     
     //SYS_CONSOLE_PRINT("\nPop first setting: %i, %i, %i, %i, %i\n", settings[0].settingStatus, settings[0].modbusDeviceAddress, settings[0].modbusCommand, settings[0].modbusWriteRegister, settings[0].modbusWriteData);
     return settings[0]; // Return the first setting without removing it
@@ -135,17 +135,19 @@ MANUAL_SETTING PopFirstSetting(void)  {
 
 void ConfirmSettingIsEchoed(uint16_t reg, uint16_t data)
 {
+    SYS_CONSOLE_PRINT("Echo setting, %i, %i\n", reg, data); 
     MANUAL_SETTING setting = (MANUAL_SETTING)PopFirstSetting();
     //if (setting.settingStatus == SETTING_SEND_STATUS_SETTING_IS_SENT) {
-        if (reg == setting.modbusWriteRegister && data == setting.modbusWriteData)
-        {
-            //setting.settingStatus = SETTING_SEND_STATUS_SETTING_IS_ECHOED;
-            //setting.settingStatus = SETTING_SEND_STATUS_IDLE;
-            setWaitForSettingEchoProtection(UINT32_MAX);
-            removeSetting();
+    if (reg == setting.modbusWriteRegister && data == setting.modbusWriteData)
+    {
+        SYS_CONSOLE_PRINT("Settings match\n"); 
+        //setting.settingStatus = SETTING_SEND_STATUS_SETTING_IS_ECHOED;
+        //setting.settingStatus = SETTING_SEND_STATUS_IDLE;
+        setWaitForSettingEchoProtection(UINT32_MAX);
+        removeSetting();
             
             //SetDataInArrays(reg, data);
-        } 
+    } 
     //}
 }
 

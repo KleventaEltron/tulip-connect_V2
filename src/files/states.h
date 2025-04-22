@@ -246,6 +246,44 @@ typedef enum{
 } CIRCULATION_PUMP_STATES; 
 
 
+typedef enum
+{
+    HEATPUMP_COMM_STATUS_IDLE=0,
+    HEATPUMP_COMM_STATUS_SENDING_DATA_TO_HEATPUMP,         
+    HEATPUMP_COMM_STATUS_DATA_SENT_TO_HEATPUMP,          
+    HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP, 
+    HEATPUMP_COMM_STATUS_DEVICE_ADDRESS_RECEIVED,
+    HEATPUMP_COMM_STATUS_FIRST_8_BYTES_RECEIVED,        
+    HEATPUMP_COMM_STATUS_DATA_RECEIVED_FROM_HEATPUMP,
+            
+} HEATPUMP_COMMUNICATION_STATUS;
+    
+
+typedef enum
+{
+    APP_HEATPUMP_COMM_STATE_INIT=0,
+    APP_HEATPUMP_COMM_STATE_SEND_DATA,
+    APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_SENT,        
+    APP_HEATPUMP_COMM_STATE_RECEIVE_DATA,
+    APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_RECEIVED,      
+    APP_HEATPUMP_COMM_STATE_CHECKSUM_CHECK,         
+    APP_HEATPUMP_COMM_STATE_PARSE_DATA,        
+    APP_HEATPUMP_COMM_STATE_DELAY,             
+} APP_HEATPUMP_COMM_STATES;
+
+typedef struct
+{
+    /* The application's current state */
+    APP_HEATPUMP_COMM_STATES state;
+    HEATPUMP_COMMUNICATION_STATUS commStatus;
+
+    /* TODO: Define any additional data used by the application. */
+
+} APP_HEATPUMP_COMM_DATA;
+
+
+
+
 
 typedef struct{
     CIRCULATION_PUMP_STATES state;
@@ -260,6 +298,7 @@ int16_t getHeatpumpSetpoint();
 uint16_t getHeatpumpWaterFlow();
 int16_t getHeatpumpReturnWaterTemperature();
 const char * getThreeWayValveState(int state);
+char * getHeatpumpStateToString();
 
 CIRCULATION_PUMP_DATA getCircPumpData();
 HEATING_MODE_DATA getHeatingModeData();

@@ -42,6 +42,7 @@
 #include "files/logging.h"
 
 #include "files\eeprom.h"
+#include "files/states.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -51,7 +52,7 @@
 
 // *****************************************************************************
 
-APP_HEATPUMP_COMM_DATA app_heatpump_commData;
+extern APP_HEATPUMP_COMM_DATA app_heatpump_commData;
 
 static uint8_t TxBuffer[TX_BUFFER_DISPLAY_SIZE];
 static uint8_t RxBuffer[RX_BUFFER_DISPLAY_SIZE];
@@ -78,16 +79,20 @@ static void APP_WriteCallbackHeatpump(DMAC_TRANSFER_EVENT event, uintptr_t conte
 
 static void APP_ReadCallbackHeatpump(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
 {    
+    SYS_CONSOLE_PRINT("APP_ReadCallbackHeatpump %i\n", event); 
     if (event == DMAC_TRANSFER_EVENT_COMPLETE)
     {
+        SYS_CONSOLE_PRINT("APP READ CALLBACK\n"); 
         if(SERCOM7_USART_ErrorGet() == USART_ERROR_NONE)
         {   // ErrorGet clears errors, set error flag to notify console 
             switch (app_heatpump_commData.commStatus)
             {
                 case HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP:
                 {   // Eerste byte ontvangen, kijken wat dit is
+                    SYS_CONSOLE_PRINT("HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP\n"); 
                     if (RxBuffer[0] == THIS_DEVICE_ADDRESS)
                     {   // Als het het address is van de slave, vraag om de 7 andere bytes die hierna komen.
+                        SYS_CONSOLE_PRINT("addr received\n"); 
                         app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DEVICE_ADDRESS_RECEIVED;
                     
                         DMAC_ChannelTransfer(DMAC_CHANNEL_3, \
@@ -96,6 +101,7 @@ static void APP_ReadCallbackHeatpump(DMAC_TRANSFER_EVENT event, uintptr_t contex
                     }
                     else
                     {   // Wacht op volgende eerste byte
+                        SYS_CONSOLE_PRINT("Wacht op volgende 1e byte\n"); 
                         DMAC_ChannelTransfer(DMAC_CHANNEL_3, \
                             (const void *)&SERCOM7_REGS->USART_INT.SERCOM_DATA, \
                             &RxBuffer[0], 1);
@@ -104,12 +110,15 @@ static void APP_ReadCallbackHeatpump(DMAC_TRANSFER_EVENT event, uintptr_t contex
                 }
                 case HEATPUMP_COMM_STATUS_DEVICE_ADDRESS_RECEIVED:
                 {
+                    SYS_CONSOLE_PRINT("HEATPUMP_COMM_STATUS_DEVICE_ADDRESS_RECEIVED\n"); 
                     if (RxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_WRITE_REG)
                     {   // Alle data ontvangen
+                        SYS_CONSOLE_PRINT("Alle data ontvangen\n"); 
                         app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DATA_RECEIVED_FROM_HEATPUMP;
                     }
                     else if (RxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_READ_REGS)
                     {   // Vraag wat nog komt
+                        SYS_CONSOLE_PRINT("Vraag wat nog komt\n"); 
                         app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_FIRST_8_BYTES_RECEIVED;
                         DMAC_ChannelTransfer(DMAC_CHANNEL_3, \
                             (const void *)&SERCOM7_REGS->USART_INT.SERCOM_DATA, \
@@ -121,11 +130,13 @@ static void APP_ReadCallbackHeatpump(DMAC_TRANSFER_EVENT event, uintptr_t contex
                 }
                 case HEATPUMP_COMM_STATUS_FIRST_8_BYTES_RECEIVED:
                 {
+                    SYS_CONSOLE_PRINT("HEATPUMP_COMM_STATUS_FIRST_8_BYTES_RECEIVED\n"); 
                     app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DATA_RECEIVED_FROM_HEATPUMP;
                     break;
                 }
                 default:
                 {
+                    SYS_CONSOLE_PRINT("default\n"); 
                     break;
                 }   
             }      
@@ -304,10 +315,10 @@ void APP_HEATPUMP_COMM_Tasks ( void )
             
             //if(setLoggingLock()){
             // Fill buffer with setting to send or with reading data request
-                FillTxBuffer(&TxBuffer[0]);
-                StartTransmittingDataToHeatpump(&TxBuffer[0]);
-                //while(!releaseLoggingLock());
-                app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_SENT;
+            FillTxBuffer(&TxBuffer[0]);
+            StartTransmittingDataToHeatpump(&TxBuffer[0]);
+            //while(!releaseLoggingLock());
+            app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_SENT;
             //}
             
             break;
@@ -317,6 +328,7 @@ void APP_HEATPUMP_COMM_Tasks ( void )
         {          
             if (app_heatpump_commData.commStatus == HEATPUMP_COMM_STATUS_DATA_SENT_TO_HEATPUMP)
             {
+                SYS_CONSOLE_PRINT("APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_SENT\n"); 
                 SetOutput(LED_TX_HEATPUMP, false);
                 app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_RECEIVE_DATA;
             }
@@ -328,6 +340,7 @@ void APP_HEATPUMP_COMM_Tasks ( void )
         {            
             StartReceivingDataFromHeatpump();
             app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_RECEIVED;
+            SYS_CONSOLE_PRINT("APP_HEATPUMP_COMM_STATE_RECEIVE_DATA\n"); 
             break;
         }
         // 5: Wachten tot data ontvangen is
@@ -336,7 +349,7 @@ void APP_HEATPUMP_COMM_Tasks ( void )
             if (app_heatpump_commData.commStatus == HEATPUMP_COMM_STATUS_DATA_RECEIVED_FROM_HEATPUMP)
             {
                 SetOutput(LED_RX_HEATPUMP, false);
-                
+                SYS_CONSOLE_PRINT("APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_RECEIVED\n"); 
                 app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_CHECKSUM_CHECK;
             }
             else{}
@@ -347,6 +360,7 @@ void APP_HEATPUMP_COMM_Tasks ( void )
         {            
             if (ChecksumCheck(&RxBuffer[0], CalculateModbusBufferSize(&RxBuffer[0])) == true)
             {
+                SYS_CONSOLE_PRINT("APP_HEATPUMP_COMM_STATE_CHECKSUM_CHECK\n");
                 app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_PARSE_DATA;
             }
             else
@@ -360,7 +374,7 @@ void APP_HEATPUMP_COMM_Tasks ( void )
         {            
             //if(setLoggingLock()){
                 ParseHeatpumpData(&TxBuffer[0], &RxBuffer[0]);
-                
+                SYS_CONSOLE_PRINT("APP_HEATPUMP_COMM_STATE_PARSE_DATA\n");
                 ResponseDelay = 0;
                 CommunicationWindowSecondCounter = 0;
                 CommunicationTimeOutCounter = 0;

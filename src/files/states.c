@@ -24,6 +24,7 @@ HOT_WATER_HEATING_MODE_DATA hot_water_heating_mode_data;
 HOT_WATER_FLOOR_HEATING_MODE_DATA hot_water_floor_heating_mode_data;
 
 CIRCULATION_PUMP_DATA circulation_pump_data;
+APP_HEATPUMP_COMM_DATA app_heatpump_commData;
 
 
 void setActiveModeControllerHeatpumpSetpoint(int16_t newSetpoint) {
@@ -138,6 +139,23 @@ const char * getThreeWayValveState(int state) {
 
     return "-1, Unkown";
 }
+
+
+
+char * getHeatpumpStateToString() {
+    switch(app_heatpump_commData.state){
+        case(APP_HEATPUMP_COMM_STATE_INIT): return "0, Init"; break;        
+        case(APP_HEATPUMP_COMM_STATE_SEND_DATA): return "1, Send Data"; break;   
+        case(APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_SENT): return "2, Wait Send"; break;    
+        case(APP_HEATPUMP_COMM_STATE_RECEIVE_DATA): return "3, Receive Data"; break;    
+        case(APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_RECEIVED): return "4, Wait Receive"; break;    
+        case(APP_HEATPUMP_COMM_STATE_CHECKSUM_CHECK): return "5, Checksum"; break;      
+        case(APP_HEATPUMP_COMM_STATE_PARSE_DATA):  return "6, Parse Data"; break;    
+        case(APP_HEATPUMP_COMM_STATE_DELAY): return "7, Delay"; break;              
+        default: return "8, Unkown"; break;
+    }
+}
+
 
 uint16_t getHeatpumpCompressorFrequency()
 {

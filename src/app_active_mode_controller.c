@@ -77,7 +77,8 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
         SYS_CONSOLE_PRINT(" Setpoint:             %i\n", getHeatpumpSetpoint());
         SYS_CONSOLE_PRINT(" Compressor:           %i\n", getHeatpumpCompressorFrequency());
         //SYS_CONSOLE_PRINT(" Waterflow:            %i\n", getHeatpumpWaterFlow());
-        SYS_CONSOLE_PRINT(" Retour temp.:         %i\n\n", getHeatpumpReturnWaterTemperature());
+        SYS_CONSOLE_PRINT(" Retour temp.:         %i\n", getHeatpumpReturnWaterTemperature());
+        SYS_CONSOLE_PRINT(" Heatpump comm state:  %s\n\n", getHeatpumpStateToString());
         
         SYS_CONSOLE_PRINT("\r\nCIRCULATION PUMP:\n");
         SYS_CONSOLE_PRINT(" State:                %s\n", getCirculationPumpStateToString());
