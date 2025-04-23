@@ -4558,7 +4558,7 @@
     &lt;ComponentGraph dnOrder=&quot;2&quot; id=&quot;BASIC CONFIGURATION&quot;&gt;
       &lt;ElementPositions dnOrder=&quot;0&quot;&gt;
         &lt;ElementPosition dnOrder=&quot;0&quot; id=&quot;tcpipCmd&quot; x=&quot;200&quot; y=&quot;22&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;1&quot; id=&quot;tcpipStack&quot; x=&quot;27&quot; y=&quot;20&quot;/&gt;
+        &lt;ElementPosition dnOrder=&quot;1&quot; id=&quot;tcpipStack&quot; x=&quot;27&quot; y=&quot;18&quot;/&gt;
       &lt;/ElementPositions&gt;
     &lt;/ComponentGraph&gt;
     &lt;ComponentGraph dnOrder=&quot;3&quot; id=&quot;DATA LINK LAYER&quot;&gt;
@@ -4599,7 +4599,7 @@
     &lt;ComponentGraph dnOrder=&quot;9&quot; id=&quot;NETWORK LAYER&quot;&gt;
       &lt;ElementPositions dnOrder=&quot;0&quot;&gt;
         &lt;ElementPosition dnOrder=&quot;0&quot; id=&quot;tcpipArp&quot; x=&quot;19&quot; y=&quot;19&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;1&quot; id=&quot;tcpipIPv4&quot; x=&quot;160&quot; y=&quot;20&quot;/&gt;
+        &lt;ElementPosition dnOrder=&quot;1&quot; id=&quot;tcpipIPv4&quot; x=&quot;160&quot; y=&quot;21&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;2&quot; id=&quot;tcpipIcmp&quot; x=&quot;300&quot; y=&quot;20&quot;/&gt;
       &lt;/ElementPositions&gt;
     &lt;/ComponentGraph&gt;
@@ -35622,7 +35622,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;tcpipStack&gt;
   &lt;tcpipStack dnOrder=&quot;0&quot; id=&quot;TCPIP_STACK_HEAP_SIZE_RECOMMEND&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;tcpipStack&quot; value=&quot;82&quot;/&gt;
+      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;tcpipStack&quot; value=&quot;87&quot;/&gt;
     &lt;/Values&gt;
   &lt;/tcpipStack&gt;
 &lt;/tcpipStack&gt;
@@ -36218,7 +36218,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;tcpipTcp&gt;
   &lt;tcpipTcp dnOrder=&quot;0&quot; id=&quot;TCPIP_TCP_HEAP_SIZE&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;tcpipTcp&quot; value=&quot;47400&quot;/&gt;
+      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;tcpipTcp&quot; value=&quot;52520&quot;/&gt;
     &lt;/Values&gt;
   &lt;/tcpipTcp&gt;
 &lt;/tcpipTcp&gt;
@@ -36300,7 +36300,9 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="tcpipTcp" name="TCPIP_TCP_SOCKET_DEFAULT_RX_SIZE"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;tcpipTcp&gt;
   &lt;tcpipTcp dnOrder=&quot;0&quot; id=&quot;TCPIP_TCP_SOCKET_DEFAULT_RX_SIZE&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;/&gt;
+    &lt;Values dnOrder=&quot;0&quot;&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;1024&quot;/&gt;
+    &lt;/Values&gt;
   &lt;/tcpipTcp&gt;
 &lt;/tcpipTcp&gt;
 </value>
@@ -36550,7 +36552,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\configuration.h</file>
-         <hash>c5d646386f48b74fcc55559449178bd7f3fb5b192a11c793e8e79fe85b72e7d1</hash>
+         <hash>5f5195ec627b317e635bc052e3e4200edaba447eac208b28681666728c8bd3b5</hash>
       </entry>
       <entry>
          <file>..\src\config\default\crypto\crypto.h</file>
@@ -36562,7 +36564,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\definitions.h</file>
-         <hash>8f89b816449d94ecec2acd357ace341929cf7a5709ef2bffb10a2055783b5bea</hash>
+         <hash>c669e8ef63f722b4299cc0d7f85dfdc5d94ba1c766737ca8c47763b3f76e91da</hash>
       </entry>
       <entry>
          <file>..\src\config\default\device.h</file>

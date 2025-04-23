@@ -20,6 +20,7 @@
 #include "tcpip/tcpip.h"
 #include "credentials.h"
 #include "states.h"
+#include "cJSON.h"
 //#include "delay.h"
 
 /* Used in sending and receiving data to and from the server */
@@ -29,6 +30,9 @@
 #define UNDEFINED_INT16_T 32767 
 #define UNDEFINED_STRING "UNDEFINED"
 #define UNDEFINED_CHAR "U"
+#define RX_SOCKET_READ_SIZE 1024
+
+#define HTTP_RESPONSE_OK  200
 
 //extern const TCPIP_NETWORK_CONFIG __attribute__((unused))  TCPIP_HOSTS_CONFIGURATION[];
 extern const TCPIP_STACK_MODULE_CONFIG TCPIP_STACK_MODULE_CONFIG_TBL [];
@@ -600,7 +604,8 @@ bool TULIP_REQUEST_TESTER ( char request[], char path[]) {
                     "Accept: application/json\r\n"
                     "Content-Type: application/json\r\n"
                     "Authorization: Bearer %s\r\n"
-                    "Connection: close\r\n"
+                    "Connection: keep-alive\r\n"
+                    //"Connection: close\r\n"
                     "Content-Length: %i\r\n\r\n"
                     "%s\r\n",
                     request, path, HOST, TOKEN, strlen(requestBody), requestBody);     
@@ -615,6 +620,7 @@ bool TULIP_REQUEST_TESTER ( char request[], char path[]) {
         //SYS_CONSOLE_PRINT("%s", networkBuffer);
         SYS_CONSOLE_PRINT("*** REQUEST SEND WITH FOLLOWING SETTINGS: %s, %s, %s\r\n", request, path, NTP_TIME_BUFFER);
     }
+    
     DEVICE_TYPE_REQUESTED = -1;  
     return true;
 }     
@@ -635,23 +641,268 @@ bool loggingRequestBuilder ( REQUEST_TYPE rqt ) {
 
 
 
+//void loggingRequestBuilder ( REQUEST_TYPE rqt, DEVICE_TYPE dvt) {
+bool getNewSettingsFromServer () {   
+    char path[50];  
+    char networkBuffer[4096];    
+    char hardwareId[50];
+    char device[20];
+    
+    parsePath(path, GET);
+    /* LOG TULIP PRINT DATA */
+    parseDeviceType(HEATPUMP, device);  
+    
+    /* SET THE HARDWARE ID IN THE HTTP HEADER */
+    setHardwareId( device, hardwareId, 1 );
+    sprintf(parameter, "\"hardware_id\": \"%s\",", hardwareId);    
+    
+    sprintf(networkBuffer, "GET %s%s HTTP/1.1\r\n"//"GET /api/v1/heatpump/settings?hardware_id=FC:C2:3D:00:00:34:07:6A-W-1 HTTP/1.1\r\n" //"%s /%s%s HTTP/1.1\r\n"
+            "Accept: application/json\r\n"
+            "Host: %s\r\n"
+            "Authorization: Bearer %s\r\n"
+            "Cache-Control: no-cache\r\n"
+            "Content-Type: application/json\r\n"
+            "Accept-Encoding: identity\r\n"
+            "Connection: close\r\n"
+            "Content-Length: 2\r\n\r\n"
+            "{}\r\n", path, hardwareId, HOST, TOKEN);
+
+    
+    uint16_t bytesSend = NET_PRES_SocketWrite(socket, (uint8_t*) networkBuffer, strlen(networkBuffer));
+    //SYS_CONSOLE_PRINT("BYTES SEND >> %i\n", bytesSend);
+    
+    if (bytesSend <= 0) {
+        SYS_CONSOLE_PRINT("***** COULD NOT COMPLETE REQUEST, CHECK IF NETWORK TX BUFFER SIZE IS BIG ENOUGH TO SEND THE REQUEST! SIZE NOW >> %d *****\r\n", strlen(networkBuffer));  
+        return false;
+    } else {
+        //SYS_CONSOLE_PRINT("%s", networkBuffer);
+        SYS_CONSOLE_PRINT("*** REQUEST SEND WITH FOLLOWING SETTINGS: %s, %s, %s\r\n", "GET", path, NTP_TIME_BUFFER);
+    }
+    
+    DEVICE_TYPE_REQUESTED = -1;  
+    
+    return true;    
+}
+
+
+
 /*
  * Read out the server response from the network buffer.
  */
-void readNetworkBufferSslResponse ( void ) {
-    char networkBuffer[2048];
-    uint16_t res = NET_PRES_SocketRead(socket, (uint8_t*) networkBuffer, sizeof (networkBuffer));
-            
-    SYS_CONSOLE_PRINT("Received %d bytes from the server\r\n", res);
+bool readNetworkBufferSslResponse ( void ) {
+    char response[RX_SOCKET_READ_SIZE];
+    int totalRead = 0;
+    SYS_CONSOLE_PRINT("Response received!\r\n");
     
-    //UNCOMMENT VOOR HELE RESPONSE
-    for(int i = 0; i < res; i++) {
-        SYS_CONSOLE_PRINT("%c", networkBuffer[i]);
+    //while (NET_PRES_SocketIsConnected(socket)) {
+    int bytes = NET_PRES_SocketRead(socket, (uint8_t*)&response[totalRead], RX_SOCKET_READ_SIZE - totalRead - 1);
+        
+    if (bytes <= 0) {
+        memset(response, 0, sizeof response);       
+        return false;
+    }    
+    SYS_CONSOLE_PRINT("Bytes received >> %i\r\n", bytes);
+                         
+    totalRead += bytes;
+    response[totalRead] = '\0';
+            
+    // Parse the status code
+    int statusCode = 0;
+    sscanf(response, "HTTP/%*d.%*d %d", &statusCode);
+    SYS_CONSOLE_PRINT("*** Status Code: %d ***\n", statusCode);
+            
+    // Check if there is a JSON body in the HTTP response
+    char *headerEnd = strstr(response, "{");
+    if (headerEnd == NULL) {
+        memset(response, 0, sizeof response);       
+        return false;
+    }
+            
+    // Check if there are items for cJSON to parse
+    cJSON *root = cJSON_Parse(headerEnd);
+    if (root == NULL) {
+        cJSON_Delete(root);
+        memset(response, 0, sizeof response);   
+        return false;
     }
     
-    return;
+    cJSON *message = cJSON_GetObjectItemCaseSensitive(root, "message");
+    if (cJSON_IsString(message) && message->valuestring != NULL) {
+        SYS_CONSOLE_PRINT("*** message: %s ***\n", message->valuestring);
+    }
+    
+    // If the response is not 200 OK return
+    if(statusCode != HTTP_RESPONSE_OK) {
+        cJSON_Delete(root);
+        memset(response, 0, sizeof response);    
+        return false;
+    }    
+    
+    cJSON *updateSettings = cJSON_GetObjectItemCaseSensitive(root, "update_settings");
+    if (cJSON_IsBool(updateSettings)) {
+        SYS_CONSOLE_PRINT("*** updateSettings: %s ***\n",(cJSON_IsTrue(updateSettings) ? "true" : "false"));
+        return cJSON_IsTrue(updateSettings);
+    }    
+    
+    return false;
 }
 
+
+
+
+void addSettingFromServerToSettingQueue(int keyIndex, cJSON *value) {
+    switch(keyIndex) {
+        case 1:{
+            break;
+        }
+        case 2:{
+            break;
+        }
+        case 3:{
+            break;
+        }
+        case 4:{
+            ChangeHeatpumpSetting(ADDRESS_HEATING_CURVE_SETTING, (uint16_t)value->valueint);
+            break;
+        }    
+        case 5:{
+            ChangeHeatpumpSetting(ADDRESS_HEATING_SET_TEMPERATURE, (uint16_t)value->valueint);
+            break;
+        }
+        case 6:{
+            // Geen idee of dit klopt
+            //ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_RETURN_DIFFERENCE, (uint16_t)value->valueint); 
+            break;
+        }
+        case 7:{
+            break;
+        }
+        case 8:{
+            break;
+        }       
+        case 9:{
+            ChangeHeatpumpSetting(ADDRESS_HOT_WATER_SET_TEMPERATURE, (uint16_t)value->valueint);
+            break;
+        }
+        case 10:{
+            ChangeHeatpumpSetting(ADDRESS_HOT_WATER_RETURN_DIFFERENCE, (uint16_t)value->valueint);
+            break;
+        }
+        case 11:{
+            break;
+        }
+        case 12:{
+            break;
+        }    
+        case 13:{
+            ChangeHeatpumpSetting(ADDRESS_STERILIZATION_INTERVAL_DAYS, (uint16_t)value->valueint);
+            break;
+        }
+        case 14:{
+            ChangeHeatpumpSetting(ADDRESS_STERILIZATION_START_TIME, (uint16_t)value->valueint);
+            break;
+        }
+        case 15:{
+            ChangeHeatpumpSetting(ADDRESS_STERILIZATION_RUN_TIME, (uint16_t)value->valueint);
+            break;
+        }
+        case 16:{
+            ChangeHeatpumpSetting(ADDRESS_STERILIZATION_TEMPERATURE_SETTING, (uint16_t)value->valueint);
+            break;
+        }    
+        case 17:{
+            break;
+        }       
+        default:{
+            break;
+        }
+    }
+    return;   
+}
+
+
+
+
+
+
+/*
+ * Read out the server response from the network buffer.
+ */
+bool readNetworkBufferSslResponseNewSettings( void ) {
+    char response[RX_SOCKET_READ_SIZE];
+    int totalRead = 0;
+    SYS_CONSOLE_PRINT("Response received!\r\n");
+    
+    //while (NET_PRES_SocketIsConnected(socket)) {
+    int bytes = NET_PRES_SocketRead(socket, (uint8_t*)&response[totalRead], RX_SOCKET_READ_SIZE - totalRead - 1);
+        
+    if (bytes <= 0) {
+        memset(response, 0, sizeof response);       
+        return false;
+    }    
+    SYS_CONSOLE_PRINT("Bytes received >> %i\r\n", bytes);
+                         
+    totalRead += bytes;
+    response[totalRead] = '\0';
+            
+    // Parse the status code
+    int statusCode = 0;
+    sscanf(response, "HTTP/%*d.%*d %d", &statusCode);
+    SYS_CONSOLE_PRINT("*** Status Code: %d ***\n", statusCode);
+            
+    // Check if there is a JSON body in the HTTP response
+    char *headerEnd = strstr(response, "{");
+    if (headerEnd == NULL) {
+        memset(response, 0, sizeof response);       
+        return false;
+    }
+            
+    // Check if there are items for cJSON to parse
+    cJSON *root = cJSON_Parse(headerEnd);
+    if (root == NULL) {
+        cJSON_Delete(root);
+        memset(response, 0, sizeof response);   
+        return false;
+    }
+    
+    cJSON *message = cJSON_GetObjectItemCaseSensitive(root, "message");
+    if (cJSON_IsString(message) && message->valuestring != NULL) {
+        SYS_CONSOLE_PRINT("*** message: %s ***\n", message->valuestring);
+    }
+    
+    // If the response is not 200 OK return
+    if(statusCode != HTTP_RESPONSE_OK) {
+        cJSON_Delete(root);
+        memset(response, 0, sizeof response);    
+        return false;
+    }    
+    
+    // settings (array)
+    cJSON *settings = cJSON_GetObjectItemCaseSensitive(root, "settings");
+    if (cJSON_IsArray(settings)) {
+        cJSON *settingObject = cJSON_GetArrayItem(settings, 0); // Only one object in array
+        if (cJSON_IsObject(settingObject)) {
+            // Iterate through CP1 - CP17
+            for (int i = 1; i <= 17; i++) {
+                char key[6];
+                sprintf(key, "CP%d", i);
+                cJSON *value = cJSON_GetObjectItemCaseSensitive(settingObject, key);
+                
+                if (cJSON_IsString(value)) {
+                    SYS_CONSOLE_PRINT("%s: %s\r\n", key, value->valuestring);
+                } else if (cJSON_IsNumber(value)) {
+                    SYS_CONSOLE_PRINT("%s: %d\r\n", key, value->valueint);
+                }
+                
+                addSettingFromServerToSettingQueue(i, value);
+            }
+        }
+    }
+            
+    cJSON_Delete(root);
+    memset(response, 0, sizeof response);    
+    return true;
+}
 
 
 /*

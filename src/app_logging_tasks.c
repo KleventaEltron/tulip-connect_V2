@@ -251,8 +251,9 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         
         case APP_LOGGING_TASKS_SEND_REQUEST_SSL:
-        {
+        { 
             if(!loggingRequestBuilder(POST)){
+            //if(!getNewSettingsFromServer()) {
                 app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
                 break;
             }
@@ -265,6 +266,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         case APP_LOGGING_TASKS_WAIT_FOR_RESPONSE_SSL:
         {
+            //SYS_CONSOLE_PRINT("***** WAIT FOR SSL RESPONSE ***** \r\n");
             SSL_SOCKET_STATES sslState = socketReady();
             if (sslState == SSL_SOCKET_NOT_READY) { break; } 
             if (sslState == SSL_SOCKET_WAS_DISCONNECTED) {
@@ -272,12 +274,45 @@ void APP_LOGGING_TASKS_Tasks ( void )
                 break;
             } 
             
-            readNetworkBufferSslResponse();
+            if(readNetworkBufferSslResponse()){
+                app_logging_tasksData.state = APP_LOGGING_TASKS_SEND_REQUEST_SSL_NEW_SETTINGS;
+            } else {
+                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+            }
+            //readNetworkBufferSslResponseNewSettings();
             
-            app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
             break;
         }
         
+
+        case APP_LOGGING_TASKS_SEND_REQUEST_SSL_NEW_SETTINGS:
+        { 
+            if(!getNewSettingsFromServer()) {
+                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+                break;
+            }
+            
+            app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_RESPONSE_SSL_NEW_SETTINGS;
+            break;
+        }
+        
+        
+        
+        case APP_LOGGING_TASKS_WAIT_FOR_RESPONSE_SSL_NEW_SETTINGS:
+        {
+            SSL_SOCKET_STATES sslState = socketReady();
+            if (sslState == SSL_SOCKET_NOT_READY) { break; } 
+            if (sslState == SSL_SOCKET_WAS_DISCONNECTED) {
+                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+                break;
+            } 
+            
+            
+            readNetworkBufferSslResponseNewSettings();
+            app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+            
+            break;
+        }
         
         
         case APP_LOGGING_TASKS_CLOSE_CONNECTION:
