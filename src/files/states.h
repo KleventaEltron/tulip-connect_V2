@@ -110,7 +110,7 @@ typedef struct{
 typedef enum{
     COOLING_INITIALIZE,
     COOLING_IDLE,
-    COOLING_MODE
+    COOLING_RUNNING
 } COOLING_MODE_STATES;
 
 

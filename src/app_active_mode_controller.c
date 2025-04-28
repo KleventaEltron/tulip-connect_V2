@@ -127,6 +127,12 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
                 SYS_CONSOLE_PRINT(" Initial buffer temp.: %i\n", getHeatingModeData().initialBufferTemp);
                 SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getSecondCounterHeatingTask());
             }
+            
+            if (heatpumpMode == COOLING) {
+
+                SYS_CONSOLE_PRINT("\r\nCooling:\n");
+                SYS_CONSOLE_PRINT(" State:                %s\n", getCoolingStateToString());
+            }
 
             if (heatpumpMode == HOT_WATER_HEATING) {
                 SYS_CONSOLE_PRINT("\r\nHOTWATER AND HEATING:\n");
@@ -192,7 +198,7 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
  
  
  
- 
+
  void checkIfSoftwareResetNeeded() {
      if (!getPowerFailStatus()){
          WriteSmartEeprom32(SEEP_ADDR_SECONDS_COUNTER_DAYS, getsystemOnCounter());
