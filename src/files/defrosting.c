@@ -40,17 +40,35 @@ void CheckDefrosting(HOT_WATER_HEATING_MODE_STATES currentHotWaterHeatingModeSta
 {    
     int16_t hotwaterBufferTemperature = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
     
-    if (((currentSterilizationModeState == OFF) || 
-        (currentSterilizationModeState == PASSIVE))
-         &&
-        ((currentHotWaterHeatingModeState == HOT_WATER_HEATING_INITIALIZE_HEATING) || 
-        (currentHotWaterHeatingModeState == HOT_WATER_HEATING_IDLE_HEATING) ||
-        (currentHotWaterHeatingModeState == HOT_WATER_HEATING_RUNNING_ON_HEATING) || 
-        (currentHotWaterHeatingModeState == HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON))  ){
-        // No defrosting needed
-        defrostingHotwaterElementOn = false;
-        initialDefrostingTemperature = TEMPERATURE_ALARM_VALUE;
-        return;
+    if ((currentSterilizationModeState == OFF) || 
+        (currentSterilizationModeState == PASSIVE)){
+        // There is no active sterilization 
+        
+        if ((getActiveStateValue() == COOLING) ||
+            (getActiveStateValue() == HEATING) ||
+            (getActiveStateValue() == FLOOR_HEATING)) {
+            // No need for defrosting mode in these modes
+            defrostingHotwaterElementOn = false;
+            initialDefrostingTemperature = TEMPERATURE_ALARM_VALUE;
+            return;
+        }
+        
+        if ((getHotWaterHeatingModeData().state == HOT_WATER_HEATING_IDLE_HEATING) || 
+            (getHotWaterHeatingModeData().state == HOT_WATER_HEATING_RUNNING_ON_HEATING) ||
+            (getHotWaterHeatingModeData().state == HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON)) {
+            // No need for defrosting in these hotwater/heating modes (only heating modes)
+            defrostingHotwaterElementOn = false;
+            initialDefrostingTemperature = TEMPERATURE_ALARM_VALUE;
+            return;
+        }
+
+        if ((getHotWaterCoolingModeData().state == HOT_WATER_COOLING_IDLE_COOLING) || 
+                (getHotWaterCoolingModeData().state == HOT_WATER_COOLING_MODE_RUNNING_ON_COOLING)) {
+            // No need for defrosting in these hotwater/cooling modes (only cooling modes)
+            defrostingHotwaterElementOn = false;
+            initialDefrostingTemperature = TEMPERATURE_ALARM_VALUE;
+            return;
+        }
     }
     
     bool defrostingActiveInHeatpump = isDefrostingActive();
