@@ -10,6 +10,7 @@
 #include "modbus/heatpump_parameters.h"
 #include "eeprom.h"
 #include "time_counters.h"
+#include "ntc.h"
 
 APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
 APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
@@ -31,12 +32,18 @@ void setActiveModeControllerHeatpumpSetpoint(int16_t newSetpoint) {
 }
 
 
+void setActiveModeControllerHeatpumpRunningMode(uint16_t mode) {
+    app_active_mode_controllerData.heatpumpRunningMode = mode;
+}
+
+
+
 void resetActiveModeStates() {
     heating_mode_data.state = HEATING_INITIALIZE;
     hot_water_mode_data.state = HOT_WATER_INITIALIZE;
     cooling_mode_data.state = COOLING_INITIALIZE;
     floor_heating_mode_data.state = FLOOR_HEATING_INITIALIZE;
-    hot_water_cooling_mode_data.state = HOT_WATER_COOLING_INITIALIZE;
+    hot_water_cooling_mode_data.state = HOT_WATER_COOLING_INITIALIZE_COOLING;
     hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HEATING;
     hot_water_floor_heating_mode_data.state = HOT_WATER_FLOOR_HEATING_INITIALIZE;
     
@@ -144,13 +151,18 @@ uint16_t getHeatpumpCompressorFrequency()
     return RealTimeData[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
 }
 
-int16_t getHeatpumpSetpoint()
+int16_t getHeatpumpHeatingSetpoint()
 {
     return UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
 }
 uint16_t getHeatpumpWaterFlow()
 {
     return RealTimeData[ADDRESS_WATER_FLOW - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+}
+
+int16_t getHeatpumpRunningMode()
+{
+    return UserParameters[ADDRESS_SET_MODE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
 }
 
 
@@ -174,8 +186,16 @@ HEATING_MODE_DATA getHeatingModeData(){
     return heating_mode_data;
 }
 
+COOLING_MODE_DATA getCoolingModeData(){
+    return cooling_mode_data;
+}
+
 HOT_WATER_HEATING_MODE_DATA getHotWaterHeatingModeData(){
     return hot_water_heating_mode_data;
+}
+
+HOT_WATER_COOLING_MODE_DATA getHotWaterCoolingModeData(){
+    return hot_water_cooling_mode_data;
 }
 
 int16_t getHeatingSetpoint()
@@ -188,6 +208,18 @@ int16_t getHeatingSetpoint()
     }
     
     return setpointHeating;
+}
+
+int16_t getCoolingSetpoint()
+{
+    // Get Heating setpoint out of smart eeprom
+    int16_t setpointCooling = UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    
+    if (setpointCooling != TEMPERATURE_ALARM_VALUE){
+        setpointCooling *= 10;
+    }
+    
+    return setpointCooling;
 }
 
 int16_t getHotwaterSetpoint()

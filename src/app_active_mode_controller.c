@@ -71,10 +71,11 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
         SYS_CONSOLE_PRINT(" Sys stuck protection: %i\n", getSystemStuckProtectionCounter());
         SYS_CONSOLE_PRINT(" Sys on time:          %i\n", getsystemOnCounter());
         
-        printHeadOfStringBuffer();
+        //printHeadOfStringBuffer();
         
         SYS_CONSOLE_PRINT("\r\nHEATPUMP:\n");
-        SYS_CONSOLE_PRINT(" Setpoint:             %i\n", getHeatpumpSetpoint());
+        SYS_CONSOLE_PRINT(" Setpoint:             %i\n", getHeatpumpHeatingSetpoint());
+        SYS_CONSOLE_PRINT(" Heatpump mode:        %i\n", getHeatpumpRunningMode());
         SYS_CONSOLE_PRINT(" Compressor:           %i\n", getHeatpumpCompressorFrequency());
         //SYS_CONSOLE_PRINT(" Waterflow:            %i\n", getHeatpumpWaterFlow());
         SYS_CONSOLE_PRINT(" Retour temp.:         %i\n\n", getHeatpumpReturnWaterTemperature());
@@ -131,7 +132,10 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
             if (heatpumpMode == COOLING) {
 
                 SYS_CONSOLE_PRINT("\r\nCooling:\n");
-                SYS_CONSOLE_PRINT(" State:                %s\n", getCoolingStateToString());
+                SYS_CONSOLE_PRINT(" State:                %s\n\n", getCoolingStateToString());
+                
+                SYS_CONSOLE_PRINT(" Cooling setpoint:     %i\n", getCoolingSetpoint());
+                SYS_CONSOLE_PRINT(" Cooling buffer:       %i\n\n", GetNtcTemperature(NTC_HEATING_BUFFER));
             }
 
             if (heatpumpMode == HOT_WATER_HEATING) {
@@ -150,6 +154,21 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
                 SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterHotwaterTask());
                 SYS_CONSOLE_PRINT(" Hotwater element:     %s\n", getStatusHeatingElementHotWaterBuffer() ? "True" : "False");
                 SYS_CONSOLE_PRINT(" Hot water passive:    %s\n\n", getHotWaterHeatingModeData().hotwaterPassive ? "True" : "False");
+            }
+            
+            if (heatpumpMode == HOT_WATER_COOLING) {
+                SYS_CONSOLE_PRINT("\r\nHOTWATER AND COOLING:\n");
+                SYS_CONSOLE_PRINT(" State:                %s\n", getHotWaterCoolingStateToString());
+                
+                SYS_CONSOLE_PRINT(" Cooling setpoint:     %i\n", getCoolingSetpoint());
+                SYS_CONSOLE_PRINT(" Cooling buffer:       %i\n\n", GetNtcTemperature(NTC_HEATING_BUFFER));
+
+                SYS_CONSOLE_PRINT(" Hotwater setpoint:    %i\n", getHotwaterSetpoint());
+                SYS_CONSOLE_PRINT(" Hotwater buffer:      %i\n", GetNtcTemperature(NTC_HOT_WATER_BUFFER));
+                SYS_CONSOLE_PRINT(" Offset setpoint:      %i\n", getHotWaterCoolingModeData().setpointHotWaterOffset);
+                SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterHotwaterTask());
+                SYS_CONSOLE_PRINT(" Hotwater element:     %s\n", getStatusHeatingElementHotWaterBuffer() ? "True" : "False");
+                SYS_CONSOLE_PRINT(" Hot water passive:    %s\n\n", getHotWaterCoolingModeData().hotwaterPassive ? "True" : "False");
             }
         }
     }
@@ -170,6 +189,7 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
 
     // Hot water element
     if ((getHotwaterElementBoolFromHotwaterHeatingMode() == true) ||
+            (getHotwaterElementBoolFromHotwaterCoolingMode() == true) ||
             (getDefrostingElementOnState() == true) ||
             (getSterilizationElementOnState() == true)) {
         TurnOnHeatingElementHotWaterBuffer();
@@ -182,19 +202,33 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
  
  
  
- void checkHeatpumpSetpoint() {
+ void checkHeatpumpHeatingSetpoint() {
     if (getWriteNewSetPointHeatpumpCounter() < 10) {
         return;
     }
     
-    if (app_active_mode_controllerData.setPoint != (getHeatpumpSetpoint() * 10)) {   
+    if (app_active_mode_controllerData.setPoint != (getHeatpumpHeatingSetpoint() * 10)) {   
         // Setpoint in heatpump is not correct, send the correct one
         ChangeHeatpumpSetting(ADDRESS_HEATING_SET_TEMPERATURE, (app_active_mode_controllerData.setPoint / 10));
     }
+    
     setWriteNewSetPointHeatpumpCounter(0); 
  }
  
  
+ 
+ void checkHeatpumpRunningMode() {
+    if (getWriteHeatpumpRunningModeCounter() < 10) {
+        return;
+    }
+    
+    if (app_active_mode_controllerData.heatpumpRunningMode != getHeatpumpRunningMode()) {   
+        // Heatpump is not on correct running mode, send correct one
+        ChangeHeatpumpSetting(ADDRESS_SET_MODE, app_active_mode_controllerData.heatpumpRunningMode);
+    }
+    
+    setWriteHeatpumpRunningModeCounter(0); 
+ }
  
  
  
@@ -305,12 +339,14 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     app_active_mode_controllerData.currentRunningMode = heatpumpMode;
     app_active_mode_controllerData.previousRunningMode  = heatpumpMode;
     app_active_mode_controllerData.setPoint = 0;
+    app_active_mode_controllerData.heatpumpRunningMode = 0;
     
     // Reset the system stuck protection counter
     setSystemStuckProtectionCounter(0);
     
     // Start the counter for checking and writing the correct setpoint
     setWriteNewSetPointHeatpumpCounter(0); 
+    setWriteHeatpumpRunningModeCounter(0); 
     
     // Initialize every active mode
     HEATING_MODE_Initialize();
@@ -373,7 +409,9 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         // Sterilization was either on passive mode or off, but has to be set to ACTIVE mode
         checkNeedForSterilization();
         // Every 10 seconds the setpoint in the heatpump is checked
-        checkHeatpumpSetpoint();
+        checkHeatpumpHeatingSetpoint();
+        // Every 10 seconds the running mode of the heatpump is checked
+        checkHeatpumpRunningMode();
     }
     
 

@@ -10,6 +10,7 @@
 
 #include "eeprom.h"
 #include "ntc.h"
+#include "modbus\heatpump_parameters.h"
 
 extern COOLING_MODE_DATA cooling_mode_data;
 
@@ -51,6 +52,9 @@ const char * getCoolingStateToString()
 
 void COOLING_MODE_Tasks ( void )
 {    
+    setActiveModeControllerHeatpumpSetpoint(getHeatpumpHeatingSetpoint() * 10);
+    
+    setActiveModeControllerHeatpumpRunningMode(SET_MODE_COOLING);
     
     switch ( cooling_mode_data.state )
     {

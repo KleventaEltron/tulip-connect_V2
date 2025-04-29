@@ -91,27 +91,46 @@ const char * getCirculationPumpStateToString()
     }
 }
 
-void checkBufferTemperature(int16_t currentTemperature, int16_t setpoint, int16_t pumpOffThreshold, int16_t pumpBackOnThreshold)
+void checkLowBufferTemperature(int16_t currentTemperature, int16_t heatingSetpoint, int16_t pumpOffThreshold, int16_t pumpBackOnThreshold)
 {
-    if (currentTemperature < (setpoint - pumpOffThreshold)){
+    if (currentTemperature < (heatingSetpoint - pumpOffThreshold)){
         // Temperature is lower than setpoint - threshold
         circulation_pump_data.temperatureTooLowForPumpToBeOn = true;
         return;
     }
     
-    if (currentTemperature > (setpoint - pumpOffThreshold + pumpBackOnThreshold)){
+    if (currentTemperature > (heatingSetpoint - pumpOffThreshold + pumpBackOnThreshold)){
         // Temperature is higher again than setpoint - threshold + threshold_back_on
         circulation_pump_data.temperatureTooLowForPumpToBeOn = false;
         return;
     }
 }
 
-bool canPumpRunInThisHeatingState(HEATING_MODE_DATA heatingModeData, HOT_WATER_HEATING_MODE_DATA hotwaterHeatingModeData)
+void checkHighBufferTemperature(int16_t currentTemperature, int16_t coolingSetpoint, int16_t pumpOffThreshold, int16_t pumpBackOnThreshold)
+{
+    if (currentTemperature > (coolingSetpoint + pumpOffThreshold)){
+        // Temperature is lower than setpoint - threshold
+        circulation_pump_data.temperatureTooHighForPumpToBeOn = true;
+        return;
+    }
+    
+    if (currentTemperature < (coolingSetpoint + pumpOffThreshold - pumpBackOnThreshold)){
+        // Temperature is higher again than setpoint - threshold + threshold_back_on
+        circulation_pump_data.temperatureTooHighForPumpToBeOn = false;
+        return;
+    }
+}
+
+bool canPumpRunInThisHeatingState(HEATING_MODE_DATA heatingModeData, COOLING_MODE_DATA coolingModeData, HOT_WATER_HEATING_MODE_DATA hotwaterHeatingModeData, HOT_WATER_COOLING_MODE_DATA hotwaterCoolingModeData)
 {
     if ((heatingModeData.state == HEATING_IDLE) || 
             (heatingModeData.state == HEATING_RUNNING) || 
+            (coolingModeData.state == COOLING_IDLE) || 
+            (coolingModeData.state == COOLING_RUNNING) || 
             (hotwaterHeatingModeData.state == HOT_WATER_HEATING_IDLE_HEATING) || 
-            (hotwaterHeatingModeData.state == HOT_WATER_HEATING_RUNNING_ON_HEATING)){
+            (hotwaterHeatingModeData.state == HOT_WATER_HEATING_RUNNING_ON_HEATING) ||
+            (hotwaterCoolingModeData.state == HOT_WATER_COOLING_IDLE_COOLING) || 
+            (hotwaterCoolingModeData.state == HOT_WATER_COOLING_MODE_RUNNING_ON_COOLING) ) {
         // Pump can run
         return true;
     }
@@ -124,8 +143,15 @@ bool canPumpRunInThisHeatingState(HEATING_MODE_DATA heatingModeData, HOT_WATER_H
 
 bool circulationPumpConditions()
 {
-    if (circulation_pump_data.temperatureTooLowForPumpToBeOn == true){
-        // Temperature too low
+    if ((circulation_pump_data.temperatureTooLowForPumpToBeOn == true) && 
+            ((getActiveStateValue() == HEATING) || (getActiveStateValue() == HOT_WATER_HEATING))){
+        // Temperature too low in heating modes
+        return false;
+    }
+    
+     if ((circulation_pump_data.temperatureTooHighForPumpToBeOn == true) &&
+            ((getActiveStateValue() == COOLING) || (getActiveStateValue() == HOT_WATER_COOLING))){
+        // Temperature too high in cooling modes
         return false;
     }
     
@@ -134,7 +160,7 @@ bool circulationPumpConditions()
         return false;
     }
     
-    if (canPumpRunInThisHeatingState(getHeatingModeData(), getHotWaterHeatingModeData()) == false){
+    if (canPumpRunInThisHeatingState(getHeatingModeData(), getCoolingModeData(), getHotWaterHeatingModeData(), getHotWaterCoolingModeData()) == false){
         // Pump can not run in this state
         return false;
     }
@@ -158,7 +184,9 @@ void CIRCULATION_PUMP_Tasks()
     //if (GetNtcTemperature(NTC_HEATING_BUFFER < ))
     //    temperatureTooLow
     
-    checkBufferTemperature(GetNtcTemperature(NTC_HEATING_BUFFER), getHeatingSetpoint(), ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW), ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP));
+    checkLowBufferTemperature(GetNtcTemperature(NTC_HEATING_BUFFER), getHeatingSetpoint(), ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW), ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP));
+    
+    checkHighBufferTemperature(GetNtcTemperature(NTC_HEATING_BUFFER), getCoolingSetpoint(), ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH), ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP));
     
     switch ( circulation_pump_data.state )
     {

@@ -66,6 +66,10 @@
 
 #define SEEP_ADDR_DISPLAY_PUMP_ON                           65 // 1 byte V2-0-0
 
+#define SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH                    66 // 2 bytes V2-0-0
+#define SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP          68 // 2 bytes V2-0-0
+
+
 #define SEEP_ADDR
 
 //.....

@@ -43,6 +43,9 @@ void ParseDisplayData(uint8_t * rxBuffer)
                 if (data == SET_MODE_HOT_WATER_AND_HEATING)
                 {   // If the display tells the heatpump to go to Hot water and Heating, this must not be possible, because we control the hot water with the Connect. So tell to go to heating only
                     ChangeHeatpumpSetting(regAddress, SET_MODE_HEATING); 
+                } else if (data == SET_MODE_HOT_WATER_AND_COOLING)
+                {   // If the display tells the heatpump to go to Hot water and Cooling, this must not be possible, because we control the hot water with the Connect. So tell to go to Cooling only
+                    ChangeHeatpumpSetting(regAddress, SET_MODE_COOLING); 
                 } else
                 {   // All other modes can be sent to the heatpump
                     ChangeHeatpumpSetting(regAddress, data);
@@ -317,10 +320,20 @@ void GetDataFromHeatpump(void)
     for (uint16_t i = 0; i < REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_9; i++)
         UnknownParameters9[i][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = UnknownParameters9[i][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
     
-    // If smartEEprom mode is on Hot Water and Heating, and mode from heatpump is only heating, send to display Hot Water and Heating
+    
     int16_t heatpumpMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
-    if ((UserParameters[ADDRESS_SET_MODE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] == SET_MODE_HEATING) && (heatpumpMode == SET_MODE_HOT_WATER_AND_HEATING))
-        UserParameters[ADDRESS_SET_MODE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = heatpumpMode; 
+    UserParameters[ADDRESS_SET_MODE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = heatpumpMode;
+    /*
+    if ((UserParameters[ADDRESS_SET_MODE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] == SET_MODE_HEATING) && (heatpumpMode == SET_MODE_HOT_WATER_AND_HEATING)){
+        // If smartEEprom mode is on Hot Water and Heating, and mode from heatpump is only heating, send to display Hot Water and Heating
+        UserParameters[ADDRESS_SET_MODE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = heatpumpMode;
+    }
+    
+    if ((UserParameters[ADDRESS_SET_MODE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] == SET_MODE_COOLING) && (heatpumpMode == SET_MODE_HOT_WATER_AND_COOLING)){
+        // If smartEEprom mode is on Hot Water and Heating, and mode from heatpump is only heating, send to display Hot Water and Heating
+        UserParameters[ADDRESS_SET_MODE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = heatpumpMode;
+    }
+    */  
     
     int16_t heatingSetpoint = ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT);
     

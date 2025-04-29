@@ -49,8 +49,23 @@ bool neededThreeWayValveState(RUNNING_MODES selectedRunningMode) {
         
         
         case HOT_WATER_COOLING:{
-            // TODO: LATER OP TERUG KOMEN
-            //valvePositionForActiveState = VALVE_IS_ON_HEATING_CIRCUIT;
+            if ((getHotWaterCoolingModeData().state == HOT_WATER_COOLING_INITIALIZE_COOLING) || 
+                    (getHotWaterCoolingModeData().state == HOT_WATER_COOLING_IDLE_COOLING) ||
+                    (getHotWaterCoolingModeData().state == HOT_WATER_COOLING_MODE_RUNNING_ON_COOLING)) {
+                // Valve must be on heating (also cooling) circuit
+                valvePositionForActiveState = VALVE_IS_ON_HEATING_CIRCUIT;
+                break;
+            }
+            
+            if ((getHotWaterCoolingModeData().state == HOT_WATER_COOLING_INITIALIZE_HOT_WATER) || 
+                    (getHotWaterCoolingModeData().state == HOT_WATER_COOLING_STATE_WAIT_FOR_MINIMAL_TIME_IN_HOT_WATER) ||
+                    (getHotWaterCoolingModeData().state == HOT_WATER_COOLING_STATE_RUNNING_IN_HOT_WATER) ||
+                    (getHotWaterCoolingModeData().state == HOT_WATER_COOLING_STATE_RUNNING_WITH_ELEMENT_ON_IN_HOT_WATER)) {
+                // Valve must be on hot water circuit
+                valvePositionForActiveState = VALVE_IS_ON_HOT_WATER_CIRCUIT;
+                break;
+            } 
+            
             break;
         }
         
@@ -71,7 +86,7 @@ bool neededThreeWayValveState(RUNNING_MODES selectedRunningMode) {
                 valvePositionForActiveState = VALVE_IS_ON_HOT_WATER_CIRCUIT;
                 break;
             } 
-            // TODO: LATER OP TERUG KOMEN
+            
             break;
         }
         
