@@ -13,6 +13,7 @@
 #include "ntc.h"
 #include "sterilization.h"
 #include "defrosting.h"
+#include "modbus\heatpump_parameters.h"
 
 extern HOT_WATER_HEATING_MODE_DATA hot_water_heating_mode_data;
 
@@ -76,7 +77,7 @@ const char * getHotwaterHeatingStateToString()
     }
 }
 
-bool areWeOnHotWaterMode()
+bool areWeOnHotWaterModeInHotWaterAndHeatingMode()
 {
     if (hot_water_heating_mode_data.state == HOT_WATER_HEATING_INITIALIZE_HOT_WATER){
         return true;
@@ -97,7 +98,8 @@ bool areWeOnHotWaterMode()
     return false;
 }
 
-void adjustSetpointOffset()
+
+void adjustSetpointOffsetHotWater()
 {
     int16_t hotwaterBufferTemperature = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
     int16_t hotwaterSetpoint = getHotwaterSetpoint();
@@ -119,6 +121,7 @@ void adjustSetpointOffset()
         return;
     }
 }
+
 
 int16_t determineCorrectSetpoint() {
     if ((hot_water_heating_mode_data.state == HOT_WATER_HEATING_INITIALIZE_HEATING) ||
@@ -172,7 +175,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         return;
     }
     
-    if (areWeOnHotWaterMode() == true){
+    if (areWeOnHotWaterModeInHotWaterAndHeatingMode() == true){
         // Already in one of the hot water modes
         // If sterilization goes to passive mode, go to heating
         if (getSterilisationMode() == PASSIVE){
@@ -204,7 +207,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         }
     }
     
-    if ((areWeOnHotWaterMode() == false) && (hot_water_heating_mode_data.hotwaterPassive == false) && (hotwaterBufferTemperature < (hotwaterSetpoint - hotwaterDelta)) && (getSterilisationMode() != PASSIVE)) {
+    if ((areWeOnHotWaterModeInHotWaterAndHeatingMode() == false) && (hot_water_heating_mode_data.hotwaterPassive == false) && (hotwaterBufferTemperature < (hotwaterSetpoint - hotwaterDelta)) && (getSterilisationMode() != PASSIVE)) {
         // Not in hot water state yet
         // Not on one of the hot water states or doing passive hot water
         // Hot water buffer is lower than setpoint - delta
@@ -214,6 +217,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
     
     
     setActiveModeControllerHeatpumpSetpoint(determineCorrectSetpoint());
+    
+    setActiveModeControllerHeatpumpRunningMode(SET_MODE_HEATING);
 
     switch ( hot_water_heating_mode_data.state )
     {
@@ -352,7 +357,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         
         // 5
         case HOT_WATER_HEATING_STATE_WAIT_FOR_MINIMAL_TIME_IN_HOT_WATER:{
-            adjustSetpointOffset();
+            
+            adjustSetpointOffsetHotWater();
             
             if ((getSecondCounterHotwaterTask() >= ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_MIN_TIME_IN_HOT_WATER_MODE)) && (getSecondCounterHotwaterTask() != UINT32_MAX)) {
                 // Minimal time in hot water passed
@@ -365,7 +371,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         
         // 6
         case HOT_WATER_HEATING_STATE_RUNNING_IN_HOT_WATER:{
-            adjustSetpointOffset();
+            
+            adjustSetpointOffsetHotWater();
             
             if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
                 // Compressor is not running and is also not in defrosting, so go back to heating
@@ -393,7 +400,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         
         // 7
         case HOT_WATER_HEATING_STATE_RUNNING_WITH_ELEMENT_ON_IN_HOT_WATER:{
-            adjustSetpointOffset();
+            
+            adjustSetpointOffsetHotWater();
             
             if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
                 // Compressor is not running and is also not in defrosting, so go back to heating

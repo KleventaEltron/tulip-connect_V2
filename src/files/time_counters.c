@@ -21,6 +21,7 @@ uint32_t waitingThreeWayValveSwitch = UINT32_MAX;
 uint32_t systemStuckProtectionCounter = UINT32_MAX;
 uint32_t writeNewSetPointHeatpumpCounter = UINT32_MAX;
 uint32_t waitForSettingEchoProtection = UINT32_MAX;
+uint32_t writeHeatpumpRunningModeCounter = UINT32_MAX;
 
 //static uint32_t SecondCounterFtp = UINT32_MAX;
 //static uint32_t SecondCounterResetSoftware = UINT32_MAX;
@@ -143,6 +144,10 @@ void UpdateCounters ( void )
             if (waitForSettingEchoProtection >= 0 && waitForSettingEchoProtection < UINT32_MAX) {
                 waitForSettingEchoProtection++;
             }
+            
+            if (writeHeatpumpRunningModeCounter >= 0 && writeHeatpumpRunningModeCounter < UINT32_MAX) {
+                writeHeatpumpRunningModeCounter++;
+            }
         }   
 
         if (SecondCounterLeds >= 0 && SecondCounterLeds < UINT32_MAX)
@@ -209,6 +214,15 @@ uint32_t getsystemOnCounter() {
 void setSystemOnCounter(uint32_t value) {
     systemOnCounter = value;
 }
+
+uint32_t getWriteHeatpumpRunningModeCounter() {
+    return writeHeatpumpRunningModeCounter;
+}
+
+void setWriteHeatpumpRunningModeCounter(uint32_t value) {
+    writeHeatpumpRunningModeCounter = value;
+}
+
 
 
 bool LedsTimerExpired ( void )

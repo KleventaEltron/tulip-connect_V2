@@ -11,6 +11,7 @@
 #include "eeprom.h"
 #include "time_counters.h"
 #include "ntc.h"
+#include "modbus\heatpump_parameters.h"
 
 
 extern HEATING_MODE_DATA heating_mode_data;
@@ -78,6 +79,8 @@ void HEATING_MODE_Tasks ( void )
     */
     
     setActiveModeControllerHeatpumpSetpoint(getHeatingSetpoint());
+    
+    setActiveModeControllerHeatpumpRunningMode(SET_MODE_HEATING);
     
     switch ( heating_mode_data.state )
     {

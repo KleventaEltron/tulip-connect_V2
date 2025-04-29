@@ -47,9 +47,11 @@ typedef struct
     RUNNING_MODES previousRunningMode;
     RUNNING_MODES currentRunningMode;
     uint16_t setPoint;
+    uint16_t heatpumpRunningMode;
 } APP_ACTIVE_MODE_CONTROLLER_DATA;    
     
 void setActiveModeControllerHeatpumpSetpoint(int16_t newSetpoint);
+void setActiveModeControllerHeatpumpRunningMode(uint16_t mode);
 RUNNING_MODES getActiveStateValue();
 /*********
 ,--.  ,--.,------.  ,---. ,--------.,--.,--.  ,--. ,----.       ,--.   ,--. ,-----. ,------.  ,------. 
@@ -153,15 +155,26 @@ typedef struct{
  */
 
 typedef enum{
-    HOT_WATER_COOLING_INITIALIZE,
-    HOT_WATER_COOLING_IDLE,
-    HOT_WATER_COOLING_MODE
+    // Cooling modes:
+    HOT_WATER_COOLING_INITIALIZE_COOLING = 0,
+    HOT_WATER_COOLING_IDLE_COOLING,
+    HOT_WATER_COOLING_MODE_RUNNING_ON_COOLING,
+            
+    // Hot water modes:
+    HOT_WATER_COOLING_INITIALIZE_HOT_WATER,   
+    HOT_WATER_COOLING_STATE_WAIT_FOR_MINIMAL_TIME_IN_HOT_WATER,
+    HOT_WATER_COOLING_STATE_RUNNING_IN_HOT_WATER,
+    HOT_WATER_COOLING_STATE_RUNNING_WITH_ELEMENT_ON_IN_HOT_WATER
 } HOT_WATER_COOLING_MODE_STATES;
 
 
 
 typedef struct{
     HOT_WATER_COOLING_MODE_STATES state;
+    
+    bool hotwaterPassive;
+    int16_t setpointHotWaterOffset;
+    bool HotwaterElementOn;
 } HOT_WATER_COOLING_MODE_DATA;
 
 
@@ -250,21 +263,26 @@ typedef enum{
 typedef struct{
     CIRCULATION_PUMP_STATES state;
     bool temperatureTooLowForPumpToBeOn;
+    bool temperatureTooHighForPumpToBeOn;
 } CIRCULATION_PUMP_DATA;
 
 void resetActiveModeStates();
 const char * getActiveModeToString(RUNNING_MODES state);
 bool isDefrostingActive();
 uint16_t getHeatpumpCompressorFrequency();
-int16_t getHeatpumpSetpoint();
+int16_t getHeatpumpHeatingSetpoint();
 uint16_t getHeatpumpWaterFlow();
+int16_t getHeatpumpRunningMode();
 int16_t getHeatpumpReturnWaterTemperature();
 const char * getThreeWayValveState(int state);
 
 CIRCULATION_PUMP_DATA getCircPumpData();
 HEATING_MODE_DATA getHeatingModeData();
+COOLING_MODE_DATA getCoolingModeData();
 HOT_WATER_HEATING_MODE_DATA getHotWaterHeatingModeData();
+HOT_WATER_COOLING_MODE_DATA getHotWaterCoolingModeData();
 int16_t getHeatingSetpoint();
+int16_t getCoolingSetpoint();
 int16_t getHotwaterSetpoint();
 int16_t getHotwaterDelta();
 
