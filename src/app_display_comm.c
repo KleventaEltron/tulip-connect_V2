@@ -63,18 +63,20 @@ static volatile uint32_t CommunicationTimeOutCounter = 0;
 // *****************************************************************************
 // *****************************************************************************
 
-static void APP_WriteCallbackDisplay(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
+//static void APP_WriteCallbackDisplay(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
+void APP_WriteCallbackDisplay(uintptr_t context)
 {
-    if (event == DMAC_TRANSFER_EVENT_COMPLETE)
-    {
+    //if (event == DMAC_TRANSFER_EVENT_COMPLETE)
+    //{
         app_display_commData.commStatus = DISPLAY_COMM_STATUS_DATA_SENT_TO_DISPLAY;
-    }
+    //}
 }
 
-static void APP_ReadCallbackDisplay(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
+//static void APP_ReadCallbackDisplay(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
+void APP_ReadCallbackDisplay(uintptr_t context)
 {
-    if (event == DMAC_TRANSFER_EVENT_COMPLETE)
-    {
+    //if (event == DMAC_TRANSFER_EVENT_COMPLETE)
+    //{
         if(SERCOM1_USART_ErrorGet() == USART_ERROR_NONE)
         {   // ErrorGet clears errors, set error flag to notify console
             //errorStatus = true;
@@ -85,32 +87,36 @@ static void APP_ReadCallbackDisplay(DMAC_TRANSFER_EVENT event, uintptr_t context
                     if (RxBuffer[0] == THIS_DEVICE_ADDRESS)
                     {   // Als het het address is van de modbus slave, vraag om de 7 andere bytes die hierna komen.
                         app_display_commData.commStatus = DISPLAY_COMM_STATUS_DEVICE_ADDRESS_RECEIVED;
-                        
-                        DMAC_ChannelTransfer(DMAC_CHANNEL_2, \
+                        SERCOM1_USART_Read(&RxBuffer[1], 7);
+                        /*DMAC_ChannelTransfer(DMAC_CHANNEL_2, \
                             (const void *)&SERCOM1_REGS->USART_INT.SERCOM_DATA, \
-                            &RxBuffer[1], 7);
+                            &RxBuffer[1], 7);*/
                     }
                     else if (RxBuffer[0] == 104)
                     {   // Soms stuurt display 104, wat het betekend weet ik niet, maar wacht op de volgende 15 bytes en stuurd het door
                         app_display_commData.commStatus = DISPLAY_COMM_STATUS_104_RECEIVED;
-                        
-                        DMAC_ChannelTransfer(DMAC_CHANNEL_2, \
+                        SERCOM1_USART_Read(&RxBuffer[1], 15);
+                        /*DMAC_ChannelTransfer(DMAC_CHANNEL_2, \
                             (const void *)&SERCOM1_REGS->USART_INT.SERCOM_DATA, \
-                            &RxBuffer[1], 15);
+                            &RxBuffer[1], 15);*/
                     }
                     else if (RxBuffer[0] == 255)
                     {   // Soms stuurt display 255, wat het betekend weet ik niet, maar stuur het door
                         app_display_commData.commStatus = DISPLAY_COMM_STATUS_255_RECEIVED;
                         
-                        DMAC_ChannelTransfer(DMAC_CHANNEL_2, \
+                        SERCOM1_USART_Read(&RxBuffer[1], 7);
+                        /*DMAC_ChannelTransfer(DMAC_CHANNEL_2, \
                             (const void *)&SERCOM1_REGS->USART_INT.SERCOM_DATA, \
-                            &RxBuffer[1], 7);
+                            &RxBuffer[1], 7);*/
                     }
                     else
-                    {   // Wacht op volgende eerste byte
-                        DMAC_ChannelTransfer(DMAC_CHANNEL_2, \
+                    {   
+                        SERCOM1_USART_Read(&RxBuffer[0], 1);
+                        //SERCOM1_USART_Write(&TxBuffer[0], sizeOfBuffer);
+                        // Wacht op volgende eerste byte
+                        /*DMAC_ChannelTransfer(DMAC_CHANNEL_2, \
                             (const void *)&SERCOM1_REGS->USART_INT.SERCOM_DATA, \
-                            &RxBuffer[0], 1);
+                            &RxBuffer[0], 1);*/
                     }
                     break;
                 }
@@ -136,7 +142,7 @@ static void APP_ReadCallbackDisplay(DMAC_TRANSFER_EVENT event, uintptr_t context
             }
         }
         else{}
-    }
+    //}
 }
 /*
 static void TC1_Callback_InterruptHandler(TC_TIMER_STATUS status, uintptr_t context)
@@ -159,25 +165,31 @@ static void TC1_Callback_InterruptHandler(TC_TIMER_STATUS status, uintptr_t cont
 // *****************************************************************************
 // *****************************************************************************
 
+//void StartReceivingDataFromDisplay(void)
 void StartReceivingDataFromDisplay(void)
 {
     SetOutput(LED_RX_DISPLAY, true);
     
     app_display_commData.commStatus = DISPLAY_COMM_STATUS_WAITING_FOR_DATA_FROM_DISPLAY;
     
+    SERCOM1_USART_Read(&RxBuffer[0], 1);
+    /*
     DMAC_ChannelTransfer(DMAC_CHANNEL_2, \
         (const void *)&SERCOM1_REGS->USART_INT.SERCOM_DATA, \
-        &RxBuffer[0], 1);
+        &RxBuffer[0], 1);*/
 }
 
+//void StartTransmittingDataToDisplay(uint8_t sizeOfBuffer)
 void StartTransmittingDataToDisplay(uint8_t sizeOfBuffer)
 {
     SetOutput(LED_TX_DISPLAY, true);
     
     app_display_commData.commStatus = DISPLAY_COMM_STATUS_SENDING_DATA_TO_DISPLAY;
     
+    SERCOM1_USART_Write(&TxBuffer[0], sizeOfBuffer);
+    /*
     DMAC_ChannelTransfer(DMAC_CHANNEL_1, &TxBuffer[0], \
-        (const void *)&SERCOM1_REGS->USART_INT.SERCOM_DATA, sizeOfBuffer);
+        (const void *)&SERCOM1_REGS->USART_INT.SERCOM_DATA, sizeOfBuffer);*/
 }
 
 // *****************************************************************************
@@ -196,8 +208,11 @@ void StartTransmittingDataToDisplay(uint8_t sizeOfBuffer)
 
 void APP_DISPLAY_COMM_Initialize ( void )
 {
-    DMAC_ChannelCallbackRegister(DMAC_CHANNEL_2, APP_ReadCallbackDisplay, 0);
-    DMAC_ChannelCallbackRegister(DMAC_CHANNEL_1, APP_WriteCallbackDisplay, 0);
+    // DMAC_ChannelCallbackRegister(DMAC_CHANNEL_2, APP_ReadCallbackDisplay, 0);
+    // DMAC_ChannelCallbackRegister(DMAC_CHANNEL_1, APP_WriteCallbackDisplay, 0);
+    
+    SERCOM1_USART_WriteCallbackRegister(APP_WriteCallbackDisplay, 0);
+    SERCOM1_USART_ReadCallbackRegister(APP_ReadCallbackDisplay, 0);
     
     //TC1_TimerCallbackRegister(TC1_Callback_InterruptHandler, (uintptr_t)NULL);
     //TC1_TimerStart();
@@ -227,13 +242,19 @@ void APP_DISPLAY_COMM_Tasks ( void )
     {   // Tijd lang geen communicatie geweest
         CommunicationWindowSecondCounter = 0;
         
+        SERCOM1_USART_Initialize();
+        SERCOM1_USART_WriteCallbackRegister(APP_WriteCallbackDisplay, 0);
+        SERCOM1_USART_ReadCallbackRegister(APP_ReadCallbackDisplay, 0);
+        
         app_display_commData.state = APP_DISPLAY_COMM_STATE_RECEIVE_DATA;
     }  
     
-    if (CommunicationTimeOutCounter > RESET_AFTER_NO_COMMUNICATION_SECONDS)
+    if (CommunicationTimeOutCounter > RESET_AFTER_NO_COMMUNICATION_SECONDS) {
         SetOrClearAlarm(ALARM_DISPLAY_COMMUNICATION, SET_ALARM);
-    else
+    
+    } else {
         SetOrClearAlarm(ALARM_DISPLAY_COMMUNICATION, CLEAR_ALARM);
+    }
     
     if (DisplayCommunicationTimerExpired() == true)
     {

@@ -23,7 +23,6 @@
 
 /*
  Test comment added to top of TEST BRANCH
- 
  */
 
 //int stackResetCount = 0;
@@ -77,6 +76,9 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         case APP_LOGGING_TASKS_IDLE:
         {
+            if (SERCOM7_USART_WriteIsBusy() || SERCOM7_USART_ReadIsBusy()) {
+                break;
+            }
             /* Wait for next logging timer trigger */
             if (LoggingTimerExpired()) {
                 app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_LOGGING_UNLOCK;
@@ -285,6 +287,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
         }
         
 
+        
         case APP_LOGGING_TASKS_SEND_REQUEST_SSL_NEW_SETTINGS:
         { 
             if(!getNewSettingsFromServer()) {
@@ -307,9 +310,9 @@ void APP_LOGGING_TASKS_Tasks ( void )
                 break;
             } 
             
-            
             readNetworkBufferSslResponseNewSettings();
             app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+            
             
             break;
         }
@@ -320,7 +323,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
             TC2_TimerStop();
             closeSocket();
             while(!releaseLoggingLock());
-            app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;
+            app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;   
             break;
         }
             

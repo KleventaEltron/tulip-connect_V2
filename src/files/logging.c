@@ -604,8 +604,8 @@ bool TULIP_REQUEST_TESTER ( char request[], char path[]) {
                     "Accept: application/json\r\n"
                     "Content-Type: application/json\r\n"
                     "Authorization: Bearer %s\r\n"
-                    "Connection: keep-alive\r\n"
-                    //"Connection: close\r\n"
+                    //"Connection: keep-alive\r\n"
+                    "Connection: close\r\n"
                     "Content-Length: %i\r\n\r\n"
                     "%s\r\n",
                     request, path, HOST, TOKEN, strlen(requestBody), requestBody);     
@@ -1002,3 +1002,5 @@ SSL_SOCKET_STATES socketReady( void ) {
 void closeSocket ( void ) {
     NET_PRES_SocketClose(socket);
 }
+
+

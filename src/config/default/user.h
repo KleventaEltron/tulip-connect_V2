@@ -80,7 +80,8 @@ extern "C" {
 #define GetDip3()   ((NotInputDip3_Get()) ? false : true) 
 #define GetDip4()   ((NotInputDip4_Get()) ? false : true)     
 
-#define DebugDipSwitch()    GetDip4()
+#define DebugLoggingDipSwitch()     GetDip3()
+#define DebugDipSwitch()            GetDip4()
     
 #define getPowerFailStatus()                    NotPwrPowerFail_Get()
 #define getSupercapFaultStatus()                NotPwrCapFault_Get()   
