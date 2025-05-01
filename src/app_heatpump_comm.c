@@ -96,57 +96,33 @@ void APP_ReadCallback(uintptr_t context)
 {
     if(SERCOM7_USART_ErrorGet() != USART_ERROR_NONE)
     {
-        if(DebugLoggingDipSwitch()) { SYS_CONSOLE_PRINT("READ CALLBACK SERCOM7 ERROR!\n"); }
         /* ErrorGet clears errors, set error flag to notify console */
     }
     else
     {
-        size_t rxBytes = SERCOM7_USART_ReadCountGet();
-        if(DebugLoggingDipSwitch()) { SYS_CONSOLE_PRINT("1. READ CALLBACK SERCOM7, BYTES READ >> %i\n\n", rxBytes); }
-        
-        if(rxBytes <= 20) {
-            for(int i = 0; i < rxBytes; i++) {
-                if(DebugLoggingDipSwitch()) { SYS_CONSOLE_PRINT("%i ", RxBuffer[i]); }
-            }
-        }
-        if(DebugLoggingDipSwitch()) { SYS_CONSOLE_PRINT("\n\n"); }
-        
         switch (app_heatpump_commData.commStatus)
             {
                 case HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP:
                 {   // Eerste byte ontvangen, kijken wat dit is
-                    if(DebugLoggingDipSwitch()) {  SYS_CONSOLE_PRINT("2. READ CALLBACK SERCOM7\n"); }
                     if (RxBuffer[0] == THIS_DEVICE_ADDRESS)
                     {   // Als het het address is van de slave, vraag om de 7 andere bytes die hierna komen.
                         app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DEVICE_ADDRESS_RECEIVED;
-                        
-                        
-                        //size_t rxBytes = SERCOM7_USART_ReadCountGet();
-                        //SYS_CONSOLE_PRINT("SERCOM7 RX Buffer has %lu bytes available\r\n", rxBytes);
-
-                        if(DebugLoggingDipSwitch()) {  SYS_CONSOLE_PRINT("3. READ CALLBACK SERCOM7\n"); }
                         SERCOM7_USART_Read(&RxBuffer[1], 7);
-                        
-                        
                     }
                     else
                     {   // Wacht op volgende eerste byte
-                        if(DebugLoggingDipSwitch()) { SYS_CONSOLE_PRINT("4. READ CALLBACK SERCOM7\n"); }
                         SERCOM7_USART_Read(&RxBuffer[0], 1);
                     }
                     break;
                 }
                 case HEATPUMP_COMM_STATUS_DEVICE_ADDRESS_RECEIVED:
                 {
-                    if(DebugLoggingDipSwitch()) { SYS_CONSOLE_PRINT("99. HEATPUMP_COMM_STATUS_DEVICE_ADDRESS_RECEIVED\n");}
                     if (RxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_WRITE_REG)
                     {   // Alle data ontvangen
-                        if(DebugLoggingDipSwitch()) { SYS_CONSOLE_PRINT("5. READ CALLBACK SERCOM7\n");}
                         app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DATA_RECEIVED_FROM_HEATPUMP;
                     }
                     else if (RxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_READ_REGS)
                     {   // Vraag wat nog komt
-                        if(DebugLoggingDipSwitch()) { SYS_CONSOLE_PRINT("6. READ CALLBACK SERCOM7\n");}
                         app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_FIRST_8_BYTES_RECEIVED;
                         SERCOM7_USART_Read(&RxBuffer[8], (RxBuffer[MODBUS_BYTES_RETURNED_INDEX] - 3)); 
                     }
@@ -156,7 +132,6 @@ void APP_ReadCallback(uintptr_t context)
                 }
                 case HEATPUMP_COMM_STATUS_FIRST_8_BYTES_RECEIVED:
                 {
-                    if(DebugLoggingDipSwitch()) { SYS_CONSOLE_PRINT("7. READ CALLBACK SERCOM7\n");}
                     app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DATA_RECEIVED_FROM_HEATPUMP;
                     break;
                 }
@@ -226,16 +201,7 @@ void APP_HEATPUMP_COMM_Tasks ( void )
             
         SERCOM7_USART_WriteCallbackRegister(APP_WriteCallback, 0);
         SERCOM7_USART_ReadCallbackRegister(APP_ReadCallback, 0);
-        //SERCOM7_USART_Disable();
-        //SERCOM7_USART_Enable();
-        if(DebugLoggingDipSwitch()) { SYS_CONSOLE_PRINT("RESETTING SERCOM7 USART\n");}
-        //printf("\r\n Error! Manual to APP_STATE_INIT counter: %d\r\n", ManualToInitCounter);
     } 
-    
-    //if (httpSocketIsBusy()) {
-        //SYS_CONSOLE_PRINT("Stack is busy\n");
-    //    return;
-    //}
     
     if (CommunicationTimeOutCounter > RESET_AFTER_NO_COMMUNICATION_SECONDS)
     {

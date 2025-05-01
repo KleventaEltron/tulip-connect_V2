@@ -4640,7 +4640,7 @@
         &lt;ElementPosition dnOrder=&quot;11&quot; id=&quot;evsys&quot; x=&quot;5&quot; y=&quot;183&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;12&quot; id=&quot;lib_crypto&quot; x=&quot;472&quot; y=&quot;343&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;13&quot; id=&quot;lib_wolfcrypt&quot; x=&quot;216&quot; y=&quot;226&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;14&quot; id=&quot;lib_wolfssl&quot; x=&quot;465&quot; y=&quot;237&quot;/&gt;
+        &lt;ElementPosition dnOrder=&quot;14&quot; id=&quot;lib_wolfssl&quot; x=&quot;466&quot; y=&quot;237&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;15&quot; id=&quot;nvmctrl&quot; x=&quot;6&quot; y=&quot;20&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;16&quot; id=&quot;sdhc1&quot; x=&quot;281&quot; y=&quot;516&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;17&quot; id=&quot;sercom5&quot; x=&quot;240&quot; y=&quot;137&quot;/&gt;
@@ -23406,7 +23406,9 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="lib_wolfssl" name="wolfSslSessionCache"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;lib_wolfssl&gt;
   &lt;lib_wolfssl dnOrder=&quot;0&quot; id=&quot;wolfSslSessionCache&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;/&gt;
+    &lt;Values dnOrder=&quot;0&quot;&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;None&quot;/&gt;
+    &lt;/Values&gt;
   &lt;/lib_wolfssl&gt;
 &lt;/lib_wolfssl&gt;
 </value>
@@ -36552,7 +36554,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\configuration.h</file>
-         <hash>5f5195ec627b317e635bc052e3e4200edaba447eac208b28681666728c8bd3b5</hash>
+         <hash>68dedbf5e664abf9a7421d016cc047a80c7bb8f67b655a0bf620e3c12b1d1bba</hash>
       </entry>
       <entry>
          <file>..\src\config\default\crypto\crypto.h</file>

@@ -23,6 +23,7 @@
 
 /*
  Test comment added to top of TEST BRANCH
+ 
  */
 
 //int stackResetCount = 0;
@@ -76,9 +77,6 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         case APP_LOGGING_TASKS_IDLE:
         {
-            if (SERCOM7_USART_WriteIsBusy() || SERCOM7_USART_ReadIsBusy()) {
-                break;
-            }
             /* Wait for next logging timer trigger */
             if (LoggingTimerExpired()) {
                 app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_LOGGING_UNLOCK;
@@ -253,9 +251,8 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         
         case APP_LOGGING_TASKS_SEND_REQUEST_SSL:
-        { 
+        {
             if(!loggingRequestBuilder(POST)){
-            //if(!getNewSettingsFromServer()) {
                 app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
                 break;
             }
@@ -268,7 +265,6 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         case APP_LOGGING_TASKS_WAIT_FOR_RESPONSE_SSL:
         {
-            //SYS_CONSOLE_PRINT("***** WAIT FOR SSL RESPONSE ***** \r\n");
             SSL_SOCKET_STATES sslState = socketReady();
             if (sslState == SSL_SOCKET_NOT_READY) { break; } 
             if (sslState == SSL_SOCKET_WAS_DISCONNECTED) {
@@ -276,46 +272,12 @@ void APP_LOGGING_TASKS_Tasks ( void )
                 break;
             } 
             
-            if(readNetworkBufferSslResponse()){
-                app_logging_tasksData.state = APP_LOGGING_TASKS_SEND_REQUEST_SSL_NEW_SETTINGS;
-            } else {
-                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
-            }
-            //readNetworkBufferSslResponseNewSettings();
+            readNetworkBufferSslResponse();
             
-            break;
-        }
-        
-
-        
-        case APP_LOGGING_TASKS_SEND_REQUEST_SSL_NEW_SETTINGS:
-        { 
-            if(!getNewSettingsFromServer()) {
-                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
-                break;
-            }
-            
-            app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_RESPONSE_SSL_NEW_SETTINGS;
-            break;
-        }
-        
-        
-        
-        case APP_LOGGING_TASKS_WAIT_FOR_RESPONSE_SSL_NEW_SETTINGS:
-        {
-            SSL_SOCKET_STATES sslState = socketReady();
-            if (sslState == SSL_SOCKET_NOT_READY) { break; } 
-            if (sslState == SSL_SOCKET_WAS_DISCONNECTED) {
-                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
-                break;
-            } 
-            
-            readNetworkBufferSslResponseNewSettings();
             app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
-            
-            
             break;
         }
+        
         
         
         case APP_LOGGING_TASKS_CLOSE_CONNECTION:
@@ -323,7 +285,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
             TC2_TimerStop();
             closeSocket();
             while(!releaseLoggingLock());
-            app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;   
+            app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;
             break;
         }
             

@@ -8,9 +8,17 @@
 extern "C" {
 #endif
 
-#define GET_PATH    "/api/v1/heatpump/settings?hardware_id="
+#define GET_PATH    "api/v1/heatpump/log"
 #define POST_PATH   "api/v1/combined_log"
-#define PORT 443                
+#define PORT 443         
+        
+/* TEST PARAMETERS */
+//#define HOST        "test.tulip-wise.com"
+//#define TOKEN       "6g9Xoo^8Es*V!f&N"        
+
+/* UNCOMMENT VOOR LOGGING NAAR PRODUCTIE */
+//#define HOST "admin.tulip-wise.com"
+//#define TOKEN "!$nMM7QUsf9NX5kz"            
 
 #define HardwareID                      "TL1"
 #define KlantID                         "TL2"
@@ -106,7 +114,7 @@ typedef enum {
 extern char NTP_TIME_BUFFER[40];
 
 void postDevicesLogDataJson( void );
-bool readNetworkBufferSslResponse( void );
+void readNetworkBufferSslResponse( void );
 bool startSocketConnection( void );
 SSL_NEGOTIATION_STATES waitForConnection ( void );
 bool waitOnDNS( void );
@@ -127,10 +135,6 @@ bool setupNewTcpipStack();
 void increaseTcpIpResetCounter();
 uint8_t getTcpIpResetCounter();
 char * getLoggingStateToString(APP_LOGGING_TASKS_STATES logState);
-bool getNewSettingsFromServer();
-bool readNetworkBufferSslResponseNewSettings( void );
 //extern char NTP_TIME_BUFFER[40];
 
 #endif
-
-

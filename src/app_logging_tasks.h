@@ -42,10 +42,6 @@ typedef enum
             
     APP_LOGGING_TASKS_WAIT_FOR_RESPONSE_SSL,
             
-    APP_LOGGING_TASKS_SEND_REQUEST_SSL_NEW_SETTINGS,
-            
-    APP_LOGGING_TASKS_WAIT_FOR_RESPONSE_SSL_NEW_SETTINGS,
-            
     APP_LOGGING_TASKS_CLOSE_CONNECTION,
             
     APP_LOGGING_TASKS_WAIT_FOR_LOGGING_UNLOCK,  
@@ -80,4 +76,3 @@ void APP_LOGGING_TASKS_Tasks( void );
 /*******************************************************************************
  End of File
  */
-
