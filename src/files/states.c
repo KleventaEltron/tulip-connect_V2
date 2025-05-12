@@ -190,6 +190,10 @@ COOLING_MODE_DATA getCoolingModeData(){
     return cooling_mode_data;
 }
 
+HOT_WATER_MODE_DATA getHotWaterModeData(){
+    return hot_water_mode_data;
+}
+
 HOT_WATER_HEATING_MODE_DATA getHotWaterHeatingModeData(){
     return hot_water_heating_mode_data;
 }

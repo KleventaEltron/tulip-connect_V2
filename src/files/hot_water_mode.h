@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+bool getHotwaterElementBoolFromHotwaterMode();
+const char * getHotWaterStateToString();
        
 void HOT_WATER_MODE_Initialize ( void );
 void HOT_WATER_MODE_Tasks ( void );

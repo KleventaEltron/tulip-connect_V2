@@ -90,13 +90,16 @@ typedef struct{
 typedef enum{
     HOT_WATER_INITIALIZE,
     HOT_WATER_IDLE,
-    HOT_WATER_MODE
+    HOT_WATER_STATE_RUNNING_IN_HOT_WATER,
+    HOT_WATER_STATE_RUNNING_WITH_ELEMENT_ON_IN_HOT_WATER
 } HOT_WATER_MODE_STATES;
 
 
 
 typedef struct{
     HOT_WATER_MODE_STATES state;
+    int16_t setpointHotWaterOffset;
+    bool HotwaterElementOn;    
 } HOT_WATER_MODE_DATA;
 
 
@@ -279,6 +282,7 @@ const char * getThreeWayValveState(int state);
 CIRCULATION_PUMP_DATA getCircPumpData();
 HEATING_MODE_DATA getHeatingModeData();
 COOLING_MODE_DATA getCoolingModeData();
+HOT_WATER_MODE_DATA getHotWaterModeData();
 HOT_WATER_HEATING_MODE_DATA getHotWaterHeatingModeData();
 HOT_WATER_COOLING_MODE_DATA getHotWaterCoolingModeData();
 int16_t getHeatingSetpoint();

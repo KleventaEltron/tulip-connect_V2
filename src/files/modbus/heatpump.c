@@ -296,7 +296,7 @@ uint8_t FillBufferWithStartupSettings(bool doFirstTimeHeatpumpCommunicationSetti
         }
         
         case 4:
-        {
+        { 
             ChangeHeatpumpSetting(ADDRESS_DEVICE_REACHING_TARGET_TEMPERATURE_AND_SHUTDOWN_MODE, 1); 
             i++;
             break;
@@ -307,6 +307,10 @@ uint8_t FillBufferWithStartupSettings(bool doFirstTimeHeatpumpCommunicationSetti
             if (doFirstTimeHeatpumpCommunicationSettings == true)
             {
                 ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, 5); 
+                ChangeHeatpumpSetting(ADDRESS_STERILIZATION_INTERVAL_DAYS, 7); 
+                ChangeHeatpumpSetting(ADDRESS_STERILIZATION_START_TIME, 14); 
+                ChangeHeatpumpSetting(ADDRESS_STERILIZATION_RUN_TIME, 10); 
+                ChangeHeatpumpSetting(ADDRESS_STERILIZATION_TEMPERATURE_SETTING, 65); 
             }       
             i++;
             break;
