@@ -43,13 +43,6 @@
 
 #include "files\eeprom.h"
 
-// *****************************************************************************
-// *****************************************************************************
-// Section: Global Data Definitions
-// *****************************************************************************
-// *****************************************************************************
-
-// *****************************************************************************
 
 APP_HEATPUMP_COMM_DATA app_heatpump_commData;
 
@@ -62,43 +55,63 @@ static volatile uint32_t CommunicationTimeOutCounter = 0;
 
 static volatile bool doFirstTimeHeatpumpCommunicationSettings = false;
 
-// *****************************************************************************
-// *****************************************************************************
-// Section: Application Callback Functions
-// *****************************************************************************
-// *****************************************************************************
 
-static void APP_WriteCallbackHeatpump(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
-{
-    if (event == DMAC_TRANSFER_EVENT_COMPLETE)
-    {
-        app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DATA_SENT_TO_HEATPUMP;
+
+
+
+void StartReceivingDataFromHeatpump(void) {
+    SetOutput(LED_RX_HEATPUMP, true);
+    app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
+    // Start a single byte read operation
+    SERCOM7_USART_Read(&RxBuffer[0], 1);
+}
+
+
+
+
+
+void StartTransmittingDataToHeatpump(uint8_t * txBufferHeatpump) {
+    SetOutput(LED_TX_HEATPUMP, true);
+    app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_SENDING_DATA_TO_HEATPUMP;
+    if (txBufferHeatpump[0] == 104) {
+        SERCOM7_USART_Write(&TxBuffer[0], 16);
+    } else {
+        SERCOM7_USART_Write(&TxBuffer[0], 8);
     }
 }
 
-static void APP_ReadCallbackHeatpump(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
-{    
-    if (event == DMAC_TRANSFER_EVENT_COMPLETE)
+
+
+
+
+void APP_WriteCallback(uintptr_t context) {
+    app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DATA_SENT_TO_HEATPUMP;
+}
+
+
+
+
+
+void APP_ReadCallback(uintptr_t context)
+{
+    if(SERCOM7_USART_ErrorGet() != USART_ERROR_NONE)
     {
-        if(SERCOM7_USART_ErrorGet() == USART_ERROR_NONE)
-        {   // ErrorGet clears errors, set error flag to notify console 
-            switch (app_heatpump_commData.commStatus)
+        /* ErrorGet clears errors, set error flag to notify console */
+    }
+    else
+    {
+        switch (app_heatpump_commData.commStatus)
             {
                 case HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP:
                 {   // Eerste byte ontvangen, kijken wat dit is
                     if (RxBuffer[0] == THIS_DEVICE_ADDRESS)
                     {   // Als het het address is van de slave, vraag om de 7 andere bytes die hierna komen.
                         app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DEVICE_ADDRESS_RECEIVED;
-                    
-                        DMAC_ChannelTransfer(DMAC_CHANNEL_3, \
-                            (const void *)&SERCOM7_REGS->USART_INT.SERCOM_DATA, \
-                            &RxBuffer[1], 7);
+                        SERCOM7_USART_Read(&RxBuffer[1], 7);
                     }
                     else
                     {   // Wacht op volgende eerste byte
-                        DMAC_ChannelTransfer(DMAC_CHANNEL_3, \
-                            (const void *)&SERCOM7_REGS->USART_INT.SERCOM_DATA, \
-                            &RxBuffer[0], 1);
+                        SERCOM7_USART_Read(&RxBuffer[0], 1);
                     }
                     break;
                 }
@@ -111,9 +124,7 @@ static void APP_ReadCallbackHeatpump(DMAC_TRANSFER_EVENT event, uintptr_t contex
                     else if (RxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_READ_REGS)
                     {   // Vraag wat nog komt
                         app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_FIRST_8_BYTES_RECEIVED;
-                        DMAC_ChannelTransfer(DMAC_CHANNEL_3, \
-                            (const void *)&SERCOM7_REGS->USART_INT.SERCOM_DATA, \
-                            &RxBuffer[8], (RxBuffer[MODBUS_BYTES_RETURNED_INDEX] - 3));
+                        SERCOM7_USART_Read(&RxBuffer[8], (RxBuffer[MODBUS_BYTES_RETURNED_INDEX] - 3)); 
                     }
                     else{}
                     
@@ -128,81 +139,23 @@ static void APP_ReadCallbackHeatpump(DMAC_TRANSFER_EVENT event, uintptr_t contex
                 {
                     break;
                 }   
-            }      
-        }
-        else{}
-    }
-}
-/*
-static void TC4_Callback_InterruptHandler(TC_TIMER_STATUS status, uintptr_t context)
-{    
-    if (ResponseDelay < UINT32_MAX)
-        ResponseDelay++;    
-    
-    if (CommunicationWindowSecondCounter < UINT32_MAX)
-        CommunicationWindowSecondCounter++;
-    
-    if (CommunicationTimeOutCounter < UINT32_MAX)
-        CommunicationTimeOutCounter++;
-}
-*/
-
-// *****************************************************************************
-// *****************************************************************************
-// Section: Application Local Functions
-// *****************************************************************************
-// *****************************************************************************
-
-void StartReceivingDataFromHeatpump(void)
-{
-    SetOutput(LED_RX_HEATPUMP, true);
-    
-    app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
-    
-    DMAC_ChannelTransfer(DMAC_CHANNEL_3, \
-        (const void *)&SERCOM7_REGS->USART_INT.SERCOM_DATA, \
-        &RxBuffer[0], 1);
-}
-
-void StartTransmittingDataToHeatpump(uint8_t * txBufferHeatpump)
-{
-    SetOutput(LED_TX_HEATPUMP, true);
-    
-    app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_SENDING_DATA_TO_HEATPUMP;
-    
-    if (txBufferHeatpump[0] == 104)
-    {
-        DMAC_ChannelTransfer(DMAC_CHANNEL_0, &TxBuffer[0], \
-            (const void *)&SERCOM7_REGS->USART_INT.SERCOM_DATA, 16);
-    }
-    else
-    {
-        DMAC_ChannelTransfer(DMAC_CHANNEL_0, &TxBuffer[0], \
-            (const void *)&SERCOM7_REGS->USART_INT.SERCOM_DATA, 8);
+            }        
     }
 }
 
-// *****************************************************************************
-// *****************************************************************************
-// Section: Application Initialization and State Machine Functions
-// *****************************************************************************
-// *****************************************************************************
 
-/*******************************************************************************
-  Function:
-    void APP_HEATPUMP_COMM_Initialize ( void )
 
-  Remarks:
-    See prototype in app_heatpump_comm.h.
- */
+
 
 void APP_HEATPUMP_COMM_Initialize ( void )
 {
     SmartEepromInit();
     
-    DMAC_ChannelCallbackRegister(DMAC_CHANNEL_3, APP_ReadCallbackHeatpump, 0);
-    DMAC_ChannelCallbackRegister(DMAC_CHANNEL_0, APP_WriteCallbackHeatpump, 0);
+    //DMAC_ChannelCallbackRegister(DMAC_CHANNEL_3, APP_ReadCallbackHeatpump, 0);
+    //DMAC_ChannelCallbackRegister(DMAC_CHANNEL_0, APP_WriteCallbackHeatpump, 0);
     
+    SERCOM7_USART_WriteCallbackRegister(APP_WriteCallback, 0);
+    SERCOM7_USART_ReadCallbackRegister(APP_ReadCallback, 0);
     //TC4_TimerCallbackRegister(TC4_Callback_InterruptHandler, (uintptr_t)NULL);
     //TC4_TimerStart();
 
@@ -229,13 +182,8 @@ void APP_HEATPUMP_COMM_Initialize ( void )
 }
 
 
-/******************************************************************************
-  Function:
-    void APP_HEATPUMP_COMM_Tasks ( void )
 
-  Remarks:
-    See prototype in app_heatpump_comm.h.
- */
+
 
 void APP_HEATPUMP_COMM_Tasks ( void )
 {
@@ -248,7 +196,11 @@ void APP_HEATPUMP_COMM_Tasks ( void )
         
         //while(true); // Laatste redmiddel, zorg ervoor dat watchdog ingaat en print gereset wordt
         app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_INIT;
-        //printf("\r\n Error! Manual to APP_STATE_INIT counter: %d\r\n", ManualToInitCounter);
+        
+        SERCOM7_USART_Initialize();
+            
+        SERCOM7_USART_WriteCallbackRegister(APP_WriteCallback, 0);
+        SERCOM7_USART_ReadCallbackRegister(APP_ReadCallback, 0);
     } 
     
     if (CommunicationTimeOutCounter > RESET_AFTER_NO_COMMUNICATION_SECONDS)

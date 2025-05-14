@@ -65,6 +65,7 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
         
             
         SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
+        SYS_CONSOLE_PRINT(" FW:                   %d-%d-%d\n", (int)((THIS_FIRMWARE_VERSION / 1000000)), (int)((THIS_FIRMWARE_VERSION / 1000) % 1000), (int)(THIS_FIRMWARE_VERSION % 1000));
         SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
         SYS_CONSOLE_PRINT(" Heatpump ON:          %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
         SYS_CONSOLE_PRINT(" Display pump on:      %s\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
@@ -137,6 +138,16 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
                 SYS_CONSOLE_PRINT(" Cooling setpoint:     %i\n", getCoolingSetpoint());
                 SYS_CONSOLE_PRINT(" Cooling buffer:       %i\n\n", GetNtcTemperature(NTC_HEATING_BUFFER));
             }
+            
+            if (heatpumpMode == HOT_WATER) {
+                SYS_CONSOLE_PRINT("\r\nHOTWATER:\n");
+                SYS_CONSOLE_PRINT(" State:                %s\n\n", getHotWaterStateToString());
+                SYS_CONSOLE_PRINT(" Hotwater setpoint:    %i\n", getHotwaterSetpoint());
+                SYS_CONSOLE_PRINT(" Hotwater buffer:      %i\n", GetNtcTemperature(NTC_HOT_WATER_BUFFER));
+                SYS_CONSOLE_PRINT(" Offset setpoint:      %i\n", getHotWaterModeData().setpointHotWaterOffset);
+                SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterHotwaterTask());
+                SYS_CONSOLE_PRINT(" Hotwater element:     %s\n", getHotwaterElementBoolFromHotwaterMode() ? "True" : "False");              
+            }
 
             if (heatpumpMode == HOT_WATER_HEATING) {
                 SYS_CONSOLE_PRINT("\r\nHOTWATER AND HEATING:\n");
@@ -190,6 +201,7 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
     // Hot water element
     if ((getHotwaterElementBoolFromHotwaterHeatingMode() == true) ||
             (getHotwaterElementBoolFromHotwaterCoolingMode() == true) ||
+            (getHotwaterElementBoolFromHotwaterMode() == true) ||
             (getDefrostingElementOnState() == true) ||
             (getSterilizationElementOnState() == true)) {
         TurnOnHeatingElementHotWaterBuffer();
@@ -280,7 +292,8 @@ void callActiveModeTaskHandler() {
         
         
         case FLOOR_HEATING: {
-            FLOOR_HEATING_MODE_Tasks();
+            WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, HEATING);
+            //FLOOR_HEATING_MODE_Tasks();
             break;
         }
             
@@ -304,7 +317,8 @@ void callActiveModeTaskHandler() {
         
         
         case HOT_WATER_FLOOR_HEATING:{
-            HOT_WATER_FLOOR_HEATING_MODE_Tasks();
+            WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, HOT_WATER_HEATING);
+            //HOT_WATER_FLOOR_HEATING_MODE_Tasks();
             break;
         }
         
@@ -336,10 +350,14 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
         WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, HEATING);
         heatpumpMode = HEATING;
     }
+    
     app_active_mode_controllerData.currentRunningMode = heatpumpMode;
     app_active_mode_controllerData.previousRunningMode  = heatpumpMode;
     app_active_mode_controllerData.setPoint = 0;
     app_active_mode_controllerData.heatpumpRunningMode = 0;
+    
+    // Make sure arrays contain known values
+    SetDataInArraysAtStartup();
     
     // Reset the system stuck protection counter
     setSystemStuckProtectionCounter(0);
@@ -368,6 +386,9 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
 
 void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
 {    
+    
+    
+    
     // Functions as a watchdog timer, if it is not constantly reset the system is stuck
     if (getSystemStuckProtectionCounter() >= SYS_STUCK_TIMER_MAX_LIMIT) {
         SYS_RESET_SoftwareReset();
@@ -388,6 +409,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
      *
      */
     UpdateCounters(); 
+    
     
     
     /*
@@ -413,6 +435,10 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         // Every 10 seconds the running mode of the heatpump is checked
         checkHeatpumpRunningMode();
     }
+    
+    
+    // Wait 30 seconds to receive data from heatpump before doing anything
+    if(getsystemOnCounter() < 30) { return; }
     
 
     /*

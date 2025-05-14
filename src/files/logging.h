@@ -10,7 +10,15 @@ extern "C" {
 
 #define GET_PATH    "api/v1/heatpump/log"
 #define POST_PATH   "api/v1/combined_log"
-#define PORT 443                
+#define PORT 443         
+        
+/* TEST PARAMETERS */
+//#define HOST        "test.tulip-wise.com"
+//#define TOKEN       "6g9Xoo^8Es*V!f&N"        
+
+/* UNCOMMENT VOOR LOGGING NAAR PRODUCTIE */
+//#define HOST "admin.tulip-wise.com"
+//#define TOKEN "!$nMM7QUsf9NX5kz"            
 
 #define HardwareID                      "TL1"
 #define KlantID                         "TL2"
@@ -130,5 +138,3 @@ char * getLoggingStateToString(APP_LOGGING_TASKS_STATES logState);
 //extern char NTP_TIME_BUFFER[40];
 
 #endif
-
-
