@@ -37,6 +37,21 @@ void setActiveModeControllerHeatpumpRunningMode(uint16_t mode) {
 }
 
 
+bool getCurrentDip1SwitchState() {
+    return app_active_mode_controllerData.dip1SwitchCurrentState;
+}
+
+bool getPreviousDip1SwitchState() {
+    return app_active_mode_controllerData.dip1SwitchPreviousState;
+}
+
+void setCurrentDip1SwitchState() {
+    app_active_mode_controllerData.dip1SwitchCurrentState = GetDip1();
+}
+
+void setPreviousDip1SwitchState(bool currentState) {
+    app_active_mode_controllerData.dip1SwitchPreviousState = currentState;
+}
 
 void resetActiveModeStates() {
     heating_mode_data.state = HEATING_INITIALIZE;
