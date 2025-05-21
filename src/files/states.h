@@ -77,6 +77,7 @@ typedef struct{
     int16_t initialBufferTemp;
     bool HeatingElementOn;
     int16_t stepperSetpoint;
+    bool heatingCurveSet;
 } HEATING_MODE_DATA;
 
 

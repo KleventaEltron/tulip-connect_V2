@@ -112,6 +112,8 @@ void HEATING_MODE_Initialize ( void )
     heating_mode_data.HeatingElementOn = false;
     heating_mode_data.stepperSetpoint = TEMPERATURE_ALARM_VALUE;
     
+    heating_mode_data.heatingCurveSet = false;
+    
     heating_mode_data.state = HEATING_INITIALIZE;
     return;
 }
@@ -156,6 +158,13 @@ void HEATING_MODE_Tasks ( void )
 {        
     
     int16_t heatingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
+    
+    if (getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING) > 0) {
+        heating_mode_data.heatingCurveSet = true; 
+    } else {
+        heating_mode_data.heatingCurveSet = false; 
+    }
+
     //int16_t heatingSetpoint = getHeatingSetpoint();
    
     bool currentDip1SwitchState = getCurrentDip1SwitchState();

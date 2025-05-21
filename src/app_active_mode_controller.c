@@ -71,7 +71,12 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
         SYS_CONSOLE_PRINT(" Heatpump ON:          %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
         SYS_CONSOLE_PRINT(" Display pump on:      %s\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
         SYS_CONSOLE_PRINT(" Sys stuck protection: %i\n", getSystemStuckProtectionCounter());
-        SYS_CONSOLE_PRINT(" Sys on time:          %i\n", getsystemOnCounter());
+        SYS_CONSOLE_PRINT(" Sys on time:          %i\n\n", getsystemOnCounter());
+        //SYS_CONSOLE_PRINT(" Hot W/Cooling Curve:  %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_COOLING_CURVE_SETTINGS));
+        //SYS_CONSOLE_PRINT(" Cooling Curve:        %i\n", getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
+        SYS_CONSOLE_PRINT(" Heating Curve:        %i\n", getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
+        //SYS_CONSOLE_PRINT(" Hot W Curve:          %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_CURVE_SETTING));
+        //SYS_CONSOLE_PRINT(" UnderF Curve:         %i\n", getDataFromMemoryCallable(ADDRESS_FLOOR_HEATING_CURVE_SETTING));
         
         //printHeadOfStringBuffer();
         
@@ -132,8 +137,8 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
                 SYS_CONSOLE_PRINT(" Initial buffer temp.: %i\n", getHeatingModeData().initialBufferTemp);
                 SYS_CONSOLE_PRINT(" Stepper setpoint:     %i\n", getHeatingModeData().stepperSetpoint);
                 SYS_CONSOLE_PRINT(" Heating setpoint:     %i\n", getHeatingSetpoint());
-                SYS_CONSOLE_PRINT(" Conditioning offset:  %i\n", getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE));
-                SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
+                //SYS_CONSOLE_PRINT(" Conditioning offset:  %i\n", getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE));
+                //SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
                 SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
                 SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getSecondCounterHeatingTask());
             }
@@ -146,7 +151,7 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
                 SYS_CONSOLE_PRINT(" Cooling setpoint:     %i\n", getCoolingSetpoint());
                 SYS_CONSOLE_PRINT(" Cooling buffer:       %i\n", GetNtcTemperature(NTC_HEATING_BUFFER));
                 SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
-                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
+                //SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
             }
             
             if (heatpumpMode == HOT_WATER) {
@@ -175,7 +180,7 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
                 SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterHotwaterTask());
                 SYS_CONSOLE_PRINT(" Hotwater element:     %s\n", getStatusHeatingElementHotWaterBuffer() ? "True" : "False");
                 SYS_CONSOLE_PRINT(" Hot water passive:    %s\n\n", getHotWaterHeatingModeData().hotwaterPassive ? "True" : "False");
-                SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
+                //SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
                 SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
             }
             
