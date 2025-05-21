@@ -26,6 +26,7 @@
 #include "files/threeWayValve.h"
 #include "files/sterilization.h"
 #include "files/defrosting.h"
+#include "files/modbus/display.h"
 
 #include "files/circulation_pump.h"
 
@@ -87,16 +88,18 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
         SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterCirculationPumpTask());
         SYS_CONSOLE_PRINT(" Temp. too low:        %s\n\n", getCirculationPumpData().temperatureTooLowForPumpToBeOn ? "True" : "False");
         
+        /*
         SYS_CONSOLE_PRINT("\r\nDefrosting:\n");
         SYS_CONSOLE_PRINT(" Defrosting active:    %s\n", isDefrostingActive() ? "True" : "False");
         SYS_CONSOLE_PRINT(" Hotwater buffer:      %i\n", GetNtcTemperature(NTC_HOT_WATER_BUFFER));
         SYS_CONSOLE_PRINT(" Initial defrost temp :%i\n", getInitialDefrostingTemperature());
         SYS_CONSOLE_PRINT(" Defrosting element:   %s\n\n", getDefrostingElementOnState() ? "True" : "False");
-        
+        */
+         
         SYS_CONSOLE_PRINT("\r\n3-WAY VALVE:\n");
         SYS_CONSOLE_PRINT(" 3-way valve mode:     %s\n", getThreeWayValveState(getStatus3WayValve()));
         SYS_CONSOLE_PRINT(" 3-way needed state:   %s\n", getThreeWayValveState(getNeededValvePosition()));
-        SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getWaitingThreeWayValveSwitch());
+        //SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getWaitingThreeWayValveSwitch());
         
         if (getSterilisationMode() != OFF) {
             SYS_CONSOLE_PRINT("\r\nSTERILIZATION:\n");
@@ -127,6 +130,11 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
                 SYS_CONSOLE_PRINT(" Element ON:           %s\n", getStatusHeatingElementHeatingBuffer() ? "True" : "False");
                 SYS_CONSOLE_PRINT(" Buffer:               %i\n", GetNtcTemperature(NTC_HEATING_BUFFER));
                 SYS_CONSOLE_PRINT(" Initial buffer temp.: %i\n", getHeatingModeData().initialBufferTemp);
+                SYS_CONSOLE_PRINT(" Stepper setpoint:     %i\n", getHeatingModeData().stepperSetpoint);
+                SYS_CONSOLE_PRINT(" Heating setpoint:     %i\n", getHeatingSetpoint());
+                SYS_CONSOLE_PRINT(" Conditioning offset:  %i\n", getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE));
+                SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
+                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
                 SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getSecondCounterHeatingTask());
             }
             
@@ -136,7 +144,9 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
                 SYS_CONSOLE_PRINT(" State:                %s\n\n", getCoolingStateToString());
                 
                 SYS_CONSOLE_PRINT(" Cooling setpoint:     %i\n", getCoolingSetpoint());
-                SYS_CONSOLE_PRINT(" Cooling buffer:       %i\n\n", GetNtcTemperature(NTC_HEATING_BUFFER));
+                SYS_CONSOLE_PRINT(" Cooling buffer:       %i\n", GetNtcTemperature(NTC_HEATING_BUFFER));
+                SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
+                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
             }
             
             if (heatpumpMode == HOT_WATER) {
@@ -165,6 +175,8 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
                 SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterHotwaterTask());
                 SYS_CONSOLE_PRINT(" Hotwater element:     %s\n", getStatusHeatingElementHotWaterBuffer() ? "True" : "False");
                 SYS_CONSOLE_PRINT(" Hot water passive:    %s\n\n", getHotWaterHeatingModeData().hotwaterPassive ? "True" : "False");
+                SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
+                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
             }
             
             if (heatpumpMode == HOT_WATER_COOLING) {
@@ -180,6 +192,8 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
                 SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterHotwaterTask());
                 SYS_CONSOLE_PRINT(" Hotwater element:     %s\n", getStatusHeatingElementHotWaterBuffer() ? "True" : "False");
                 SYS_CONSOLE_PRINT(" Hot water passive:    %s\n\n", getHotWaterCoolingModeData().hotwaterPassive ? "True" : "False");
+                SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
+                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
             }
         }
     }
@@ -355,6 +369,8 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     app_active_mode_controllerData.previousRunningMode  = heatpumpMode;
     app_active_mode_controllerData.setPoint = 0;
     app_active_mode_controllerData.heatpumpRunningMode = 0;
+    app_active_mode_controllerData.dip1SwitchCurrentState = GetDip1();
+    app_active_mode_controllerData.dip1SwitchPreviousState = GetDip1();
     
     // Make sure arrays contain known values
     SetDataInArraysAtStartup();
@@ -427,7 +443,9 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
      */
     if(HeatingHotWaterTimerExpired()) {
         // If DIP switch 4 set, print debug info
-        printDebugInfo();
+        printDebugInfo();  
+        // Get Dip1 state
+        setCurrentDip1SwitchState();     
         // Sterilization was either on passive mode or off, but has to be set to ACTIVE mode
         checkNeedForSterilization();
         // Every 10 seconds the setpoint in the heatpump is checked

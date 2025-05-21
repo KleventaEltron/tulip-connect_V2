@@ -14,8 +14,44 @@
 #include "sterilization.h"
 #include "defrosting.h"
 #include "modbus\heatpump_parameters.h"
+#include "modbus/display.h"
 
 extern HOT_WATER_COOLING_MODE_DATA hot_water_cooling_mode_data;
+
+bool regulateOnTempSensorInBufferHotWaterCooling = false;
+bool changeSettingHotWaterCooling = false;
+
+void setTemperatureOperatingCycleHotWaterCooling() {
+    if ((getsystemOnCounter() % 10) == 0) {
+        changeSettingHotWaterCooling = true;
+        return;
+    }    
+    
+    if (!regulateOnTempSensorInBufferHotWaterCooling) {
+        changeSettingHotWaterCooling = false;
+        return;
+    }
+    
+    int16_t coolingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
+    int16_t coolingSetpoint = getCoolingSetpoint();        
+    
+    if (coolingBufferTemperature >= (coolingSetpoint + (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE) * 10)) 
+            && getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 1
+            && changeSettingHotWaterCooling) {
+        ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
+        changeSettingHotWaterCooling = false;
+        return;
+    }  
+    
+    if (coolingBufferTemperature <= coolingSetpoint
+            && getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 240
+            && changeSettingHotWaterCooling) {
+        ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+        changeSettingHotWaterCooling = false;
+        return;        
+    }
+}
+
 
 bool getHotwaterElementBoolFromHotwaterCoolingMode() {
     return hot_water_cooling_mode_data.HotwaterElementOn;
@@ -151,6 +187,22 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
     int16_t hotwaterSetpoint = getHotwaterSetpoint();
     int16_t hotwaterDelta = getHotwaterDelta();
     
+    bool currentDip1SwitchState = getCurrentDip1SwitchState();
+    if (currentDip1SwitchState) {
+        regulateOnTempSensorInBufferHotWaterCooling = false;
+    } else {
+        regulateOnTempSensorInBufferHotWaterCooling = true;
+    }
+    
+    if (currentDip1SwitchState != getPreviousDip1SwitchState()) {
+        setPreviousDip1SwitchState(currentDip1SwitchState);
+        if(currentDip1SwitchState == true) {
+            ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 10);
+        }
+    }
+    
+    setTemperatureOperatingCycleHotWaterCooling();
+    
     if ((hotwaterBufferTemperature == TEMPERATURE_ALARM_VALUE) || (hotwaterSetpoint == TEMPERATURE_ALARM_VALUE) || (hotwaterDelta == TEMPERATURE_ALARM_VALUE)) {
         // Needed values not yet known
         return;
@@ -214,6 +266,10 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
         case HOT_WATER_COOLING_INITIALIZE_COOLING:{
             // 0: Init cooling
             
+            if(regulateOnTempSensorInBufferHotWaterCooling) {
+                ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+            }
+            
             hot_water_cooling_mode_data.state = HOT_WATER_COOLING_IDLE_COOLING;
             
             break;
@@ -224,6 +280,10 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
             
             if (getHeatpumpCompressorFrequency() != 0){
                 // Compressor is running
+                if(regulateOnTempSensorInBufferHotWaterCooling) {
+                    ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
+                }
+                            
                 hot_water_cooling_mode_data.state = HOT_WATER_COOLING_MODE_RUNNING_ON_COOLING;
                 break;
             }
@@ -236,6 +296,11 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
             
             if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
                 // Compressor is not running and is also not in defrosting
+                
+                if(regulateOnTempSensorInBufferHotWaterCooling) {
+                    ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                }
+                            
                 hot_water_cooling_mode_data.state = HOT_WATER_COOLING_IDLE_COOLING;
                 break;
             }
@@ -256,6 +321,10 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
             // 3: Initialize hot water
             
             setSecondCounterHotwaterTask(0);
+            
+            if(regulateOnTempSensorInBufferHotWaterCooling) {
+                ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
+            }
             
             hot_water_cooling_mode_data.HotwaterElementOn = false;
             

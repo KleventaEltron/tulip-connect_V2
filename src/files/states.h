@@ -48,6 +48,8 @@ typedef struct
     RUNNING_MODES currentRunningMode;
     uint16_t setPoint;
     uint16_t heatpumpRunningMode;
+    bool dip1SwitchCurrentState;
+    bool dip1SwitchPreviousState;
 } APP_ACTIVE_MODE_CONTROLLER_DATA;    
     
 void setActiveModeControllerHeatpumpSetpoint(int16_t newSetpoint);
@@ -74,6 +76,7 @@ typedef struct{
     HEATING_MODE_STATES state;
     int16_t initialBufferTemp;
     bool HeatingElementOn;
+    int16_t stepperSetpoint;
 } HEATING_MODE_DATA;
 
 
@@ -215,6 +218,7 @@ typedef struct{
     
     bool hotwaterPassive;
     int16_t setpointHotWaterOffset;
+    int16_t stepperSetpoint;
     bool HeatingElementOn;
     bool HotwaterElementOn;
 } HOT_WATER_HEATING_MODE_DATA;
@@ -289,6 +293,11 @@ int16_t getHeatingSetpoint();
 int16_t getCoolingSetpoint();
 int16_t getHotwaterSetpoint();
 int16_t getHotwaterDelta();
+
+bool getCurrentDip1SwitchState();
+bool getPreviousDip1SwitchState();
+void setCurrentDip1SwitchState();
+void setPreviousDip1SwitchState(bool currentState);
 
 #ifdef __cplusplus
 }

@@ -14,8 +14,10 @@
 #include "sterilization.h"
 #include "defrosting.h"
 #include "modbus\heatpump_parameters.h"
+#include "modbus/display.h"
 
 extern HOT_WATER_HEATING_MODE_DATA hot_water_heating_mode_data;
+bool regulateOnTempSensorInBufferHotWaterHeating = false;
 
 bool getHeatingElementBoolFromHotwaterHeatingMode() {
     return hot_water_heating_mode_data.HeatingElementOn;
@@ -123,12 +125,84 @@ void adjustSetpointOffsetHotWater()
 }
 
 
+bool changeSettingHotWaterHeating = false;
+void setTemperatureOperatingCycleHotWaterHeating() {
+    if ((getsystemOnCounter() % 10) == 0) {
+        changeSettingHotWaterHeating = true;
+        return;
+    }    
+          
+    if (!regulateOnTempSensorInBufferHotWaterHeating) {
+        changeSettingHotWaterHeating = false;
+        return;
+    }
+    
+    int16_t heatingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
+    int16_t heatingSetpoint = getHeatingSetpoint();        
+    
+    if (heatingBufferTemperature <= (heatingSetpoint - (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE) * 10)) 
+            && getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 1
+            && changeSettingHotWaterHeating) {
+        ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
+        changeSettingHotWaterHeating = false;
+        return;
+    }  
+
+    if (heatingBufferTemperature >= heatingSetpoint
+            && getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 240
+            && changeSettingHotWaterHeating) {
+        ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+        changeSettingHotWaterHeating = false;
+        return;        
+    }    
+}
+
+
 int16_t determineCorrectSetpoint() {
     if ((hot_water_heating_mode_data.state == HOT_WATER_HEATING_INITIALIZE_HEATING) ||
         (hot_water_heating_mode_data.state == HOT_WATER_HEATING_IDLE_HEATING) ||
         (hot_water_heating_mode_data.state == HOT_WATER_HEATING_RUNNING_ON_HEATING) ||
         (hot_water_heating_mode_data.state == HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON) ) {
-        return getHeatingSetpoint();
+        
+        int16_t heatingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
+        int16_t heatingSetpoint = getHeatingSetpoint();
+
+        if (!regulateOnTempSensorInBufferHotWaterHeating) {
+            hot_water_heating_mode_data.stepperSetpoint = heatingSetpoint;
+            return heatingSetpoint;
+        }
+
+        if ((heatingBufferTemperature == TEMPERATURE_ALARM_VALUE) || (heatingSetpoint == TEMPERATURE_ALARM_VALUE)) {
+            // No temperature or setpoint known yet
+            hot_water_heating_mode_data.stepperSetpoint = heatingSetpoint;
+            return heatingSetpoint;
+        }    
+
+        if (heatingBufferTemperature >= heatingSetpoint) {
+            // Hot water buffer tempereature is equal or higher than actual setpoint, so reset offset to 0
+            hot_water_heating_mode_data.stepperSetpoint = heatingSetpoint;
+            return heatingSetpoint;
+        }    
+
+        if (getHeatpumpCompressorFrequency() == 0) {
+            hot_water_heating_mode_data.stepperSetpoint = heatingSetpoint;
+            return heatingSetpoint;
+        }
+
+        if ((heatingSetpoint - getHeatpumpReturnWaterTemperature()) > 50) {
+            hot_water_heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature() + 20;
+            return hot_water_heating_mode_data.stepperSetpoint;
+        }
+
+
+        if (getHeatpumpReturnWaterTemperature() >= (hot_water_heating_mode_data.stepperSetpoint - 20) && (hot_water_heating_mode_data.stepperSetpoint - getHeatpumpReturnWaterTemperature()) <= 20) {
+            hot_water_heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature() + 20;
+            return hot_water_heating_mode_data.stepperSetpoint;
+            //heatingSetpoint += 20;
+        }
+
+        return hot_water_heating_mode_data.stepperSetpoint;
+        
     }
     
     if ((hot_water_heating_mode_data.state == HOT_WATER_HEATING_INITIALIZE_HOT_WATER) ||
@@ -169,6 +243,20 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
     int16_t hotwaterBufferTemperature = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
     int16_t hotwaterSetpoint = getHotwaterSetpoint();
     int16_t hotwaterDelta = getHotwaterDelta();
+    
+    bool currentDip1SwitchState = getCurrentDip1SwitchState();
+    if (currentDip1SwitchState) {
+        regulateOnTempSensorInBufferHotWaterHeating = false;
+    } else {
+        regulateOnTempSensorInBufferHotWaterHeating = true;
+    }
+    
+    if (currentDip1SwitchState != getPreviousDip1SwitchState()) {
+        setPreviousDip1SwitchState(currentDip1SwitchState);
+        if(currentDip1SwitchState == true) {
+            ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 10);
+        }
+    }
     
     if ((hotwaterBufferTemperature == TEMPERATURE_ALARM_VALUE) || (hotwaterSetpoint == TEMPERATURE_ALARM_VALUE) || (hotwaterDelta == TEMPERATURE_ALARM_VALUE)) {
         // Needed values not yet known
@@ -215,6 +303,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         return;
     }
     
+    setTemperatureOperatingCycleHotWaterHeating();
     
     setActiveModeControllerHeatpumpSetpoint(determineCorrectSetpoint());
     
@@ -238,6 +327,10 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             hot_water_heating_mode_data.HeatingElementOn = false;
             setSecondCounterHeatingTask(UINT32_MAX);
             
+            if (regulateOnTempSensorInBufferHotWaterHeating) {
+                ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+            }
+            
             hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
             hot_water_heating_mode_data.state = HOT_WATER_HEATING_IDLE_HEATING;
             break;
@@ -250,6 +343,10 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                 // Compressor is running
                 setSecondCounterHeatingTask(0);
                 hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                
+                if (regulateOnTempSensorInBufferHotWaterHeating) {
+                    ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
+                }
                 
                 hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING;
                 break;
@@ -267,6 +364,10 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                 hot_water_heating_mode_data.HeatingElementOn = false;
                 hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
+                
+                if (regulateOnTempSensorInBufferHotWaterHeating) {
+                    ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                }
 
                 hot_water_heating_mode_data.state = HOT_WATER_HEATING_IDLE_HEATING;
                 break;
@@ -302,6 +403,10 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                 hot_water_heating_mode_data.HeatingElementOn = false;
                 hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
+                
+                if (regulateOnTempSensorInBufferHotWaterHeating) {
+                    ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                }
 
                 hot_water_heating_mode_data.state = HOT_WATER_HEATING_IDLE_HEATING;
                 break;
@@ -344,6 +449,12 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             
             //TurnOffHeatingElementHeatingBuffer();
             //TurnOffHeatingElementHotWaterBuffer();
+
+            if (regulateOnTempSensorInBufferHotWaterHeating) {
+                ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
+            }
+
+            
             hot_water_heating_mode_data.HeatingElementOn = false;
             hot_water_heating_mode_data.HotwaterElementOn = false;
             
