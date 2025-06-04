@@ -69,6 +69,10 @@
 #define SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH                    66 // 2 bytes V2-0-0
 #define SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP          68 // 2 bytes V2-0-0
 
+#define SEEP_ADDR_COOLING_SETPOINT                          70 // 2 bytes V2-0-1
+
+#define SEEP_ADDR_HEATING_CURVE                             72 // 1 byte V2-0-1
+#define SEEP_ADDR_COOLING_CURVE                             73 // 1 byte V2-0-1
 
 #define SEEP_ADDR
 

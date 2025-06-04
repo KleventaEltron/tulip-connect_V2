@@ -46,13 +46,15 @@ typedef struct
 {
     RUNNING_MODES previousRunningMode;
     RUNNING_MODES currentRunningMode;
-    uint16_t setPoint;
+    uint16_t setPointHeating;
+    uint16_t setPointCooling;
     uint16_t heatpumpRunningMode;
     bool dip1SwitchCurrentState;
     bool dip1SwitchPreviousState;
 } APP_ACTIVE_MODE_CONTROLLER_DATA;    
     
-void setActiveModeControllerHeatpumpSetpoint(int16_t newSetpoint);
+void setActiveModeControllerHeatpumpSetpointHeating(int16_t newSetpoint);
+void setActiveModeControllerHeatpumpSetpointCooling(int16_t newSetpoint);
 void setActiveModeControllerHeatpumpRunningMode(uint16_t mode);
 RUNNING_MODES getActiveStateValue();
 /*********
@@ -77,6 +79,7 @@ typedef struct{
     int16_t initialBufferTemp;
     bool HeatingElementOn;
     int16_t stepperSetpoint;
+    bool heatingCurveSet;
 } HEATING_MODE_DATA;
 
 
@@ -124,6 +127,7 @@ typedef enum{
 
 
 typedef struct{
+    bool coolingCurveSet;
     COOLING_MODE_STATES state;
 } COOLING_MODE_DATA;
 
@@ -181,6 +185,7 @@ typedef struct{
     bool hotwaterPassive;
     int16_t setpointHotWaterOffset;
     bool HotwaterElementOn;
+    bool coolingCurveSet;
 } HOT_WATER_COOLING_MODE_DATA;
 
 
@@ -221,6 +226,7 @@ typedef struct{
     int16_t stepperSetpoint;
     bool HeatingElementOn;
     bool HotwaterElementOn;
+    bool heatingCurveSet;
 } HOT_WATER_HEATING_MODE_DATA;
 
 
@@ -278,6 +284,7 @@ const char * getActiveModeToString(RUNNING_MODES state);
 bool isDefrostingActive();
 uint16_t getHeatpumpCompressorFrequency();
 int16_t getHeatpumpHeatingSetpoint();
+int16_t getHeatpumpCoolingSetpoint();
 uint16_t getHeatpumpWaterFlow();
 int16_t getHeatpumpRunningMode();
 int16_t getHeatpumpReturnWaterTemperature();

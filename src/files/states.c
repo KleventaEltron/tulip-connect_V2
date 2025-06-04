@@ -27,10 +27,13 @@ HOT_WATER_FLOOR_HEATING_MODE_DATA hot_water_floor_heating_mode_data;
 CIRCULATION_PUMP_DATA circulation_pump_data;
 
 
-void setActiveModeControllerHeatpumpSetpoint(int16_t newSetpoint) {
-    app_active_mode_controllerData.setPoint = newSetpoint;
+void setActiveModeControllerHeatpumpSetpointHeating(int16_t newSetpoint) {
+    app_active_mode_controllerData.setPointHeating = newSetpoint;
 }
 
+void setActiveModeControllerHeatpumpSetpointCooling(int16_t newSetpoint) {
+    app_active_mode_controllerData.setPointCooling = newSetpoint;
+}
 
 void setActiveModeControllerHeatpumpRunningMode(uint16_t mode) {
     app_active_mode_controllerData.heatpumpRunningMode = mode;
@@ -170,6 +173,12 @@ int16_t getHeatpumpHeatingSetpoint()
 {
     return UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
 }
+
+int16_t getHeatpumpCoolingSetpoint()
+{
+    return UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+}
+
 uint16_t getHeatpumpWaterFlow()
 {
     return RealTimeData[ADDRESS_WATER_FLOW - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
@@ -232,7 +241,8 @@ int16_t getHeatingSetpoint()
 int16_t getCoolingSetpoint()
 {
     // Get Heating setpoint out of smart eeprom
-    int16_t setpointCooling = UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    int16_t setpointCooling = ReadSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT);
+    //int16_t setpointCooling = UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
     
     if (setpointCooling != TEMPERATURE_ALARM_VALUE){
         setpointCooling *= 10;

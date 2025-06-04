@@ -40,7 +40,13 @@ void setTemperatureOperatingCycleHeating() {
     }
     
     int16_t heatingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
-    int16_t heatingSetpoint = getHeatingSetpoint();        
+    int16_t heatingSetpoint = TEMPERATURE_ALARM_VALUE; 
+    
+    if (heating_mode_data.heatingCurveSet) {
+        heatingSetpoint = getHeatpumpHeatingSetpoint();
+    } else {
+        heatingSetpoint = getHeatingSetpoint();
+    }   
     
     if (heatingBufferTemperature <= (heatingSetpoint - (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE) * 10)) 
             && getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 1
@@ -63,7 +69,7 @@ void setTemperatureOperatingCycleHeating() {
 
 int16_t determineCorrectHeatingSetpoint() {
     int16_t heatingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
-    int16_t heatingSetpoint = getHeatingSetpoint();
+    int16_t heatingSetpoint = getHeatingSetpoint(); 
     
     if (!regulateOnTempSensorInBufferHeating) {
         heating_mode_data.stepperSetpoint = heatingSetpoint;
@@ -112,6 +118,8 @@ void HEATING_MODE_Initialize ( void )
     heating_mode_data.HeatingElementOn = false;
     heating_mode_data.stepperSetpoint = TEMPERATURE_ALARM_VALUE;
     
+    heating_mode_data.heatingCurveSet = false;
+    
     heating_mode_data.state = HEATING_INITIALIZE;
     return;
 }
@@ -156,6 +164,13 @@ void HEATING_MODE_Tasks ( void )
 {        
     
     int16_t heatingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
+    
+    if (getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING) > 0) {
+        heating_mode_data.heatingCurveSet = true; 
+    } else {
+        heating_mode_data.heatingCurveSet = false; 
+    }
+
     //int16_t heatingSetpoint = getHeatingSetpoint();
    
     bool currentDip1SwitchState = getCurrentDip1SwitchState();
@@ -174,7 +189,7 @@ void HEATING_MODE_Tasks ( void )
     
     setTemperatureOperatingCycleHeating();
     
-    setActiveModeControllerHeatpumpSetpoint(determineCorrectHeatingSetpoint());
+    setActiveModeControllerHeatpumpSetpointHeating(determineCorrectHeatingSetpoint());
     
     setActiveModeControllerHeatpumpRunningMode(SET_MODE_HEATING);
     
@@ -191,6 +206,9 @@ void HEATING_MODE_Tasks ( void )
             if(regulateOnTempSensorInBufferHeating) {
                 ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
             }
+            
+            ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, ReadSmartEeprom8(SEEP_ADDR_COOLING_CURVE));
+            ChangeHeatpumpSetting(ADDRESS_HEATING_CURVE_SETTING, ReadSmartEeprom8(SEEP_ADDR_HEATING_CURVE));
             
             heating_mode_data.state = HEATING_IDLE;
             break;

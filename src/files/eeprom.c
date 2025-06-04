@@ -193,6 +193,7 @@ void restoreEepromValuesToDefault(void)
     WriteSmartEeprom8 (SEEP_ADDR_TEST, 0);
     WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, UINT16_MAX);
     WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT, TEMPERATURE_ALARM_VALUE);
+    WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT, TEMPERATURE_ALARM_VALUE);
     WriteSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT, TEMPERATURE_ALARM_VALUE);
 
     WriteSmartEeprom32(SEEP_ADDR_PUMP_MAXIMUM_OFF_TIME_SEC, 86400);
@@ -229,6 +230,9 @@ void restoreEepromValuesToDefault(void)
     
     WriteSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH, 100);
     WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP, 20);
+    
+    WriteSmartEeprom8(SEEP_ADDR_HEATING_CURVE, 0);
+    WriteSmartEeprom8(SEEP_ADDR_COOLING_CURVE, 0);
 }
 
 void SmartEepromInit(void)
@@ -259,6 +263,11 @@ void SmartEepromInit(void)
         
         WriteSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH, 100);
         WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP, 20);
+    }
+    
+    if (thisEepromVersion < 2000001) {
+        WriteSmartEeprom8(SEEP_ADDR_HEATING_CURVE, 0);
+        WriteSmartEeprom8(SEEP_ADDR_COOLING_CURVE, 0);
     }
 
     //if (thisEepromVersion < 1000013) // 1.0.13

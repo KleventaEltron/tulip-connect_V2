@@ -31,7 +31,13 @@ void setTemperatureOperatingCycleCooling() {
     }
     
     int16_t coolingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
-    int16_t coolingSetpoint = getCoolingSetpoint();        
+    int16_t coolingSetpoint = TEMPERATURE_ALARM_VALUE;      
+    
+    if (cooling_mode_data.coolingCurveSet) {
+        coolingSetpoint = getHeatpumpCoolingSetpoint();
+    } else {
+        coolingSetpoint = getCoolingSetpoint();
+    }   
     
     if (coolingBufferTemperature >= (coolingSetpoint + (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE) * 10)) 
             && getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 1
@@ -91,7 +97,12 @@ const char * getCoolingStateToString()
 void COOLING_MODE_Tasks ( void )
 {    
     //setActiveModeControllerHeatpumpSetpoint(getHeatpumpHeatingSetpoint() * 10);
-    
+    if (getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING) > 0) {
+        cooling_mode_data.coolingCurveSet = true; 
+    } else {
+        cooling_mode_data.coolingCurveSet = false; 
+    }
+        
     bool currentDip1SwitchState = getCurrentDip1SwitchState();
     if (currentDip1SwitchState) {
         regulateOnTempSensorInBufferCooling = false;
@@ -108,6 +119,8 @@ void COOLING_MODE_Tasks ( void )
     
     setTemperatureOperatingCycleCooling();
     
+    setActiveModeControllerHeatpumpSetpointCooling(getCoolingSetpoint());
+    
     setActiveModeControllerHeatpumpRunningMode(SET_MODE_COOLING);
     
     switch ( cooling_mode_data.state )
@@ -118,6 +131,9 @@ void COOLING_MODE_Tasks ( void )
             if(regulateOnTempSensorInBufferCooling) {
                 ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
             }
+            
+            ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, ReadSmartEeprom8(SEEP_ADDR_COOLING_CURVE));
+            ChangeHeatpumpSetting(ADDRESS_HEATING_CURVE_SETTING, ReadSmartEeprom8(SEEP_ADDR_HEATING_CURVE));
             
             cooling_mode_data.state = COOLING_IDLE;
             break;

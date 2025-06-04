@@ -10,6 +10,8 @@
 #include "heatpump_parameters.h"
 #include "files\ntc.h"
 #include "files\eeprom.h"
+#include "../states.h"
+#include "files/states.h"
 //#include "shiftregisters.h
 
 void ParseDisplayData(uint8_t * rxBuffer)
@@ -57,6 +59,10 @@ void ParseDisplayData(uint8_t * rxBuffer)
                 //if (UserParameters[ADDRESS_HEATING_FLOOR_HEATING_CURVE_SETTING - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] == HEATING_CURVE_SETTING_OFF)
                     WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT, data);
                 //ChangeHeatpumpSetting(regAddress, data); 
+                break;
+            }
+            case ADDRESS_COOLING_SET_TEMPERATURE: {
+                WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT, data);
                 break;
             }
             case ADDRESS_HOT_WATER_SET_TEMPERATURE: {
@@ -336,16 +342,38 @@ void GetDataFromHeatpump(void)
     */  
     
     int16_t heatingSetpoint = ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT);
-    
     if (heatingSetpoint == TEMPERATURE_ALARM_VALUE && UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] != UINT16_MAX)
     {   // If heating setpoint in smartEEprom is -9999, and the heatings setpoint in the heatpumt array is not UINT16_MAX (first startup only), set setpoint from heatpump in eeprom
         WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT, UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
     }
     else
-    {   // Other then at first startup, send the setpoint in the eeprom to the display.
+    {  
+        // Other then at first startup, send the setpoint in the eeprom to the display.
         //if (UserParameters[ADDRESS_HEATING_FLOOR_HEATING_CURVE_SETTING - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] == HEATING_CURVE_SETTING_OFF)
-        UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = heatingSetpoint; 
+        if ((heatpumpMode == HEATING || heatpumpMode == HOT_WATER_HEATING) && getHeatingModeData().heatingCurveSet) {
+            UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = getHeatpumpHeatingSetpoint();
+        } else {
+            UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = heatingSetpoint; 
+        }
+        
     }
+    
+    int16_t coolingSetpoint = ReadSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT);
+    if (coolingSetpoint == TEMPERATURE_ALARM_VALUE && UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] != UINT16_MAX)
+    {   // If heating setpoint in smartEEprom is -9999, and the heatings setpoint in the heatpumt array is not UINT16_MAX (first startup only), set setpoint from heatpump in eeprom
+        WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT, UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
+    }
+    else
+    {  
+        // Other then at first startup, send the setpoint in the eeprom to the display.
+        //if (UserParameters[ADDRESS_HEATING_FLOOR_HEATING_CURVE_SETTING - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] == HEATING_CURVE_SETTING_OFF)
+        if ((heatpumpMode == COOLING || heatpumpMode == HOT_WATER_COOLING) && getCoolingModeData().coolingCurveSet) {
+            UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = getHeatpumpCoolingSetpoint();
+        } else {
+            UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = coolingSetpoint; 
+        }
+        
+    }    
     
     // If hot water setpoint in smartEEprom is -9999, wait for setpoint given from heatpump, and write it to smartEEprom
     int16_t hotWaterSetpoint = ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT);
