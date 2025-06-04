@@ -138,7 +138,14 @@ void setTemperatureOperatingCycleHotWaterHeating() {
     }
     
     int16_t heatingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
-    int16_t heatingSetpoint = getHeatingSetpoint();        
+    int16_t heatingSetpoint = TEMPERATURE_ALARM_VALUE; 
+    
+    if (hot_water_heating_mode_data.heatingCurveSet) {
+        heatingSetpoint = getHeatpumpHeatingSetpoint();
+    } else {
+        heatingSetpoint = getHeatingSetpoint();
+    }   
+    
     
     if (heatingBufferTemperature <= (heatingSetpoint - (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE) * 10)) 
             && getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 1
@@ -226,6 +233,8 @@ void HOT_WATER_HEATING_MODE_Initialize ( void )
     hot_water_heating_mode_data.HeatingElementOn = false;
     hot_water_heating_mode_data.HotwaterElementOn = false;
     
+    hot_water_heating_mode_data.heatingCurveSet = false;
+    
     hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
     hot_water_heating_mode_data.hotwaterPassive = false;
     hot_water_heating_mode_data.setpointHotWaterOffset = TEMPERATURE_ALARM_VALUE;
@@ -243,6 +252,12 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
     int16_t hotwaterBufferTemperature = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
     int16_t hotwaterSetpoint = getHotwaterSetpoint();
     int16_t hotwaterDelta = getHotwaterDelta();
+    
+    if (getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING) > 0) {
+        hot_water_heating_mode_data.heatingCurveSet = true; 
+    } else {
+        hot_water_heating_mode_data.heatingCurveSet = false; 
+    }
     
     bool currentDip1SwitchState = getCurrentDip1SwitchState();
     if (currentDip1SwitchState) {
@@ -305,7 +320,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
     
     setTemperatureOperatingCycleHotWaterHeating();
     
-    setActiveModeControllerHeatpumpSetpoint(determineCorrectSetpoint());
+    setActiveModeControllerHeatpumpSetpointHeating(determineCorrectSetpoint());
     
     setActiveModeControllerHeatpumpRunningMode(SET_MODE_HEATING);
 
@@ -330,6 +345,9 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             if (regulateOnTempSensorInBufferHotWaterHeating) {
                 ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
             }
+            
+            ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, ReadSmartEeprom8(SEEP_ADDR_COOLING_CURVE));
+            ChangeHeatpumpSetting(ADDRESS_HEATING_CURVE_SETTING, ReadSmartEeprom8(SEEP_ADDR_HEATING_CURVE));
             
             hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
             hot_water_heating_mode_data.state = HOT_WATER_HEATING_IDLE_HEATING;
@@ -453,7 +471,11 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             if (regulateOnTempSensorInBufferHotWaterHeating) {
                 ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
             }
-
+         
+            WriteSmartEeprom8(SEEP_ADDR_HEATING_CURVE, getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
+            WriteSmartEeprom8(SEEP_ADDR_COOLING_CURVE, getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
+            ChangeHeatpumpSetting(ADDRESS_HEATING_CURVE_SETTING, 0);
+            ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, 0);
             
             hot_water_heating_mode_data.HeatingElementOn = false;
             hot_water_heating_mode_data.HotwaterElementOn = false;

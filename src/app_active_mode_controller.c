@@ -75,13 +75,15 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
         //SYS_CONSOLE_PRINT(" Hot W/Cooling Curve:  %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_COOLING_CURVE_SETTINGS));
         //SYS_CONSOLE_PRINT(" Cooling Curve:        %i\n", getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
         SYS_CONSOLE_PRINT(" Heating Curve:        %i\n", getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
+        SYS_CONSOLE_PRINT(" Cooling Curve:        %i\n", getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
         //SYS_CONSOLE_PRINT(" Hot W Curve:          %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_CURVE_SETTING));
         //SYS_CONSOLE_PRINT(" UnderF Curve:         %i\n", getDataFromMemoryCallable(ADDRESS_FLOOR_HEATING_CURVE_SETTING));
         
         //printHeadOfStringBuffer();
         
         SYS_CONSOLE_PRINT("\r\nHEATPUMP:\n");
-        SYS_CONSOLE_PRINT(" Setpoint:             %i\n", getHeatpumpHeatingSetpoint());
+        SYS_CONSOLE_PRINT(" Setpoint Heating:     %i\n", getHeatpumpHeatingSetpoint());
+        SYS_CONSOLE_PRINT(" Setpoint Cooling:     %i\n", getHeatpumpCoolingSetpoint());
         SYS_CONSOLE_PRINT(" Heatpump mode:        %i\n", getHeatpumpRunningMode());
         SYS_CONSOLE_PRINT(" Compressor:           %i\n", getHeatpumpCompressorFrequency());
         //SYS_CONSOLE_PRINT(" Waterflow:            %i\n", getHeatpumpWaterFlow());
@@ -238,9 +240,14 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
         return;
     }
     
-    if (app_active_mode_controllerData.setPoint != (getHeatpumpHeatingSetpoint() * 10)) {   
+    if (app_active_mode_controllerData.setPointHeating != (getHeatpumpHeatingSetpoint() * 10)) {   
         // Setpoint in heatpump is not correct, send the correct one
-        ChangeHeatpumpSetting(ADDRESS_HEATING_SET_TEMPERATURE, (app_active_mode_controllerData.setPoint / 10));
+        ChangeHeatpumpSetting(ADDRESS_HEATING_SET_TEMPERATURE, (app_active_mode_controllerData.setPointHeating / 10));
+    }
+    
+    if (app_active_mode_controllerData.setPointCooling != (getHeatpumpCoolingSetpoint() * 10)) {   
+        // Setpoint in heatpump is not correct, send the correct one
+        ChangeHeatpumpSetting(ADDRESS_COOLING_SET_TEMPERATURE, (app_active_mode_controllerData.setPointCooling / 10));
     }
     
     setWriteNewSetPointHeatpumpCounter(0); 
@@ -289,6 +296,29 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
  }
  
  
+ 
+ 
+ 
+ void storeHeatingCoolingCurveToEeprom() {
+    if (app_active_mode_controllerData.previousRunningMode == HOT_WATER) {
+        return;
+    }
+    
+    if (app_active_mode_controllerData.previousRunningMode == HOT_WATER_COOLING
+            && getHotWaterCoolingModeData().state >= 3) {
+        return;
+    }
+    
+    if (app_active_mode_controllerData.previousRunningMode == HOT_WATER_HEATING
+            && getHotWaterHeatingModeData().state >= 4) {
+        return;
+    }
+     
+    WriteSmartEeprom8(SEEP_ADDR_HEATING_CURVE, getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
+    WriteSmartEeprom8(SEEP_ADDR_COOLING_CURVE, getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
+
+     return;
+ }
  
  
  
@@ -372,7 +402,8 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     
     app_active_mode_controllerData.currentRunningMode = heatpumpMode;
     app_active_mode_controllerData.previousRunningMode  = heatpumpMode;
-    app_active_mode_controllerData.setPoint = 0;
+    app_active_mode_controllerData.setPointHeating = 0;
+    app_active_mode_controllerData.setPointCooling = 0;
     app_active_mode_controllerData.heatpumpRunningMode = 0;
     app_active_mode_controllerData.dip1SwitchCurrentState = GetDip1();
     app_active_mode_controllerData.dip1SwitchPreviousState = GetDip1();
@@ -538,6 +569,9 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
             
             // Check if the active mode was switched
             if (app_active_mode_controllerData.currentRunningMode != app_active_mode_controllerData.previousRunningMode) {     
+                
+                storeHeatingCoolingCurveToEeprom();
+                
                 SYS_CONSOLE_PRINT("Switching to mode %s\r\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
                 resetActiveModeStates();
                 app_active_mode_controllerData.previousRunningMode = app_active_mode_controllerData.currentRunningMode;

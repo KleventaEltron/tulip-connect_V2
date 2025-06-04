@@ -170,7 +170,7 @@ void HOT_WATER_MODE_Tasks ( void )
 
     setTemperatureOperatingCycleHotWater();
     
-    setActiveModeControllerHeatpumpSetpoint(determineCorrectSetpointHotWaterMode());
+    setActiveModeControllerHeatpumpSetpointHeating(determineCorrectSetpointHotWaterMode());
     //setActiveModeControllerHeatpumpSetpoint(getHotwaterSetpoint());
     setActiveModeControllerHeatpumpRunningMode(SET_MODE_HEATING);
     
@@ -184,6 +184,11 @@ void HOT_WATER_MODE_Tasks ( void )
             if(regulateOnTempSensorInBufferHotWater) {
                 ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
             }
+            
+            WriteSmartEeprom8(SEEP_ADDR_HEATING_CURVE, getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
+            WriteSmartEeprom8(SEEP_ADDR_COOLING_CURVE, getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
+            ChangeHeatpumpSetting(ADDRESS_HEATING_CURVE_SETTING, 0);
+            ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, 0);
             
             hot_water_mode_data.HotwaterElementOn = false;
             hot_water_mode_data.setpointHotWaterOffset = ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT_OFFSET_START);

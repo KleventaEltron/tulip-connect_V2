@@ -117,7 +117,7 @@ bool sterilisationIsActivelyRunning() {
     }    
         
     if (sterilisationMode != PASSIVE) {
-        setActiveModeControllerHeatpumpSetpoint(sterilizationTemperature + sterilizationTemperatureOffset);
+        setActiveModeControllerHeatpumpSetpointHeating(sterilizationTemperature + sterilizationTemperatureOffset);
     }
         
     int16_t currentHotWaterBufferTemp = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
