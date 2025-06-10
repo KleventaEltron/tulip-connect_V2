@@ -86,5 +86,6 @@ uint8_t ReadSmartEeprom8(uint32_t address);
 uint16_t ReadSmartEeprom16(uint32_t address);
 uint32_t ReadSmartEeprom32(uint32_t address);
 void SmartEepromInit(void);
+void restoreEepromValuesToDefault(void);
 
 #endif 

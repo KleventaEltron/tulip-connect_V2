@@ -51,6 +51,8 @@ typedef struct
     uint16_t heatpumpRunningMode;
     bool dip1SwitchCurrentState;
     bool dip1SwitchPreviousState;
+    bool resetFactorySettings;
+    bool factorySettingResetInProgress;
 } APP_ACTIVE_MODE_CONTROLLER_DATA;    
     
 void setActiveModeControllerHeatpumpSetpointHeating(int16_t newSetpoint);
@@ -282,6 +284,9 @@ typedef struct{
 void resetActiveModeStates();
 const char * getActiveModeToString(RUNNING_MODES state);
 bool isDefrostingActive();
+bool getResetFactorySettings();
+void setResetFactorySettings();
+bool getFactorySettingsResetInProgress();
 uint16_t getHeatpumpCompressorFrequency();
 int16_t getHeatpumpHeatingSetpoint();
 int16_t getHeatpumpCoolingSetpoint();

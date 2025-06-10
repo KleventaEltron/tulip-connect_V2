@@ -261,6 +261,26 @@ void FillTxBuffer(uint8_t * txBuffer)
     }
 }
 
+
+void FillBufferWithStartupSettings(bool doFirstTimeHeatpumpCommunicationSettings) {
+    ChangeHeatpumpSetting(ADDRESS_PARAMETER_PASSWORD_SETTING, 255);
+    ChangeHeatpumpSetting(ADDRESS_TANK_TEMPERATURE_PROBE_ENABLED, TANK_TEMPERATURE_PROBE_DISABLED); 
+    ChangeHeatpumpSetting(ADDRESS_UNIT_TEMPERATURE_CONTROL_METHOD, UNIT_TEMPERATURE_CONTROL_METHOD_RETURN_WATER); 
+    ChangeHeatpumpSetting(ADDRESS_HIGH_TEMPERATURE_STERILIZATION_FUNCTION, 0);  
+    ChangeHeatpumpSetting(ADDRESS_DEVICE_REACHING_TARGET_TEMPERATURE_AND_SHUTDOWN_MODE, 1); 
+    
+    if (doFirstTimeHeatpumpCommunicationSettings == true)
+    {
+        ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, 5); 
+        ChangeHeatpumpSetting(ADDRESS_STERILIZATION_INTERVAL_DAYS, 7); 
+        ChangeHeatpumpSetting(ADDRESS_STERILIZATION_START_TIME, 14); 
+        ChangeHeatpumpSetting(ADDRESS_STERILIZATION_RUN_TIME, 10); 
+        ChangeHeatpumpSetting(ADDRESS_STERILIZATION_TEMPERATURE_SETTING, 65); 
+    }      
+}
+
+
+/*
 uint8_t FillBufferWithStartupSettings(bool doFirstTimeHeatpumpCommunicationSettings)
 {
     //static uint8_t i = UINT8_MAX;
@@ -324,3 +344,4 @@ uint8_t FillBufferWithStartupSettings(bool doFirstTimeHeatpumpCommunicationSetti
     }
     return i;
 }
+ */

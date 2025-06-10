@@ -27,6 +27,7 @@
 #include "files/sterilization.h"
 #include "files/defrosting.h"
 #include "files/modbus/display.h"
+#include "files/eeprom.h"
 
 #include "files/circulation_pump.h"
 
@@ -35,7 +36,7 @@
 extern APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
 extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
 
- 
+bool factorySettingResetInProgress = false;
  
  
 
@@ -79,7 +80,9 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
         //SYS_CONSOLE_PRINT(" Hot W Curve:          %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_CURVE_SETTING));
         //SYS_CONSOLE_PRINT(" UnderF Curve:         %i\n", getDataFromMemoryCallable(ADDRESS_FLOOR_HEATING_CURVE_SETTING));
         
-        //printHeadOfStringBuffer();
+        if(GetDip3()) {
+            printHeadOfStringBuffer();
+        }
         
         SYS_CONSOLE_PRINT("\r\nHEATPUMP:\n");
         SYS_CONSOLE_PRINT(" Setpoint Heating:     %i\n", getHeatpumpHeatingSetpoint());
@@ -407,6 +410,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     app_active_mode_controllerData.heatpumpRunningMode = 0;
     app_active_mode_controllerData.dip1SwitchCurrentState = GetDip1();
     app_active_mode_controllerData.dip1SwitchPreviousState = GetDip1();
+    app_active_mode_controllerData.resetFactorySettings = false;
     
     // Make sure arrays contain known values
     SetDataInArraysAtStartup();
@@ -438,10 +442,34 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
 
 void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
 {    
-    
-    
-    
-    // Functions as a watchdog timer, if it is not constantly reset the system is stuck
+    /*
+     *
+     * Reset the connect to factory settings, including the heatpump itself
+     *
+     */
+    if (getResetFactorySettings()) {
+        app_active_mode_controllerData.resetFactorySettings = false;
+        //app_active_mode_controllerData.factorySettingResetInProgress = true;
+        SYS_CONSOLE_PRINT("IN RESTE\r\n");  
+        
+        restoreEepromValuesToDefault();
+        
+        APP_HEATPUMP_COMM_Initialize();
+        APP_DISPLAY_COMM_Initialize();
+        APP_IN_OUTPUTS_Initialize();
+        APP_I2C_TASKS_Initialize();
+        APP_LOGGING_TASKS_Initialize();
+        APP_SD_CARD_TASKS_Initialize();
+        APP_ACTIVE_MODE_CONTROLLER_Initialize();
+
+        return;
+    }
+   
+    /*
+     * 
+     * Functions as a watchdog timer, if it is not constantly reset the system is stuck
+     * 
+     */ 
     if (getSystemStuckProtectionCounter() >= SYS_STUCK_TIMER_MAX_LIMIT) {
         SYS_RESET_SoftwareReset();
     }    
@@ -521,6 +549,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
     if(!validateThreeWayValveStateOkay(app_active_mode_controllerData.currentRunningMode)) {
         return;
     }
+    
     
     /*
      * 
