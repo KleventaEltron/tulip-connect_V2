@@ -449,8 +449,6 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
      */
     if (getResetFactorySettings()) {
         app_active_mode_controllerData.resetFactorySettings = false;
-        //app_active_mode_controllerData.factorySettingResetInProgress = true;
-        SYS_CONSOLE_PRINT("IN RESTE\r\n");  
         
         restoreEepromValuesToDefault();
         
