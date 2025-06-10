@@ -77,6 +77,15 @@ void ParseDisplayData(uint8_t * rxBuffer)
                 SetDataInArrays(regAddress, data);
                 break;
             }    
+            // RESET NAAR FABRIEKS PARAMETERS
+            case ADDRESS_CREW_CONTROL:{
+                
+                if (data & (1 << 13)) {
+                    SYS_CONSOLE_PRINT("Resetting\r\n");                
+                    setResetFactorySettings();        
+                }
+                break;
+            }
                 
             default: {
                 //SetDataInDisplayArray(regAddress, data);

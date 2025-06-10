@@ -177,6 +177,8 @@ void APP_HEATPUMP_COMM_Initialize ( void )
         doFirstTimeHeatpumpCommunicationSettings = true;
     }
     
+    FillBufferWithStartupSettings(doFirstTimeHeatpumpCommunicationSettings);
+    
     app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_IDLE;
     app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_INIT;
 }
@@ -187,7 +189,7 @@ void APP_HEATPUMP_COMM_Initialize ( void )
 
 void APP_HEATPUMP_COMM_Tasks ( void )
 {
-    static uint8_t startupSettingsCounter = 0;
+    //static uint8_t startupSettingsCounter = 0;
     
     if (CommunicationWindowSecondCounter >= RESET_AFTER_NO_COMMUNICATION_SECONDS)
     {   // Tijd lang geen communicatie geweest
@@ -242,7 +244,8 @@ void APP_HEATPUMP_COMM_Tasks ( void )
                 SetOutput(LED_RX_HEATPUMP, false);
                 SetOutput(LED_TX_HEATPUMP, false);
             
-                startupSettingsCounter = FillBufferWithStartupSettings(doFirstTimeHeatpumpCommunicationSettings);
+                //startupSettingsCounter = FillBufferWithStartupSettings(doFirstTimeHeatpumpCommunicationSettings);
+                
                 //while(!releaseLoggingLock());
                 app_heatpump_commData.commStatus = DISPLAY_COMM_STATUS_IDLE;
                 app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_SEND_DATA;
@@ -317,7 +320,8 @@ void APP_HEATPUMP_COMM_Tasks ( void )
                 CommunicationWindowSecondCounter = 0;
                 CommunicationTimeOutCounter = 0;
                 
-                if ((doFirstTimeHeatpumpCommunicationSettings == true) && (startupSettingsCounter == UINT8_MAX))
+                //if ((doFirstTimeHeatpumpCommunicationSettings == true) && (startupSettingsCounter == UINT8_MAX))
+                if ((doFirstTimeHeatpumpCommunicationSettings == true))
                 {
                     
                     doFirstTimeHeatpumpCommunicationSettings = false;

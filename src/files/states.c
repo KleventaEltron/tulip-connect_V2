@@ -39,6 +39,17 @@ void setActiveModeControllerHeatpumpRunningMode(uint16_t mode) {
     app_active_mode_controllerData.heatpumpRunningMode = mode;
 }
 
+bool getResetFactorySettings() {
+    return app_active_mode_controllerData.resetFactorySettings;
+}
+
+void setResetFactorySettings() {
+    app_active_mode_controllerData.resetFactorySettings = true;
+}
+
+bool getFactorySettingsResetInProgress() {
+    return app_active_mode_controllerData.factorySettingResetInProgress;
+}
 
 bool getCurrentDip1SwitchState() {
     return app_active_mode_controllerData.dip1SwitchCurrentState;
