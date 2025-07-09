@@ -26,6 +26,17 @@ HOT_WATER_FLOOR_HEATING_MODE_DATA hot_water_floor_heating_mode_data;
 
 CIRCULATION_PUMP_DATA circulation_pump_data;
 
+void setActiveModeControllerPumpOffDueToDipSwitch1(bool target) {
+    SYS_CONSOLE_PRINT("*** NEW HEATPUMP ON TARGET: %s ***\n", (target ? "True" : "False"));
+    
+    //WriteSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON, !target);
+    ChangeHeatpumpSetting(ADDRESS_ON_OFF, !target);
+    app_active_mode_controllerData.pumpOffDueToDipSwitch1 = target;
+}
+
+bool getActiveModeControllerPumpOffDueToDipSwitch1() {
+    return app_active_mode_controllerData.pumpOffDueToDipSwitch1;
+}
 
 void setActiveModeControllerHeatpumpSetpointHeating(int16_t newSetpoint) {
     app_active_mode_controllerData.setPointHeating = newSetpoint;

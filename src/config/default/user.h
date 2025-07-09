@@ -37,7 +37,7 @@ extern "C" {
 #define TEMPERATURE_ALARM_VALUE -9999    
     
 //     
-#define THIS_FIRMWARE_VERSION 2000001 // 2.0.1
+#define THIS_FIRMWARE_VERSION 2000002 // 2.0.1
     
 //#define SECONDS_IN_DAY 86400 // 1 day
 //#define SECONDS_IN_DAY 60 // 1 minute
@@ -82,6 +82,12 @@ extern "C" {
 
 #define DebugLoggingDipSwitch()     GetDip3()
 #define DebugDipSwitch()            GetDip4()
+    
+#define CoolingActiveRelaySet()         RelayPotfree1_Set()
+#define CoolingActiveRelayClear()       RelayPotfree1_Clear()
+#define CoolingActiveRelayGet()         RelayPotfree1_Get()
+#define CoolingActiveRelayToggle()      RelayPotfree1_Toggle()
+#define coolingActiveRelaySetOutput()   RelayPotfree1_OutputEnable()
     
 #define getPowerFailStatus()                    NotPwrPowerFail_Get()
 #define getSupercapFaultStatus()                NotPwrCapFault_Get()   

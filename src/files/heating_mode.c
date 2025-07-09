@@ -49,17 +49,21 @@ void setTemperatureOperatingCycleHeating() {
     }   
     
     if (heatingBufferTemperature <= (heatingSetpoint - (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE) * 10)) 
-            && getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 1
+            // && getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 1
+            && getActiveModeControllerPumpOffDueToDipSwitch1()
             && changeSetting) {
-        ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
+        // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
+        setActiveModeControllerPumpOffDueToDipSwitch1(false);
         changeSetting = false;
         return;
     }  
     
     if (heatingBufferTemperature >= heatingSetpoint
-            && getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 240
+            //&& getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 240
+            && !getActiveModeControllerPumpOffDueToDipSwitch1()
             && changeSetting) {
-        ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+        setActiveModeControllerPumpOffDueToDipSwitch1(true);
+        //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
         changeSetting = false;
         return;        
     }
@@ -183,7 +187,8 @@ void HEATING_MODE_Tasks ( void )
     if (currentDip1SwitchState != getPreviousDip1SwitchState()) {
         setPreviousDip1SwitchState(currentDip1SwitchState);
         if(currentDip1SwitchState == true) {
-            ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 10);
+            setActiveModeControllerPumpOffDueToDipSwitch1(false);
+            //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 10);
         }
     }
     
@@ -204,7 +209,8 @@ void HEATING_MODE_Tasks ( void )
             setSecondCounterHeatingTask(UINT32_MAX);
             
             if(regulateOnTempSensorInBufferHeating) {
-                ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                setActiveModeControllerPumpOffDueToDipSwitch1(true);
             }
             
             ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, ReadSmartEeprom8(SEEP_ADDR_COOLING_CURVE));
@@ -222,7 +228,8 @@ void HEATING_MODE_Tasks ( void )
                 heating_mode_data.stepperSetpoint = (getHeatpumpReturnWaterTemperature() + 20);
                 
                 if(regulateOnTempSensorInBufferHeating) {
-                    ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
+                    // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
+                    setActiveModeControllerPumpOffDueToDipSwitch1(false);
                 }
                 
                 heating_mode_data.state = HEATING_RUNNING;
@@ -242,7 +249,8 @@ void HEATING_MODE_Tasks ( void )
                 setSecondCounterHeatingTask(UINT32_MAX);
                 
                 if(regulateOnTempSensorInBufferHeating) {
-                    ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                    //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                    setActiveModeControllerPumpOffDueToDipSwitch1(true);
                 }
 
                 heating_mode_data.state = HEATING_IDLE;
@@ -280,7 +288,8 @@ void HEATING_MODE_Tasks ( void )
                 setSecondCounterHeatingTask(UINT32_MAX);
 
                 if(regulateOnTempSensorInBufferHeating) {
-                    ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                    //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                    setActiveModeControllerPumpOffDueToDipSwitch1(true);
                 }
                 
                 heating_mode_data.state = HEATING_IDLE;

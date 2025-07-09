@@ -145,7 +145,7 @@ bool validateThreeWayValveStateOkay(RUNNING_MODES currentRunningMode) {
         return false;
     }
     // Heatpump must be on before we can may start any other action again
-    if(UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] != SET_HEATPUMP_ON){
+    if(UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] != SET_HEATPUMP_ON && !getActiveModeControllerPumpOffDueToDipSwitch1()){
         ChangeHeatpumpSetting(ADDRESS_ON_OFF, SET_HEATPUMP_ON);
         setWaitingThreeWayValveSwitch(0);
         return false;

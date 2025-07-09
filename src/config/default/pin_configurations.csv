@@ -24,7 +24,7 @@ Pin Number,Pin ID,Custom Name,Function,Mode, Direction,Latch,Pull Up,Pull Down,D
 29,PC06,TeInverter,GPIO,Digital,Out,Low,,,NORMAL
 30,PC07,RelayLine3,GPIO,Digital,In/Out,Low,,,NORMAL
 33,PA08,RelayExtern2,GPIO,Digital,In/Out,Low,,,NORMAL
-34,PA09,RelayPotfree1,GPIO,Digital,In/Out,Low,,,NORMAL
+34,PA09,RelayPotfree1,GPIO,Digital,Out,Low,,,NORMAL
 35,PA10,RelayPotfree2,GPIO,Digital,In/Out,Low,,,NORMAL
 36,PA11,RelayPotfree3,GPIO,Digital,In/Out,Low,,,NORMAL
 39,PB10,InputExt1,GPIO,Digital,In,n/a,No,No,NORMAL

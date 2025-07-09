@@ -53,6 +53,7 @@ typedef struct
     bool dip1SwitchPreviousState;
     bool resetFactorySettings;
     bool factorySettingResetInProgress;
+    bool pumpOffDueToDipSwitch1;
 } APP_ACTIVE_MODE_CONTROLLER_DATA;    
     
 void setActiveModeControllerHeatpumpSetpointHeating(int16_t newSetpoint);
@@ -294,6 +295,9 @@ uint16_t getHeatpumpWaterFlow();
 int16_t getHeatpumpRunningMode();
 int16_t getHeatpumpReturnWaterTemperature();
 const char * getThreeWayValveState(int state);
+
+void setActiveModeControllerPumpOffDueToDipSwitch1 (bool target);
+bool getActiveModeControllerPumpOffDueToDipSwitch1 ();
 
 CIRCULATION_PUMP_DATA getCircPumpData();
 HEATING_MODE_DATA getHeatingModeData();

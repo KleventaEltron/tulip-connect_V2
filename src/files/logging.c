@@ -20,6 +20,8 @@
 #include "tcpip/tcpip.h"
 #include "credentials.h"
 #include "states.h"
+#include <zlib.h>
+#include "cJSON.h"
 //#include "delay.h"
 
 /* Used in sending and receiving data to and from the server */
@@ -29,6 +31,10 @@
 #define UNDEFINED_INT16_T 32767 
 #define UNDEFINED_STRING "UNDEFINED"
 #define UNDEFINED_CHAR "U"
+
+//#define READ_BUFFER_SIZE 512
+#define READ_CHUNK_SIZE 512
+#define READ_BUFFER_SIZE 4096
 
 //extern const TCPIP_NETWORK_CONFIG __attribute__((unused))  TCPIP_HOSTS_CONFIGURATION[];
 extern const TCPIP_STACK_MODULE_CONFIG TCPIP_STACK_MODULE_CONFIG_TBL [];
@@ -43,6 +49,11 @@ DEVICE_TYPE DEVICE_TYPE_REQUESTED = -1;
 char NTP_TIME_BUFFER[40];
 
 uint8_t TcpIPStackResetCount = 0;
+        
+static size_t totalBytesReceived = 0;
+static char readBuffer[READ_BUFFER_SIZE + 1];
+//static uint8_t readBuffer[READ_BUFFER_SIZE + 1];
+//static size_t expectedContentLength = 0;
 
 OSAL_MUTEX_DECLARE(loggingMutex);
 
@@ -121,8 +132,9 @@ char * getLoggingStateToString(APP_LOGGING_TASKS_STATES logState) {
         case(APP_LOGGING_TASKS_START_CONNECTION): return "7, Start Conn"; break;             
         case(APP_LOGGING_TASKS_WAIT_FOR_CONNECTION): return "8, Wait Conn"; break;         
         case(APP_LOGGING_TASKS_WAIT_FOR_SSL_CONNECT): return "9, Wait SSL"; break;       
-        case(APP_LOGGING_TASKS_SEND_REQUEST_SSL): return "10, Send Request"; break;    
-        case(APP_LOGGING_TASKS_WAIT_FOR_RESPONSE_SSL): return "11, Wait Response"; break;           
+        case(APP_LOGGING_TASKS_SEND_REQUEST_SSL): return "10, Send Request"; break;   
+        case(APP_LOGGING_TASKS_WAIT_RECEIVE_SOCKET_READY): return "11, Wait Response H"; break;     
+        case(APP_LOGGING_TASKS_CHECK_FOR_UPDATE_SETTINGS): return "11, Wait Response B"; break;           
         case(APP_LOGGING_TASKS_CLOSE_CONNECTION): return "12, Close Conn"; break;     
         case(APP_LOGGING_TASKS_WAIT_FOR_LOGGING_UNLOCK): return "13, Wait Unlock"; break;    
         default: return "14, Unkown"; break;
@@ -372,7 +384,7 @@ void setLoggingDataPerDeviceType ( char* requestBuilder, char device[]) {
             setLogValue_NUMBER(requestBuilder, "WL3", getDataFromMemoryCallable(ADDRESS_FAULT_STATE_1));
             setLogValue_NUMBER(requestBuilder, "WL4", getDataFromMemoryCallable(ADDRESS_FAULT_STATE_2));
             setLogValue_NUMBER(requestBuilder, "WL5", getDataFromMemoryCallable(ADDRESS_FAULT_STATE_3));
-            setLogValue_NUMBER(requestBuilder, "WL6", getDataFromMemoryCallable(ADDRESS_SYSTEM_1_FAULT_STATE_1));
+//            setLogValue_NUMBER(requestBuilder, "WL6", getDataFromMemoryCallable(ADDRESS_SYSTEM_1_FAULT_STATE_1));
             setLogValue_NUMBER(requestBuilder, "WL7", getDataFromMemoryCallable(ADDRESS_SYSTEM_1_FAULT_STATE_2));
             setLogValue_NUMBER(requestBuilder, "WL8", getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_1));
             setLogValue_NUMBER(requestBuilder, "WL9", getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_2));
@@ -600,7 +612,9 @@ bool TULIP_REQUEST_TESTER ( char request[], char path[]) {
                     "Accept: application/json\r\n"
                     "Content-Type: application/json\r\n"
                     "Authorization: Bearer %s\r\n"
-                    "Connection: close\r\n"
+                    //"Accept-Encoding: gzip\r\n"
+                    "Accept-Encoding: Identity\r\n"
+                    "Connection: keep-alive\r\n"
                     "Content-Length: %i\r\n\r\n"
                     "%s\r\n",
                     request, path, HOST, TOKEN, strlen(requestBody), requestBody);     
@@ -634,22 +648,84 @@ bool loggingRequestBuilder ( REQUEST_TYPE rqt ) {
 }
 
 
+/*
+bool readNetworkBufferHeaderSslResponse ( void ) {
+    int bytesRead;
+    char* headerEnd;
+    bytesRead = NET_PRES_SocketRead(socket, (uint8_t*)readBuffer, READ_BUFFER_SIZE);
+    if (bytesRead <= 0) return false;
+
+    readBuffer[bytesRead] = '\0';
+    headerEnd = strstr(readBuffer, "\r\n\r\n");
+
+    if (headerEnd) {
+        size_t headerLen = headerEnd + 4 - readBuffer;
+        size_t bodyLen = bytesRead - headerLen;
+        if (bodyLen > 0) {
+            //ProcessBinaryChunkBody((uint8_t*)(readBuffer + headerLen), bodyLen);
+            totalBytesReceived += bodyLen;
+        }
+        
+        char* contentLengthStr = strstr(readBuffer, "Content-Length:");
+        if (contentLengthStr) {
+            contentLengthStr += strlen("Content-Length:");
+            while (*contentLengthStr == ' ') contentLengthStr++;  // skip spaces
+            expectedContentLength = atoi(contentLengthStr);
+            SYS_CONSOLE_PRINT("Content-Length parsed: %u bytes\n", (unsigned int)expectedContentLength);
+        } else {
+            SYS_CONSOLE_PRINT("No Content-Length header found. Using timeout fallback.\n");
+            expectedContentLength = 0;
+        }        
+        //appState = APP_STATE_READ_BODY;
+        return true;
+    }    
+    
+    return false;    
+}
+*/
+
 
 /*
  * Read out the server response from the network buffer.
  */
-void readNetworkBufferSslResponse ( void ) {
-    char networkBuffer[2048];
-    uint16_t res = NET_PRES_SocketRead(socket, (uint8_t*) networkBuffer, sizeof (networkBuffer));
-            
-    SYS_CONSOLE_PRINT("Received %d bytes from the server\r\n", res);
+bool readNetworkBufferBodySslResponse ( void ) {
+    //char networkBuffer[2048];
+    int bytesRead;
     
-    //UNCOMMENT VOOR HELE RESPONSE
-    for(int i = 0; i < res; i++) {
-        SYS_CONSOLE_PRINT("%c", networkBuffer[i]);
+    bytesRead = NET_PRES_SocketRead(socket, (uint8_t*)readBuffer, READ_BUFFER_SIZE);
+       
+    if (bytesRead > 0) {
+        SYS_CONSOLE_PRINT("Received %d bytes from the server\r\n", bytesRead);
+        
+        for(int i = 0; i < bytesRead; i++) {
+            SYS_CONSOLE_PRINT("%c", readBuffer[i]);
+        }
+        
+        totalBytesReceived += bytesRead;
+        return false;
+    }    
+    
+    //if (expectedContentLength > 0 && totalBytesReceived >= expectedContentLength) {
+    //    SYS_CONSOLE_PRINT("Received full content-length (%u bytes). Done.\n", (unsigned int)expectedContentLength);
+    //    return true;
+    //}    
+    
+    //return true;
+    if (!NET_PRES_SocketIsConnected(socket)) {
+        return true;
     }
     
-    return;
+    for(int i = 0; i < bytesRead; i++) {
+        SYS_CONSOLE_PRINT("%c", readBuffer[i]);
+    }
+    
+    // return false;
+    return true;    
+    
+    //UNCOMMENT VOOR HELE RESPONSE
+    //for(int i = 0; i < res; i++) {
+    //    SYS_CONSOLE_PRINT("%c", networkBuffer[i]);
+    //}
 }
 
 
@@ -750,4 +826,341 @@ SSL_SOCKET_STATES socketReady( void ) {
  */
 void closeSocket ( void ) {
     NET_PRES_SocketClose(socket);
+}
+
+
+
+bool getUpdateSettingsFromServer ( void ) {
+    char networkBuffer[512];
+
+    char HARDWARE_ID[50];
+    sprintf(HARDWARE_ID, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-W-1",
+                    eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]);
+    
+    
+    
+    sprintf(networkBuffer, "GET /api/v1/settings?hardware_id=%s&type=heatpump HTTP/1.1\r\n"
+                    "Host: %s\r\n"
+                    "Accept: application/json\r\n"
+                    "Authorization: Bearer %s\r\n"
+                    "Accept-Encoding: Identity\r\n"
+                    "Connection: keep-alive\r\n"
+                    "Content-Type: application/json\r\n"            
+                    "Content-Length: 0\r\n\r\n",
+                    HARDWARE_ID, HOST, TOKEN);     
+ 
+    uint16_t bytesSend = NET_PRES_SocketWrite(socket, (uint8_t*) networkBuffer, strlen(networkBuffer));
+    
+    if (bytesSend <= 0) {
+        SYS_CONSOLE_PRINT("***** COULD NOT COMPLETE REQUEST, CHECK IF NETWORK TX BUFFER SIZE IS BIG ENOUGH TO SEND THE REQUEST! SIZE NOW >> %d *****\r\n", strlen(networkBuffer));  
+        return false;
+    } else {
+        SYS_CONSOLE_PRINT("*** REQUEST SEND WITH FOLLOWING SETTINGS: GET, /api/v1/settings?hardware_id=%s&type=heatpump, %s\r\n", HARDWARE_ID, NTP_TIME_BUFFER);
+    }
+    return true;    
+}
+
+
+
+const char* find_http_body(const char *response, size_t response_len, size_t *out_body_len) {
+    const char *marker = "\r\n\r\n";
+    const char *pos = strstr(response, marker);
+    if (!pos) return NULL;
+
+    const char *body = pos + 4;
+    *out_body_len = response + response_len - body;
+    return body;
+}
+
+char* dechunk_http_body(const char *chunked_body, size_t chunked_len, size_t *out_len) {
+    const char *ptr = chunked_body;
+    const char *end = chunked_body + chunked_len;
+    char *output = malloc(chunked_len);
+    if (!output) return NULL;
+    size_t output_offset = 0;
+
+    while (ptr < end) {
+        // Read chunk size in hex
+        char size_buf[16] = {0};
+        int i = 0;
+        while (ptr < end && *ptr != '\r' && i < 15) {
+            size_buf[i++] = *ptr++;
+        }
+        size_buf[i] = '\0';
+
+        if (*ptr == '\r') ptr++;
+        if (*ptr == '\n') ptr++;
+
+        size_t chunk_size = strtoul(size_buf, NULL, 16);
+        if (chunk_size == 0) break;
+
+        if (ptr + chunk_size > end) break;  // Malformed
+
+        memcpy(output + output_offset, ptr, chunk_size);
+        output_offset += chunk_size;
+        ptr += chunk_size;
+
+        if (*ptr == '\r') ptr++;
+        if (*ptr == '\n') ptr++;
+    }
+
+    *out_len = output_offset;
+    return output;
+}
+
+bool parse_update_settings_from_json(const char *json_str, size_t len) {
+    cJSON *root = cJSON_ParseWithLength(json_str, len);
+    if (!root) {
+        SYS_CONSOLE_PRINT("Failed to parse JSON\n");
+        return false;
+    }
+
+    cJSON *upd = cJSON_GetObjectItemCaseSensitive(root, "update_settings");
+    if (cJSON_IsBool(upd)) {
+        SYS_CONSOLE_PRINT("update_settings: %s\n", cJSON_IsTrue(upd) ? "true" : "false");
+        bool updateSettings = cJSON_IsTrue(upd);
+        cJSON_Delete(root);
+        return updateSettings;
+    } else {
+        SYS_CONSOLE_PRINT("update_settings field missing\n");
+        cJSON_Delete(root);
+        return false;
+    }
+
+    cJSON_Delete(root);
+    return false;
+}
+
+
+int bytesRead = 0;
+size_t buffer_len;
+
+bool areUpdateSettingsAvailable() {
+    size_t body_len;
+    const char *chunked = find_http_body(readBuffer, buffer_len, &body_len);
+    if (!chunked) {
+        SYS_CONSOLE_PRINT("HTTP body not found\n");
+        return false;
+    }
+
+    size_t json_len;
+    char *json_data = dechunk_http_body(chunked, body_len, &json_len);
+    if (!json_data) {
+        buffer_len = 0;
+        free(json_data);
+        SYS_CONSOLE_PRINT("Dechunking failed\n");
+        return false;
+    }
+    
+    buffer_len = 0;
+    bool updateSettings = parse_update_settings_from_json(json_data, json_len);
+    free(json_data);
+    return updateSettings;
+}
+
+
+bool readServerResponseDone() {
+    bytesRead = NET_PRES_SocketRead(socket, (uint8_t*)readBuffer + buffer_len, READ_CHUNK_SIZE);
+    SYS_CONSOLE_PRINT("bytes read %i\n", bytesRead);
+    
+    if (bytesRead > 0) {
+        buffer_len += bytesRead;
+        return false;
+    }    
+    SYS_CONSOLE_PRINT("Total bytes read %i\n", buffer_len);
+    
+    return true;
+}
+
+
+
+void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
+    switch(address) {
+        case ADDRESS_SET_MODE: {
+            WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, value);
+            break;
+        }
+        
+        case ADDRESS_HOT_WATER_SET_TEMPERATURE: {
+            WriteSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT, value);
+            break;
+        }        
+        
+        default: {
+            ChangeHeatpumpSetting(address, value);
+            break;
+        }
+    }
+}
+
+
+
+int setting_count = 0;
+bool parse_modbus_settings() {
+    
+    //for(int i = 0; i < buffer_len; i++) {
+    //    SYS_CONSOLE_PRINT("%c", readBuffer[i]);
+    //}
+    
+    size_t body_len;
+    const char *chunked = find_http_body(readBuffer, buffer_len, &body_len);
+    if (!chunked) {
+        SYS_CONSOLE_PRINT("HTTP body not found\n");
+        return false;
+    }
+
+    size_t json_len;
+    char *json_data = dechunk_http_body(chunked, body_len, &json_len);
+    if (!json_data) {
+        buffer_len = 0;
+        free(json_data);
+        SYS_CONSOLE_PRINT("Dechunking failed\n");
+        return false;
+    }    
+    
+    cJSON *root = cJSON_ParseWithLength(json_data, json_len);
+    if (!root) {
+        buffer_len = 0;
+        free(json_data);
+        SYS_CONSOLE_PRINT("Failed to parse JSON\n");
+        return false;
+    }
+
+    cJSON *updates = cJSON_GetObjectItem(root, "settings_updates");
+    if (!cJSON_IsArray(updates)) {
+        SYS_CONSOLE_PRINT("settings_updates not found or not an array\n");
+        free(json_data);
+        cJSON_Delete(root);
+        buffer_len = 0;
+        return false;
+    }
+
+    cJSON *item = NULL;
+    cJSON_ArrayForEach(item, updates) {
+        if (setting_count >= MAX_SETTINGS) break;
+
+        cJSON *addr = cJSON_GetObjectItem(item, "modbus_address");
+        cJSON *val  = cJSON_GetObjectItem(item, "value");
+
+        if (cJSON_IsString(addr) && cJSON_IsString(val)) {
+            
+            SYS_CONSOLE_PRINT("\nModbus Addy >> %i\n", (uint16_t)strtol(addr->valuestring, NULL, 0));
+            SYS_CONSOLE_PRINT("value >> %i\n", (uint16_t)strtol(val->valuestring, NULL, 10));
+            
+            processModbusSettingsFromServer((uint16_t)strtol(addr->valuestring, NULL, 0), (uint16_t)strtol(val->valuestring, NULL, 10));
+
+            setting_count++;
+        }
+    }
+    
+    buffer_len = 0;
+    free(json_data);
+    cJSON_Delete(root);
+    return true;
+}
+
+
+
+void send_http_chunk(const char *data, size_t len) {
+    char header[16];
+    int n = sprintf(header, "%X\r\n", (unsigned int)len);
+
+    NET_PRES_SocketWrite(socket, header, n);
+    NET_PRES_SocketWrite(socket, data, len);
+    NET_PRES_SocketWrite(socket, "\r\n", 2);
+}
+
+
+
+void getSettingValuesByModusIndex (int MODBUS_INDEX_START, int MODBUS_INDEX_END) {   
+    
+    char chunk[512];
+    memset(chunk, 0, sizeof (chunk));
+    size_t offset = 0;
+   
+    for(int modbus_index = MODBUS_INDEX_START; modbus_index < MODBUS_INDEX_END; modbus_index++) {
+        int n = 0;
+        n = snprintf(chunk + offset, sizeof(chunk) - offset, "%i,", getDataFromMemoryCallable(modbus_index));
+        
+        if (n < 0 || n >= (int)(sizeof(chunk) - offset)) {
+            // Buffer vol stuur chunk
+            send_http_chunk(chunk, offset);
+            offset = 0;
+            modbus_index--;
+            continue;
+        }
+        offset += n;        
+    }
+    
+    // Send remaining data if any
+    if (offset > 0) {
+        send_http_chunk(chunk, offset);
+    }      
+    return;
+}
+
+
+
+
+bool sendUpdatedSettingsList ( void ) {
+    char networkBuffer[4096];
+    char requestBody[512];
+    char HARDWARE_ID[50];
+    
+    memset(networkBuffer, 0, sizeof (networkBuffer));
+    memset(requestBody, 0, sizeof (requestBody));
+    memset(HARDWARE_ID, 0, sizeof (HARDWARE_ID));
+    
+    sprintf(HARDWARE_ID, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-W-1",
+                    eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]);
+    
+    sprintf(networkBuffer, "POST /api/v1/settings?hardware_id=%s&type=heatpump HTTP/1.1\r\n"
+                    "Host: %s\r\n"
+                    "Accept: application/json\r\n"
+                    "Authorization: Bearer %s\r\n"
+                    "Accept-Encoding: Identity\r\n"
+                    "Connection: close\r\n"
+                    "Content-Type: text/plain\r\n"
+                    "Cache-Control: no-cache\r\n"     
+                    "Transfer-Encoding: chunked\r\n\r\n",
+                    HARDWARE_ID, HOST, TOKEN);
+    
+    uint16_t bytesSend = NET_PRES_SocketWrite(socket, (uint8_t*) networkBuffer, strlen(networkBuffer));
+    
+    getSettingValuesByModusIndex(0x0100, 0x022C);  
+    getSettingValuesByModusIndex(0x0300, 0x0319);
+    getSettingValuesByModusIndex(0x0330, 0x0346);
+    getSettingValuesByModusIndex(0x0360, 0x0363);
+    getSettingValuesByModusIndex(0x0800, 0x0831);    
+    getSettingValuesByModusIndex(0x1000, 0x1024);      
+    
+    // Laatste write zodat de server weet dat ontvangen klaar is
+    NET_PRES_SocketWrite(socket, "0\r\n\r\n", 5);    
+    
+    if (bytesSend <= 0) {
+        SYS_CONSOLE_PRINT("***** COULD NOT COMPLETE REQUEST, CHECK IF NETWORK TX BUFFER SIZE IS BIG ENOUGH TO SEND THE REQUEST! SIZE NOW >> %d *****\r\n", strlen(networkBuffer));  
+        return false;
+    } else {
+        SYS_CONSOLE_PRINT("*** REQUEST SEND WITH FOLLOWING SETTINGS: POST, /api/v1/settings?hardware_id=%s&type=heatpump, SIZE %i\r\n", HARDWARE_ID, strlen(requestBody));
+    }
+    return true;    
+}
+
+
+bool readServerResponseUpdatedSettingsDone() {
+    bytesRead = NET_PRES_SocketRead(socket, (uint8_t*)readBuffer + buffer_len, READ_CHUNK_SIZE);
+    SYS_CONSOLE_PRINT("bytes read %i\n", bytesRead);
+    
+    for(int i = 0; i < buffer_len; i++) {
+        SYS_CONSOLE_PRINT("%c", readBuffer[i]);
+    }
+    
+    if (bytesRead > 0) {
+        buffer_len += bytesRead;
+        return false;
+    }    
+    SYS_CONSOLE_PRINT("Total bytes read %i\n", buffer_len);
+    
+    buffer_len = 0;
+    return true;
 }

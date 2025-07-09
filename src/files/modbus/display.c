@@ -350,6 +350,10 @@ void GetDataFromHeatpump(void)
     }
     */  
     
+    // Always display the user selected status
+    UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON);
+    
+    
     int16_t heatingSetpoint = ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT);
     if (heatingSetpoint == TEMPERATURE_ALARM_VALUE && UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] != UINT16_MAX)
     {   // If heating setpoint in smartEEprom is -9999, and the heatings setpoint in the heatpumt array is not UINT16_MAX (first startup only), set setpoint from heatpump in eeprom
@@ -399,6 +403,8 @@ void GetDataFromHeatpump(void)
     // For displaying the NTC's on the display:
     RealTimeData[ADDRESS_WATER_TANK_TEMPERATURE - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = (GetNtcTemperature(NTC_HOT_WATER_BUFFER) / 10); 
     RealTimeData[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = (GetNtcTemperature(NTC_HEATING_BUFFER) / 10);
+    
+    
     
     //TEST
     //RealTimeData[ADDRESS_BUFFER_TANK_FOR_HEATING_TEMPERATURE_VALUE - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = 25;

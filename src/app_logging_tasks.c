@@ -17,6 +17,7 @@
 #include "system_definitions.h"
 #include "tcpip/tcpip.h"
 #include "files/credentials.h"
+#include "files/modbus/heatpump_parameters.h"
 
 #define LOGGING_TIMEOUT_MS 200000
 #define TCPIP_STACK_INDEX_0 0
@@ -253,18 +254,19 @@ void APP_LOGGING_TASKS_Tasks ( void )
         case APP_LOGGING_TASKS_SEND_REQUEST_SSL:
         {
             if(!loggingRequestBuilder(POST)){
+            //if(!getUpdateFileFromServer()) {
                 app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
                 break;
             }
             
-            app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_RESPONSE_SSL;
+            app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_RECEIVE_SOCKET_READY;
             break;
         }
         
         
         
-        case APP_LOGGING_TASKS_WAIT_FOR_RESPONSE_SSL:
-        {
+        case APP_LOGGING_TASKS_WAIT_RECEIVE_SOCKET_READY: {
+            
             SSL_SOCKET_STATES sslState = socketReady();
             if (sslState == SSL_SOCKET_NOT_READY) { break; } 
             if (sslState == SSL_SOCKET_WAS_DISCONNECTED) {
@@ -272,13 +274,143 @@ void APP_LOGGING_TASKS_Tasks ( void )
                 break;
             } 
             
-            readNetworkBufferSslResponse();
+            app_logging_tasksData.state = APP_LOGGING_TASKS_READ_RECEIVE_BUFFER;   
+            break;
+        }
+        
+        case APP_LOGGING_TASKS_READ_RECEIVE_BUFFER:
+        {
+            if (readServerResponseDone()) {
+                SYS_CONSOLE_PRINT("Done receiving data from server, start parsing!\r\n");
+                app_logging_tasksData.state = APP_LOGGING_TASKS_CHECK_FOR_UPDATE_SETTINGS;            
+            }
             
-            app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
             break;
         }
         
         
+        case APP_LOGGING_TASKS_CHECK_FOR_UPDATE_SETTINGS:
+        {
+            //if(!readNetworkBufferBodySslResponse()) {
+            //    break;
+            //}
+            if(!areUpdateSettingsAvailable()) {
+            //if(!readNetworkBufferBodySslResponse()) {
+                SYS_CONSOLE_PRINT("No update settings avialable, closing connection!\r\n");
+                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+                break;
+            }                  
+            
+            SYS_CONSOLE_PRINT("Retrieving update settings!\r\n");
+    
+            
+            app_logging_tasksData.state = APP_LOGGING_TASKS_REQUEST_UPDATE_SETTINGS;
+            break;
+        }
+        
+        
+    
+        case APP_LOGGING_TASKS_REQUEST_UPDATE_SETTINGS:
+        {
+            //if(!loggingRequestBuilder(POST)){
+            if(!getUpdateSettingsFromServer()) {
+                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+                break;
+            }
+            
+            app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_RECEIVE_SOCKET_READY_UPDATE_SETTINGS;   
+            break;
+        }
+        
+        
+        
+        case APP_LOGGING_TASKS_WAIT_RECEIVE_SOCKET_READY_UPDATE_SETTINGS: {
+            
+            SSL_SOCKET_STATES sslState = socketReady();
+            if (sslState == SSL_SOCKET_NOT_READY) { break; } 
+            if (sslState == SSL_SOCKET_WAS_DISCONNECTED) {
+                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+                break;
+            } 
+            
+            app_logging_tasksData.state = APP_LOGGING_TASKS_READ_RECEIVE_BUFFER_UPDATE_SETTINGS;   
+            break;
+        }        
+        
+        
+        case APP_LOGGING_TASKS_READ_RECEIVE_BUFFER_UPDATE_SETTINGS:
+        {
+            if (readServerResponseDone()) {
+                SYS_CONSOLE_PRINT("Done receiving data from server, start parsing!\r\n");
+                app_logging_tasksData.state = APP_LOGGING_TASKS_PARSE_UPDATE_SETTINGS;            
+            }
+            
+            break;     
+        }        
+        
+        
+        
+        case APP_LOGGING_TASKS_PARSE_UPDATE_SETTINGS:
+        {
+            if (parse_modbus_settings()) {
+                SYS_CONSOLE_PRINT("Done receiving data from server, SETTING PARSed!\r\n");
+                app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_NEW_SETTINGS_CHANGED;      
+                break;
+            }
+            
+            SYS_CONSOLE_PRINT("COULD NOT PARSE NEW SETTINGS!\r\n");
+            app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+            break; 
+        }
+        
+        
+        
+        case APP_LOGGING_TASKS_WAIT_FOR_NEW_SETTINGS_CHANGED:
+        {
+            if(getSettingsQueuedAmount() > 0) { break; }
+            
+            SYS_CONSOLE_PRINT("SETTING QUEUE EMPTY, PROCEEDING!\r\n");
+            app_logging_tasksData.state = APP_LOGGING_TASKS_SEND_NEW_SETTINGS_OVERVIEW;
+            break;
+        }
+        
+        
+        
+        case APP_LOGGING_TASKS_SEND_NEW_SETTINGS_OVERVIEW:
+        {
+            if(!sendUpdatedSettingsList()) {
+                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+            }
+            
+            app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_CONFIRM_CHANGED_SETTINGS;
+            break;
+        }
+        
+
+        case APP_LOGGING_TASKS_WAIT_CONFIRM_CHANGED_SETTINGS: {
+            
+            SSL_SOCKET_STATES sslState = socketReady();
+            if (sslState == SSL_SOCKET_NOT_READY) { break; } 
+            if (sslState == SSL_SOCKET_WAS_DISCONNECTED) {
+                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+                break;
+            } 
+            
+            app_logging_tasksData.state = APP_LOGGING_TASKS_READ_RECEIVE_BUFFER_SETTINGS_UPDATED;   
+            break;
+        }              
+
+        
+        case APP_LOGGING_TASKS_READ_RECEIVE_BUFFER_SETTINGS_UPDATED:
+        {
+            if (readServerResponseUpdatedSettingsDone()) {
+                SYS_CONSOLE_PRINT("SERVER RESPONSE SETTINGS RECEIVED!\r\n");
+                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;            
+            }
+
+            break;     
+        }            
+                
         
         case APP_LOGGING_TASKS_CLOSE_CONNECTION:
         {
@@ -289,8 +421,6 @@ void APP_LOGGING_TASKS_Tasks ( void )
             break;
         }
             
-        
-
         /* The default state should never be executed. */
         default:
         {

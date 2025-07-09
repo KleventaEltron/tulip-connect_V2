@@ -114,7 +114,8 @@ typedef enum {
 extern char NTP_TIME_BUFFER[40];
 
 void postDevicesLogDataJson( void );
-void readNetworkBufferSslResponse( void );
+bool readNetworkBufferHeaderSslResponse( void );
+bool readNetworkBufferBodySslResponse( void );
 bool startSocketConnection( void );
 SSL_NEGOTIATION_STATES waitForConnection ( void );
 bool waitOnDNS( void );
@@ -135,6 +136,12 @@ bool setupNewTcpipStack();
 void increaseTcpIpResetCounter();
 uint8_t getTcpIpResetCounter();
 char * getLoggingStateToString(APP_LOGGING_TASKS_STATES logState);
+bool getUpdateSettingsFromServer ( void );
+bool areUpdateSettingsAvailable();
+bool readServerResponseDone();
+bool parse_modbus_settings();
+bool sendUpdatedSettingsList ( void );
+bool readServerResponseUpdatedSettingsDone();
 //extern char NTP_TIME_BUFFER[40];
 
 #endif

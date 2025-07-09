@@ -104,17 +104,21 @@ void setTemperatureOperatingCycleHotWater() {
     int16_t hotwaterDelta = getHotwaterDelta();    
     
     if (hotwaterBufferTemperature <= (hotwaterSetpoint - hotwaterDelta)
-            && getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 1
+            //&& getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 1
+            && getActiveModeControllerPumpOffDueToDipSwitch1()
             && changeSettingHotWater) {
-        ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
+        //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
+        setActiveModeControllerPumpOffDueToDipSwitch1(false);
         changeSettingHotWater = false;
         return;
     }
     
     if (hotwaterBufferTemperature >= hotwaterSetpoint
-            && getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 240
+            //&& getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 240
+            && !getActiveModeControllerPumpOffDueToDipSwitch1()
             && changeSettingHotWater) {
-        ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+        //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+        setActiveModeControllerPumpOffDueToDipSwitch1(true);
         changeSettingHotWater = false;
         return;
     }    
@@ -164,7 +168,8 @@ void HOT_WATER_MODE_Tasks ( void )
     if (currentDip1SwitchState != getPreviousDip1SwitchState()) {
         setPreviousDip1SwitchState(currentDip1SwitchState);
         if(currentDip1SwitchState == true) {
-            ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 10);
+            setActiveModeControllerPumpOffDueToDipSwitch1(false);
+            //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 10);
         }
     }
 
@@ -182,7 +187,8 @@ void HOT_WATER_MODE_Tasks ( void )
             setSecondCounterHotwaterTask(UINT32_MAX);
             
             if(regulateOnTempSensorInBufferHotWater) {
-                ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                setActiveModeControllerPumpOffDueToDipSwitch1(true);
+                //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
             }
             
             WriteSmartEeprom8(SEEP_ADDR_HEATING_CURVE, getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
@@ -204,7 +210,8 @@ void HOT_WATER_MODE_Tasks ( void )
                 setSecondCounterHotwaterTask(0);
                 //hot_water_mode_data.initialBufferTemp = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
                 if(regulateOnTempSensorInBufferHotWater) {
-                    ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
+                    //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
+                    setActiveModeControllerPumpOffDueToDipSwitch1(false);
                 }
                 
                 hot_water_mode_data.state = HOT_WATER_STATE_RUNNING_IN_HOT_WATER;
@@ -226,7 +233,8 @@ void HOT_WATER_MODE_Tasks ( void )
                 setSecondCounterHotwaterTask(UINT32_MAX);
                 
                 if(regulateOnTempSensorInBufferHotWater) {
-                    ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                    setActiveModeControllerPumpOffDueToDipSwitch1(true);
+                    //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                 }
                 
                 hot_water_mode_data.setpointHotWaterOffset = TEMPERATURE_ALARM_VALUE;
@@ -253,7 +261,8 @@ void HOT_WATER_MODE_Tasks ( void )
                 // Compressor is not running and is also not in defrosting, so go back to heating
                 //TurnOffHeatingElementHotWaterBuffer();
                 if(regulateOnTempSensorInBufferHotWater) {
-                    ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                    setActiveModeControllerPumpOffDueToDipSwitch1(true);
+                    //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                 }
                 
                 hot_water_mode_data.HotwaterElementOn = false;

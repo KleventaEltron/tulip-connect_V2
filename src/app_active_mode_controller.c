@@ -71,6 +71,7 @@ bool factorySettingResetInProgress = false;
         SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
         SYS_CONSOLE_PRINT(" Heatpump ON:          %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
         SYS_CONSOLE_PRINT(" Display pump on:      %s\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
+        SYS_CONSOLE_PRINT(" Pump on Dip1:         %s\n", (!getActiveModeControllerPumpOffDueToDipSwitch1() ? "True" : "False"));
         SYS_CONSOLE_PRINT(" Sys stuck protection: %i\n", getSystemStuckProtectionCounter());
         SYS_CONSOLE_PRINT(" Sys on time:          %i\n\n", getsystemOnCounter());
         //SYS_CONSOLE_PRINT(" Hot W/Cooling Curve:  %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_COOLING_CURVE_SETTINGS));
