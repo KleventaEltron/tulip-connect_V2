@@ -278,9 +278,9 @@ bool HeatpumpCommunicationTimerExpired ( void )
 }
 
 bool LoggingTimerExpired ( void ) {
-    if (SecondCounterLogging >= TENTH_SECOND_COUNTER_30_SECONDS) 
+    //if (SecondCounterLogging >= TENTH_SECOND_COUNTER_30_SECONDS) 
     //if (SecondCounterLogging >= TENTH_SECOND_COUNTER_1_MINUTE) 
-    //if (SecondCounterLogging >= TENTH_SEC0ND_COUNTER_5_MINUTES) 
+    if (SecondCounterLogging >= TENTH_SEC0ND_COUNTER_5_MINUTES) 
     {   
         SecondCounterLogging = 0;
         return true;

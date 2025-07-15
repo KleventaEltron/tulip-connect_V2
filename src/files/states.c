@@ -10,6 +10,7 @@
 #include "modbus/heatpump_parameters.h"
 #include "eeprom.h"
 #include "time_counters.h"
+#include "../config/default/user.h"
 #include "ntc.h"
 
 APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
@@ -103,6 +104,12 @@ void resetActiveModeStates() {
     hot_water_heating_mode_data.hotwaterPassive = false;
     hot_water_heating_mode_data.setpointHotWaterOffset = TEMPERATURE_ALARM_VALUE;
             
+    if(app_active_mode_controllerData.currentRunningMode == COOLING 
+            || app_active_mode_controllerData.currentRunningMode == HOT_WATER_COOLING) {
+        CoolingActiveRelaySet();
+    } else {
+        CoolingActiveRelayClear();
+    }
     
     return;
 }

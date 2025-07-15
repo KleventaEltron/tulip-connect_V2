@@ -384,7 +384,7 @@ void setLoggingDataPerDeviceType ( char* requestBuilder, char device[]) {
             setLogValue_NUMBER(requestBuilder, "WL3", getDataFromMemoryCallable(ADDRESS_FAULT_STATE_1));
             setLogValue_NUMBER(requestBuilder, "WL4", getDataFromMemoryCallable(ADDRESS_FAULT_STATE_2));
             setLogValue_NUMBER(requestBuilder, "WL5", getDataFromMemoryCallable(ADDRESS_FAULT_STATE_3));
-//            setLogValue_NUMBER(requestBuilder, "WL6", getDataFromMemoryCallable(ADDRESS_SYSTEM_1_FAULT_STATE_1));
+            setLogValue_NUMBER(requestBuilder, "WL6", getDataFromMemoryCallable(ADDRESS_SYSTEM_1_FAULT_STATE_1));
             setLogValue_NUMBER(requestBuilder, "WL7", getDataFromMemoryCallable(ADDRESS_SYSTEM_1_FAULT_STATE_2));
             setLogValue_NUMBER(requestBuilder, "WL8", getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_1));
             setLogValue_NUMBER(requestBuilder, "WL9", getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_2));
