@@ -434,6 +434,8 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     
     CIRCULATION_PUMP_Initialize();
     
+    CoolingActiveRelayClear();
+    
     app_active_mode_controllerState = APP_ACTIVE_MODE_CONTROLLER_STATE_INIT;
 }
 
@@ -505,6 +507,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
      *
      */
     if(HeatingHotWaterTimerExpired()) {
+        //CoolingActiveRelayToggle();
         // If DIP switch 4 set, print debug info
         printDebugInfo();  
         // Get Dip1 state

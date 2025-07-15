@@ -64,6 +64,7 @@ void setTemperatureOperatingCycleCooling() {
 void COOLING_MODE_Initialize ( void )
 {
     cooling_mode_data.state = COOLING_INITIALIZE;
+    //CoolingActiveRelayClear();
     return;
 }
 
@@ -131,8 +132,6 @@ void COOLING_MODE_Tasks ( void )
     switch ( cooling_mode_data.state )
     {
         case COOLING_INITIALIZE:{
-            //SYS_CONSOLE_PRINT("COOLING_INITIALIZE\r\n");
-            
             if(regulateOnTempSensorInBufferCooling) {
                 //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                 setActiveModeControllerPumpOffDueToDipSwitch1(true);

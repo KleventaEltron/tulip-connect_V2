@@ -4735,7 +4735,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;APP_START_ADDRESS&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;0&quot;/&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;40000&quot;/&gt;
     &lt;/Values&gt;
   &lt;/core&gt;
 &lt;/core&gt;
@@ -36606,7 +36606,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\definitions.h</file>
-         <hash>c669e8ef63f722b4299cc0d7f85dfdc5d94ba1c766737ca8c47763b3f76e91da</hash>
+         <hash>8f89b816449d94ecec2acd357ace341929cf7a5709ef2bffb10a2055783b5bea</hash>
       </entry>
       <entry>
          <file>..\src\config\default\device.h</file>
