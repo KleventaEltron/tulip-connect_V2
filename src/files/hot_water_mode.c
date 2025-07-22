@@ -187,8 +187,8 @@ void HOT_WATER_MODE_Tasks ( void )
             setSecondCounterHotwaterTask(UINT32_MAX);
             
             if(regulateOnTempSensorInBufferHotWater) {
-                setActiveModeControllerPumpOffDueToDipSwitch1(true);
-                //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                setActiveModeControllerPumpOffDueToDipSwitch1(false);
+            //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
             }
             
             WriteSmartEeprom8(SEEP_ADDR_HEATING_CURVE, getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));

@@ -32,6 +32,11 @@ void setTemperatureOperatingCycleHotWaterCooling() {
         return;
     }
     
+    if (hot_water_cooling_mode_data.state >= 3) {
+        changeSettingHotWaterCooling = false;
+        return;
+    }
+    
     int16_t coolingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
     int16_t coolingSetpoint = TEMPERATURE_ALARM_VALUE;      
     
@@ -345,10 +350,10 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
             
             setSecondCounterHotwaterTask(0);
             
-            if(regulateOnTempSensorInBufferHotWaterCooling) {
+            //if(regulateOnTempSensorInBufferHotWaterCooling) {
                 //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
-                setActiveModeControllerPumpOffDueToDipSwitch1(false);
-            }
+            setActiveModeControllerPumpOffDueToDipSwitch1(false);
+            //}
             
             WriteSmartEeprom8(SEEP_ADDR_HEATING_CURVE, getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
             WriteSmartEeprom8(SEEP_ADDR_COOLING_CURVE, getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));

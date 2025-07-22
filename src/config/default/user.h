@@ -37,7 +37,7 @@ extern "C" {
 #define TEMPERATURE_ALARM_VALUE -9999    
     
 //     
-#define THIS_FIRMWARE_VERSION 2000002 // 2.0.1
+#define THIS_FIRMWARE_VERSION 2000004 // 2.0.4
     
 //#define SECONDS_IN_DAY 86400 // 1 day
 //#define SECONDS_IN_DAY 60 // 1 minute
