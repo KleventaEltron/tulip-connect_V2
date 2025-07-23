@@ -83,10 +83,44 @@
 #define ADDRESS_SYSTEM_2_EXHAUST_AIR_TEMPERATURE                        0x006B
 #define ADDRESS_SYSTEM_2_ECONOMIZER_INLET_TEMPERATURE                   0x006C
 #define ADDRESS_SYSTEM_2_ECONOMIZER_OUTLET_TEMPERATURE                  0x006D
+    // V1.3.8
+    #define ADDRESS_SYSTEM_1_HEAT_RECOVERY_POST_TEMPERATURE             0x006E
+    #define ADDRESS_SYSTEM_2_HEAT_RECOVERY_POST_TEMPERATURE             0x006F
+    // End
 #define ADDRESS_AUXILIARY_HEATING_SOURCE_HOT_WATER_TEMPERATURE_VALUE    0x0072
 #define ADDRESS_AUXILIARY_HEATING_SOURCE_HEATING_TEMPERATURE_VALUE      0x0073
 #define ADDRESS_BUFFER_TANK_FOR_HEATING_TEMPERATURE_VALUE               0x0074
 #define ADDRESS_MAIN_OUTLET_WATER_TEMPERATURE_VALUE                     0x0075
+    // V1.3.8
+    #define UNIT_B_PHASE_INPUT_VOLTAGE                  0x0076
+    #define UNIT_B_PHASE_INPUT_CURRENT                  0x0077
+    #define UNIT_C_PHASE_INPUT_VOLTAGE                  0x0078
+    #define UNIT_C_PHASE_INPUT_CURRENT                  0x0079
+    #define SMART_GRID_STATUS                           0x007A
+    #define ZONE_2_MIXING_VALVE_OPENING                 0x007B
+    #define ZONE_1_MIXING_TEMP                          0x007C
+    #define ZONE_1_MIXING_VALVE_OPENING                 0x007D
+    #define REFRIGERANT_SENSOR_CONCENTRATION            0x007E
+    #define REFRIGERANT_TYPE                            0x007F
+    #define REFRIGERANT_SENSOR_LIFE_TIME                0x0080
+    #define REFRIGERANT_SENSOR_SERVICE_LIFE_WARNING     0x0081
+    #define REFRIGERANT_SENSOR_LIFE                     0x0082
+    #define REFRIGERANT_SENSOR_PROGRAM_VERSION          0x0083
+
+    #define DATA_UPDATE_NUMBER                          0x00E0
+    #define POWER_CONSUMPTION_6MIN                      0x00E1
+    #define COOLING_CAPACITY_6MIN                       0x00E2
+    #define EER_6MIN                                    0x00E3
+    #define CURRENT_EER                                 0x00E4
+    #define OUTPUT_POWER_COOLING_HIGH_16BIT             0x00E5
+    #define OUTPUT_POWER_COOLING_LOW_16BIT              0x00E6
+
+    #define HEATING_CAPACITY_6MIN                       0x00E9
+    #define COP_6MIN                                    0x00EA
+    #define CURRENT_COP                                 0x00EB
+    #define OUTPUT_POWER_HEATING_HIGH_16BIT             0x00EC
+    #define OUTPUT_POWER_HEATING_LOW_16BIT              0x00ED
+    // End
 #define ADDRESS_WATER_INLET_TEMPERATURE                                 0x00F0
 #define ADDRESS_WATER_OUTLET_TEMPERATURE                                0x00F1
 #define ADDRESS_EXTERNAL_ENVIRONMENT_TEMPERATURE                        0x00F2
@@ -386,6 +420,42 @@
 #define ADDRESS_MAX_ROTATE_SPEED_OF_DC_WATER_PUMP                                               0x0204
 #define ADDRESS_ROTATE_SPEED_OF_DC_WATER_PUMP_UNDER_CONSTANT_TEMPERATURE                        0x0205
 #define ADDRESS_FLOOR_HEATING_TEST_MODE_SELECTION                                               0x0206
+    // V1.3.8
+    #define FREQ_INCREASE_TIME_EXIT_EXHAUST_OVERHEAT_LIMIT      0x0207
+    #define MAIN_VALVE_OPENING_CORRECTION_INITIAL_FREQ          0x0208
+    #define MIXING_VALVE_ADJUSTMENT_PERCENTAGE                  0x0209
+    #define DUAL_TEMPERATURE_ZONE_MODE_SELECTION                0x020A
+    #define DUAL_TEMPERATURE_ZONE_CONTROL_RETURN_TEMP           0x020B
+    #define TEMPERATURE_SELECTION_AFTER_HEAT_RECOVER            0x020C
+    #define EXHAUST_TEMPERATURE_EEV_FORCED_ON                   0x020D
+    #define EXHAUST_TEMPERATURE_EEV_RESET                       0x020E
+    #define EEV_FORCED_OPEN_DEGREE                              0x020F
+    #define EVI_VALVE_FIXED_OPENING_VALUE_30_45HZ               0x0210
+
+    #define EVI_VALVE_FIXED_OPENING_VALVE_46_60HZ         0x0211
+    #define EVI_VALVE_FIXED_OPENING_VALVE_ABOVE_60HZ      0x0212
+    #define MAIN_WATER_PUMP_TURN_ON_INTERVAL              0x0213
+    #define CRANKSHAFT_HEATER_TURN_ON_TIME                0x0214
+    #define EEV_SMALL_OPENING_ADJ_LIMIT_1                 0x0215
+    #define EEV_SMALL_OPENING_ADJ_LIMIT_2                 0x0216
+    #define EEV_EXHAUST_SUPERHEAT_ADJ_LIMIT               0x0217
+    #define AUX_VALVE_OPEN_EXHAUST_SUPERHEAT              0x0218
+    #define AUX_VALVE_CLOSED_EXHAUST_SUPERHEAT            0x0219
+    #define FREQ_INCREASE_CURVE_SELECTION                 0x021B
+    #define STAGE_1_FREQUENCY                             0x021C
+    #define PLATFORM_2_FREQUENCY                          0x021D
+    #define PLATFORM_3_FREQUENCY                          0x021E
+    #define PLATFORM_4_FREQUENCY                          0x021F
+    #define STAGE_5_FREQUENCY                             0x0220
+    #define STAGE_1_TIME                                  0x0221
+    #define STAGE_2_TIME                                  0x0222
+    #define STAGE_3_TIME                                  0x0223
+    #define STAGE_4_TIME                                  0x0224
+    #define STAGE_5_TIME                                  0x0225
+    #define FREQ_INCREASE_TIME                            0x0226
+    #define TEMP_ZONE_1_SET_UPPER_TEMP_LIMIT              0x0227
+    #define TEMP_ZONE_2_SET_UPPER_TEMP_LIMIT              0x0228
+    // End
 
 // USER PARAMETERS 0x0300?0x032F // Nagekeken
 #define ADDRESSES_USER_PARAMETERS                   112      
@@ -416,6 +486,10 @@
 #define ADDRESS_HEATING_CURVE_SETTING               0x0314
 #define ADDRESS_HOT_WATER_CURVE_SETTING             0x0315
 #define ADDRESS_FLOOR_HEATING_CURVE_SETTING         0x0316
+    // V1.3.8
+    #define TEMPERATURE_ZONE_2 0x0317
+    #define TEMPERATURE_ZONE_1 0x0319
+    // END
 
 // User Order Parameters 0x0330?0x035F // Nagekeken
 #define ADDRESS_CREW_CONTROL                        0x0330
@@ -453,6 +527,44 @@
 #define ADDRESS_RETURN_WATER_TEMPERATURE_RETURN_DIFFERENCE  0x080D
 #define ADDRESS_RETURN_WATER_CYCLE                          0x080E
 #define ADDRESS_RETURN_WATER_TIME                           0x080F
+
+    // V1.3.8
+    #define HEATING_LOW_TEMP_CURVE_DIY                   0x0810
+    #define HEATING_LOW_TEMP_CURVE_COEFF_K               0x0811
+    #define HEATING_LOW_TEMP_CURVE_CONST_B               0x0812
+    #define HEATING_CAPACITY_STATISTICS                  0x0813
+    #define EXTERNAL_PUMP_FLOW_RATE                      0x0814
+    #define HOT_WATER_ELECTRIC_HEATER_POWER              0x0815
+    #define PIPE_ELECTRIC_HEATER_1_POWER                 0x0816
+    #define PIPE_ELECTRIC_HEATER_2_POWER                 0x0817
+    #define HEATING_ELECTRIC_HEATER_POWER                0x0818
+    #define EXTERNAL_WATER_PUMP_POWER                    0x0819
+    #define HL_CURVE_COEFF_K1                            0x081A
+    #define HL_CURVE_CONST_B1                            0x081B
+    #define CURVE_START_TIME                             0x081C
+    #define CURVE_END_TIME                               0x081D
+    #define HH1_CUSTOMIZED_CURVE_SETTING                 0x081E
+    #define TEMP_SETTING_LESS_EQUAL_MINUS_15             0x081F
+    #define TEMP_SETTING_MINUS15_TO_MINUS10              0x0820
+    #define TEMP_SETTING_MINUS10_TO_MINUS5               0x0821
+    #define TEMP_SETTING_MINUS5_TO_0                     0x0822
+    #define TEMP_SETTING_0_TO_5                          0x0823
+    #define TEMP_SETTING_5_TO_10                         0x0824
+    #define TEMP_SETTING_10_TO_15                        0x0825
+    #define TEMP_SETTING_15_TO_20                        0x0826
+    #define TEMP_SETTING_20_TO_25                        0x0827
+    
+    #define TEMP_SETTING_GREATER_25C                    0x0828
+    #define PIPE_ELEC_HEATER_LOAD_SHEDDING_CYCLE        0x0829
+    #define POWER_LIMIT_ENABLE_DISABLE                  0x082A
+    #define POWER_LIMIT                                 0x082B
+    #define ELEC_HEATER_DELAYED_COMPRESSOR_START        0x082C
+    #define CL8_COEFF_K                                 0x082D
+    #define CL8_CONST_B                                 0x082E
+    #define HH2_CUSTOM_CURVE_SETTING                    0x082F
+    #define HH2_CURVE_COEFF_K1                          0x0830
+    #define HH2_CURVE_CONST_B1                          0x0831
+    // END
 
 // Coils address 0X1000-0X10FF // Nagekeken
 #define ADDRESSES_COILS_ADDRESSES               256                 
@@ -499,23 +611,23 @@
 #define START_ADDRESS_COIL_ADDRESSES            0x1000  
 
 // Unknown parameters
-#define REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_1    0x30   
+#define REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_1    0x30          
 #define REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_2    0x64
 #define REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_3    0x64
-#define REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_4    0x4D
-#define REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_5    0x4D
-#define REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_6    0x5F
-#define REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_7    0x5F
+#define REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_4    0x64    // 0x4D
+#define REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_5    0x64    // 0x4D
+#define REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_6    0x64    // 0x5F
+#define REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_7    0x64    // 0x5F
 #define REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_8    0x10
 #define REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_9    0x10
 
 #define START_ADDRESS_UNKNOWN_PARAMTERS_1   0x0370  
 #define START_ADDRESS_UNKNOWN_PARAMTERS_2   0x0400           
 #define START_ADDRESS_UNKNOWN_PARAMTERS_3   0x0600   
-#define START_ADDRESS_UNKNOWN_PARAMTERS_4   0x0464           
-#define START_ADDRESS_UNKNOWN_PARAMTERS_5   0x0664                
-#define START_ADDRESS_UNKNOWN_PARAMTERS_6   0x04B1       
-#define START_ADDRESS_UNKNOWN_PARAMTERS_7   0x06B1   
+#define START_ADDRESS_UNKNOWN_PARAMTERS_4   0x0464  // 0x0464       
+#define START_ADDRESS_UNKNOWN_PARAMTERS_5   0x0664  // 0x0664       
+#define START_ADDRESS_UNKNOWN_PARAMTERS_6   0x04C8  // 0x04B1
+#define START_ADDRESS_UNKNOWN_PARAMTERS_7   0x06C8  // 0x06B1
 #define START_ADDRESS_UNKNOWN_PARAMTERS_8   0x0840  
 #define START_ADDRESS_UNKNOWN_PARAMTERS_9   0x0880
 
