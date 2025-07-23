@@ -46,6 +46,7 @@ void checkNeedForSterilization() {
     if(sterilisationMode != ACTIVE && goToActiveSterilization()){
         setSterilisationMode(ACTIVE);
         setActiveModeControllerHeatpumpRunningMode(SET_MODE_HEATING);
+        setActiveModeControllerPumpOffDueToDipSwitch1(false);
     }        
 }
 
