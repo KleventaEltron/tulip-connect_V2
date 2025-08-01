@@ -18,6 +18,7 @@
 #include "files\hardware_rev.h"
 // Test only:
 //#include "files\modbus\heatpump_parameters.h"
+#include "files\eeprom.h"
 
 APP_IN_OUTPUTS_DATA app_in_outputsData;
 //uint8_t RevNum = 0;   
@@ -155,6 +156,24 @@ void APP_IN_OUTPUTS_Tasks ( void )
             {
                 while(1);
             }
+            
+            if (!getInputSlideSwitch() == true && ReadSmartEeprom8(SEEP_ADDR_EVU_CONTACT_ENABLE) == false){
+                WriteSmartEeprom8(SEEP_ADDR_EVU_CONTACT_ENABLE, true);
+            }
+            
+            if (!getInputSlideSwitch() == false && ReadSmartEeprom8(SEEP_ADDR_EVU_CONTACT_ENABLE) == true){
+                WriteSmartEeprom8(SEEP_ADDR_EVU_CONTACT_ENABLE, false);
+            }
+            
+            /*
+            if (GetDigitalInput2() == true && ReadSmartEeprom8(SEEP_ADDR_EVU_CONTACT_ENABLE) == true){
+                // EVU TEST
+                RelayPotfree2_Set();
+            }
+            else{
+                RelayPotfree2_Clear();
+            }
+            */  
             
             break;
         }
