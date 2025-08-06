@@ -43,6 +43,10 @@ uint32_t getWaitForSettingEchoProtection();
 void setWaitForSettingEchoProtection(uint32_t count);
 uint32_t getWriteHeatpumpRunningModeCounter();
 void setWriteHeatpumpRunningModeCounter(uint32_t value);
+uint32_t getWriteHeatpumpForcedOffCounter();
+void setWriteHeatpumpForcedOffCounter(uint32_t value);
+uint32_t getWaitingTurningHeatpumpOn();
+void setWaitingTurningHeatpumpOn(uint32_t value);
 
 bool LedsTimerExpired ( void );
 bool HeatingHotWaterTimerExpired ( void );

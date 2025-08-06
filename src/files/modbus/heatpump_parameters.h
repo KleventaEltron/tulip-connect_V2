@@ -635,6 +635,18 @@
 #define MAX_SETTINGS 50
 
 
+/*
+ * 
+ * These are no longer Modbus addresses for the heat pump, but addresses that
+ * the Tulip print can use, such as Eeprom settings, resets, etc.
+ * 
+ */
+#define ADDRESS_TULIP_CONNECT_SOFTWARE_RESET                            0xC000
+#define ADDRESS_TULIP_CONNECT_EVU_CONTACT_ENABLE                        0xC001
+#define ADDRESS_TULIP_CONNECT_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT    0xC002
+
+
+
 extern uint16_t RealTimeDataStatussen  [REGISTERS_AMOUNT_REAL_TIME_DATA_STATUSSEN] [PARAMETERS_ARRAY_LENGTH]; 
 // =
 // {{0,1}, 

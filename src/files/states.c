@@ -218,6 +218,11 @@ int16_t getHeatpumpRunningMode()
     return UserParameters[ADDRESS_SET_MODE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
 }
 
+int16_t getHeatpumpOnOff()
+{
+    return UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+}
+
 
 int16_t getHeatpumpReturnWaterTemperature()
 {

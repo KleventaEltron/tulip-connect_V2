@@ -49,6 +49,7 @@ typedef struct
     uint16_t setPointHeating;
     uint16_t setPointCooling;
     uint16_t heatpumpRunningMode;
+    bool heatpumpForcedOff;
     bool dip1SwitchCurrentState;
     bool dip1SwitchPreviousState;
     bool resetFactorySettings;
@@ -293,6 +294,7 @@ int16_t getHeatpumpHeatingSetpoint();
 int16_t getHeatpumpCoolingSetpoint();
 uint16_t getHeatpumpWaterFlow();
 int16_t getHeatpumpRunningMode();
+int16_t getHeatpumpOnOff();
 int16_t getHeatpumpReturnWaterTemperature();
 const char * getThreeWayValveState(int state);
 
