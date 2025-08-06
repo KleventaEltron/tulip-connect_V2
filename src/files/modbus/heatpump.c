@@ -300,13 +300,133 @@ void FillTxBuffer(uint8_t * txBuffer)
     }
 }
 
+uint16_t getHeatpumpData(uint16_t address)
+{
+    uint16_t returnData;
+    
+    // Known parameters
+    if ((address >= START_ADDRESS_REAL_TIME_DATA_STATUSSEN) && (address < START_ADDRESS_REAL_TIME_DATA_STATUSSEN + REGISTERS_AMOUNT_REAL_TIME_DATA_STATUSSEN))
+    {
+        address -= START_ADDRESS_REAL_TIME_DATA_STATUSSEN;
+        //RealTimeDataStatussen[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+        returnData = RealTimeDataStatussen[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_REAL_TIME_DATA) && (address < START_ADDRESS_REAL_TIME_DATA + REGISTERS_AMOUNT_REAL_TIME_DATA))
+    {
+        address -= START_ADDRESS_REAL_TIME_DATA;
+        returnData = RealTimeData[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_UNIT_SYSTEM_PARAMETERS) && (address < START_ADDRESS_UNIT_SYSTEM_PARAMETERS + REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETERS))
+    {
+        address -= START_ADDRESS_UNIT_SYSTEM_PARAMETERS;
+        returnData = UnitSystemParameters[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_USER_PARAMETERS) && (address < START_ADDRESS_USER_PARAMETERS + REGISTERS_AMOUNT_USER_PARAMETERS))
+    {
+        address -= START_ADDRESS_USER_PARAMETERS;
+        returnData = UserParameters[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_USER_ORDER) && (address < START_ADDRESS_USER_ORDER + REGISTERS_AMOUNT_USER_ORDER))
+    {
+        address -= START_ADDRESS_USER_ORDER;
+        returnData = UserOrder[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_VERSION_INFORMATION) && (address < START_ADDRESS_VERSION_INFORMATION + REGISTERS_AMOUNT_VERSION_INFORMATION))
+    {
+        address -= START_ADDRESS_VERSION_INFORMATION;
+        returnData = VersionInformation[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_UNIT_SYSTEM_PARAMETER_L) && (address < START_ADDRESS_UNIT_SYSTEM_PARAMETER_L + REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETER_L))
+    {
+        address -= START_ADDRESS_UNIT_SYSTEM_PARAMETER_L;
+        returnData = UnitSystemParameterL[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_COIL_ADDRESSES) && (address < START_ADDRESS_COIL_ADDRESSES + REGISTERS_AMOUNT_COIL_ADDRESSES))
+    {
+        address -= START_ADDRESS_COIL_ADDRESSES;
+        returnData = CoilAddresses[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    
+    // Unknown parameters
+    else if ((address >= START_ADDRESS_UNKNOWN_PARAMTERS_1) && (address < START_ADDRESS_UNKNOWN_PARAMTERS_1 + REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_1))
+    {
+        address -= START_ADDRESS_UNKNOWN_PARAMTERS_1;
+        returnData = UnknownParameters1[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_UNKNOWN_PARAMTERS_2) && (address < START_ADDRESS_UNKNOWN_PARAMTERS_2 + REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_2))
+    {
+        address -= START_ADDRESS_UNKNOWN_PARAMTERS_2;
+        returnData = UnknownParameters2[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_UNKNOWN_PARAMTERS_3) && (address < START_ADDRESS_UNKNOWN_PARAMTERS_3 + REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_3))
+    {
+        address -= START_ADDRESS_UNKNOWN_PARAMTERS_3;
+        returnData = UnknownParameters3[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_UNKNOWN_PARAMTERS_4) && (address < START_ADDRESS_UNKNOWN_PARAMTERS_4 + REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_4))
+    {
+        address -= START_ADDRESS_UNKNOWN_PARAMTERS_4;
+        returnData = UnknownParameters4[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_UNKNOWN_PARAMTERS_5) && (address < START_ADDRESS_UNKNOWN_PARAMTERS_5 + REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_5))
+    {
+        address -= START_ADDRESS_UNKNOWN_PARAMTERS_5;
+        returnData = UnknownParameters5[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_UNKNOWN_PARAMTERS_6) && (address < START_ADDRESS_UNKNOWN_PARAMTERS_6 + REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_6))
+    {
+        address -= START_ADDRESS_UNKNOWN_PARAMTERS_6;
+        returnData = UnknownParameters6[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_UNKNOWN_PARAMTERS_7) && (address < START_ADDRESS_UNKNOWN_PARAMTERS_7 + REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_7))
+    {
+        address -= START_ADDRESS_UNKNOWN_PARAMTERS_7;
+        returnData = UnknownParameters7[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_UNKNOWN_PARAMTERS_8) && (address < START_ADDRESS_UNKNOWN_PARAMTERS_8 + REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_8))
+    {
+        address -= START_ADDRESS_UNKNOWN_PARAMTERS_8;
+        returnData = UnknownParameters8[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else if ((address >= START_ADDRESS_UNKNOWN_PARAMTERS_9) && (address < START_ADDRESS_UNKNOWN_PARAMTERS_9 + REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_9))
+    {
+        address -= START_ADDRESS_UNKNOWN_PARAMTERS_9;
+        returnData = UnknownParameters9[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    else
+    {
+        returnData = UINT16_MAX; 
+    }
+    
+    return returnData;
+}
+
+uint16_t getWaterFlowProtectionValue(uint16_t unitToolingNumber)
+{
+    if ((unitToolingNumber == CURRENT_UNIT_TOOLING_NO_6KW_1) || (unitToolingNumber == CURRENT_UNIT_TOOLING_NO_6KW_2)) {
+        // 6KW unit
+        return 5;
+    }
+    
+    if ((unitToolingNumber == CURRENT_UNIT_TOOLING_NO_12KW_1) || (unitToolingNumber == CURRENT_UNIT_TOOLING_NO_12KW_2)) {
+        // 12KW unit
+        return 10;
+    }
+    
+    if ((unitToolingNumber == CURRENT_UNIT_TOOLING_NO_18KW_1) || (unitToolingNumber == CURRENT_UNIT_TOOLING_NO_18KW_2)) {
+        // 18KW unit
+        return 15;
+    }
+    
+    return UINT16_MAX;
+}
 
 void FillBufferWithStartupSettings(bool doFirstTimeHeatpumpCommunicationSettings) {
-    ChangeHeatpumpSetting(ADDRESS_PARAMETER_PASSWORD_SETTING, 255);
-    ChangeHeatpumpSetting(ADDRESS_TANK_TEMPERATURE_PROBE_ENABLED, TANK_TEMPERATURE_PROBE_DISABLED); 
-    ChangeHeatpumpSetting(ADDRESS_UNIT_TEMPERATURE_CONTROL_METHOD, UNIT_TEMPERATURE_CONTROL_METHOD_RETURN_WATER); 
-    ChangeHeatpumpSetting(ADDRESS_HIGH_TEMPERATURE_STERILIZATION_FUNCTION, 0);  
-    ChangeHeatpumpSetting(ADDRESS_DEVICE_REACHING_TARGET_TEMPERATURE_AND_SHUTDOWN_MODE, 1); 
+    //ChangeHeatpumpSetting(ADDRESS_PARAMETER_PASSWORD_SETTING, 255);
+    //ChangeHeatpumpSetting(ADDRESS_TANK_TEMPERATURE_PROBE_ENABLED, TANK_TEMPERATURE_PROBE_DISABLED); 
+    //ChangeHeatpumpSetting(ADDRESS_UNIT_TEMPERATURE_CONTROL_METHOD, UNIT_TEMPERATURE_CONTROL_METHOD_RETURN_WATER); 
+    //ChangeHeatpumpSetting(ADDRESS_HIGH_TEMPERATURE_STERILIZATION_FUNCTION, 0);  
+    //ChangeHeatpumpSetting(ADDRESS_DEVICE_REACHING_TARGET_TEMPERATURE_AND_SHUTDOWN_MODE, 1); 
     
     if (doFirstTimeHeatpumpCommunicationSettings == true)
     {
@@ -318,6 +438,43 @@ void FillBufferWithStartupSettings(bool doFirstTimeHeatpumpCommunicationSettings
     }      
 }
 
+void CheckHeatpumpStaticSettings() {
+    if (getCheckHeatpumpStaticSettingsCounter() < 30) {
+        return;
+    }
+    
+    setCheckHeatpumpStaticSettingsCounter(0);
+
+    if (getHeatpumpData(ADDRESS_PARAMETER_PASSWORD_SETTING) != 255) { 
+        ChangeHeatpumpSetting(ADDRESS_PARAMETER_PASSWORD_SETTING, 255);
+    }
+    
+    if (getHeatpumpData(ADDRESS_TANK_TEMPERATURE_PROBE_ENABLED) != TANK_TEMPERATURE_PROBE_DISABLED) { 
+        ChangeHeatpumpSetting(ADDRESS_TANK_TEMPERATURE_PROBE_ENABLED, TANK_TEMPERATURE_PROBE_DISABLED);
+    }
+    
+    if (getHeatpumpData(ADDRESS_UNIT_TEMPERATURE_CONTROL_METHOD) != UNIT_TEMPERATURE_CONTROL_METHOD_RETURN_WATER) { 
+        ChangeHeatpumpSetting(ADDRESS_UNIT_TEMPERATURE_CONTROL_METHOD, UNIT_TEMPERATURE_CONTROL_METHOD_RETURN_WATER);
+    }
+    
+    if (getHeatpumpData(ADDRESS_HIGH_TEMPERATURE_STERILIZATION_FUNCTION) != 0) { 
+        ChangeHeatpumpSetting(ADDRESS_HIGH_TEMPERATURE_STERILIZATION_FUNCTION, 0);
+    }
+    
+    if (getHeatpumpData(ADDRESS_DEVICE_REACHING_TARGET_TEMPERATURE_AND_SHUTDOWN_MODE) != 1) { 
+        ChangeHeatpumpSetting(ADDRESS_DEVICE_REACHING_TARGET_TEMPERATURE_AND_SHUTDOWN_MODE, 1);
+    }
+    
+    
+    uint16_t correctWaterFlowProtectionValue = getWaterFlowProtectionValue(getHeatpumpData(ADDRESS_CURRENT_UNIT_TOOLING_NO));
+    
+    if (correctWaterFlowProtectionValue != UINT16_MAX){
+        // Value is not UINT16_MAX, so it can be checked with its current value, otherwise skip this
+        if (getHeatpumpData(ADDRESS_WATER_FLOW_IS_TOO_LOW_PROTECTION_VALUE) != correctWaterFlowProtectionValue) {
+            ChangeHeatpumpSetting(ADDRESS_WATER_FLOW_IS_TOO_LOW_PROTECTION_VALUE, correctWaterFlowProtectionValue);
+        }
+    }
+}
 
 /*
 uint8_t FillBufferWithStartupSettings(bool doFirstTimeHeatpumpCommunicationSettings)
