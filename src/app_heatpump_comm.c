@@ -151,6 +151,9 @@ void APP_HEATPUMP_COMM_Initialize ( void )
 {
     SmartEepromInit();
     
+    // Make sure arrays contain known values
+    SetDataInArraysAtStartup();
+    
     //DMAC_ChannelCallbackRegister(DMAC_CHANNEL_3, APP_ReadCallbackHeatpump, 0);
     //DMAC_ChannelCallbackRegister(DMAC_CHANNEL_0, APP_WriteCallbackHeatpump, 0);
     
@@ -177,6 +180,7 @@ void APP_HEATPUMP_COMM_Initialize ( void )
         doFirstTimeHeatpumpCommunicationSettings = true;
     }
     
+    CheckHeatpumpStaticSettings();
     FillBufferWithStartupSettings(doFirstTimeHeatpumpCommunicationSettings);
     
     app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_IDLE;
@@ -227,6 +231,9 @@ void APP_HEATPUMP_COMM_Tasks ( void )
         if (CommunicationTimeOutCounter < UINT32_MAX) {
             CommunicationTimeOutCounter++;
         }
+        
+        // Every 30 seconds the static settings are checked
+        CheckHeatpumpStaticSettings();
     }
     
     /* Check the application's current state. */

@@ -530,9 +530,6 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     app_active_mode_controllerData.resetFactorySettings = false;
     app_active_mode_controllerData.heatpumpForcedOff = false;
     
-    // Make sure arrays contain known values
-    SetDataInArraysAtStartup();
-    
     // Reset the system stuck protection counter
     setSystemStuckProtectionCounter(0);
     

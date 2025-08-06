@@ -29,6 +29,12 @@
 #define ADDRESS_SWITCH_PORT_STATE_3             0x001F
 #define ADDRESS_SWITCH_PORT_STATE_4             0x0020
 #define ADDRESS_CURRENT_UNIT_TOOLING_NO         0x0024 
+    #define CURRENT_UNIT_TOOLING_NO_6KW_1       115     // 6KW heatpump can be Unit Tooling Nr. 115 or 129
+    #define CURRENT_UNIT_TOOLING_NO_6KW_2       129
+    #define CURRENT_UNIT_TOOLING_NO_12KW_1      116     // 12KW heatpump can be Unit Tooling Nr. 116 or 130
+    #define CURRENT_UNIT_TOOLING_NO_12KW_2      130
+    #define CURRENT_UNIT_TOOLING_NO_18KW_1      117     // 18KW heatpump can be Unit Tooling Nr. 117 or 131
+    #define CURRENT_UNIT_TOOLING_NO_18KW_2      131
 #define ADDRESS_COMPRESSOR_1_TARGET_FREQUENCY   0x0027
 #define ADDRESS_COMPRESSOR_2_TARGET_FREQUENCY   0x0028
 

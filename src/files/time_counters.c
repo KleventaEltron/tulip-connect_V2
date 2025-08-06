@@ -24,6 +24,7 @@ uint32_t waitForSettingEchoProtection = UINT32_MAX;
 uint32_t writeHeatpumpRunningModeCounter = UINT32_MAX;
 uint32_t writeHeatpumpForcedOffCounter = UINT32_MAX;
 uint32_t WaitingTurningHeatpumpOnCounter = UINT32_MAX;
+uint32_t checkHeatpumpStaticSettingsCounter = UINT32_MAX;
 
 //static uint32_t SecondCounterFtp = UINT32_MAX;
 //static uint32_t SecondCounterResetSoftware = UINT32_MAX;
@@ -158,6 +159,10 @@ void UpdateCounters ( void )
             if (WaitingTurningHeatpumpOnCounter >= 0 && WaitingTurningHeatpumpOnCounter < UINT32_MAX) {
                 WaitingTurningHeatpumpOnCounter++;
             }
+            
+            if (checkHeatpumpStaticSettingsCounter >= 0 && checkHeatpumpStaticSettingsCounter < UINT32_MAX) {
+                checkHeatpumpStaticSettingsCounter++;
+            }
         }   
 
         if (SecondCounterLeds >= 0 && SecondCounterLeds < UINT32_MAX)
@@ -247,6 +252,14 @@ uint32_t getWaitingTurningHeatpumpOn() {
 
 void setWaitingTurningHeatpumpOn(uint32_t value) {
     WaitingTurningHeatpumpOnCounter = value;
+}
+
+uint32_t getCheckHeatpumpStaticSettingsCounter() {
+    return checkHeatpumpStaticSettingsCounter;
+}
+
+void setCheckHeatpumpStaticSettingsCounter(uint32_t value) {
+    checkHeatpumpStaticSettingsCounter = value;
 }
 
 bool LedsTimerExpired ( void )
