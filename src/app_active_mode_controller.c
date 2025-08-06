@@ -64,8 +64,7 @@ bool factorySettingResetInProgress = false;
         SYS_CONSOLE_PRINT(" Temp too low:         %d\n", getCircPumpData().temperatureTooLowForPumpToBeOn);
         SYS_CONSOLE_PRINT(" Counter:              %d\n", (int)getSecondCounterCirculationPumpTask());
         */
-        
-        /*    
+           
         SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
         SYS_CONSOLE_PRINT(" FW:                   %d-%d-%d\n", (int)((THIS_FIRMWARE_VERSION / 1000000)), (int)((THIS_FIRMWARE_VERSION / 1000) % 1000), (int)(THIS_FIRMWARE_VERSION % 1000));
         SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
@@ -80,8 +79,8 @@ bool factorySettingResetInProgress = false;
         SYS_CONSOLE_PRINT(" Cooling Curve:        %i\n\n", getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
         //SYS_CONSOLE_PRINT(" Hot W Curve:          %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_CURVE_SETTING));
         //SYS_CONSOLE_PRINT(" UnderF Curve:         %i\n", getDataFromMemoryCallable(ADDRESS_FLOOR_HEATING_CURVE_SETTING));
-        */
         
+        /* EVU and thermostat
         SYS_CONSOLE_PRINT("\r\nEVU:\n");
         SYS_CONSOLE_PRINT(" EVU enabled:           %s\n", (ReadSmartEeprom8(SEEP_ADDR_EVU_CONTACT_ENABLE) ? "True" : "False"));
         SYS_CONSOLE_PRINT(" EVU contact:           %s\n\n", (GetDigitalInput2() ? "True" : "False"));
@@ -90,9 +89,11 @@ bool factorySettingResetInProgress = false;
         SYS_CONSOLE_PRINT(" Forced off counter:    %i\n", getWriteHeatpumpForcedOffCounter());
         SYS_CONSOLE_PRINT(" HP turning on counter: %i\n\n", getWaitingTurningHeatpumpOn());
         SYS_CONSOLE_PRINT(" Heatpump ON:           %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Display pump on:       %s\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
+        SYS_CONSOLE_PRINT(" Display pump on:       %s\n\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
+        SYS_CONSOLE_PRINT(" SW HP on thermostat:   %s\n", (ReadSmartEeprom8(SEEP_ADDR_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT) ? "True" : "False"));
+        SYS_CONSOLE_PRINT(" Thermostat contact:    %s\n", (GetThermostatContact() ? "True" : "False"));
+        */
         
-        /*
         if(GetDip3()) {
             printHeadOfStringBuffer();
         }
@@ -110,7 +111,7 @@ bool factorySettingResetInProgress = false;
         SYS_CONSOLE_PRINT(" Pump ON:              %s\n", getStatusCirculationPump() ? "True" : "False");
         SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterCirculationPumpTask());
         SYS_CONSOLE_PRINT(" Temp. too low:        %s\n\n", getCirculationPumpData().temperatureTooLowForPumpToBeOn ? "True" : "False");
-        */
+        
         /*
         SYS_CONSOLE_PRINT("\r\nDefrosting:\n");
         SYS_CONSOLE_PRINT(" Defrosting active:    %s\n", isDefrostingActive() ? "True" : "False");
@@ -118,13 +119,13 @@ bool factorySettingResetInProgress = false;
         SYS_CONSOLE_PRINT(" Initial defrost temp :%i\n", getInitialDefrostingTemperature());
         SYS_CONSOLE_PRINT(" Defrosting element:   %s\n\n", getDefrostingElementOnState() ? "True" : "False");
         */
-        /*
+        
         SYS_CONSOLE_PRINT("\r\n3-WAY VALVE:\n");
         SYS_CONSOLE_PRINT(" 3-way valve mode:     %s\n", getThreeWayValveState(getStatus3WayValve()));
         SYS_CONSOLE_PRINT(" 3-way needed state:   %s\n", getThreeWayValveState(getNeededValvePosition()));
         //SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getWaitingThreeWayValveSwitch());
-        */
-        /*
+        
+        
         if (getSterilisationMode() != OFF) {
             SYS_CONSOLE_PRINT("\r\nSTERILIZATION:\n");
             SYS_CONSOLE_PRINT(" Sterilisation active: %s\n", getSterilizationState(getSterilisationMode()));
@@ -220,7 +221,7 @@ bool factorySettingResetInProgress = false;
                 SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
             }
         }
-        */
+        
     }
     return;
  }
@@ -288,8 +289,10 @@ bool factorySettingResetInProgress = false;
  
  void checkHeatpumpForcedOff() {
     if (getWriteHeatpumpForcedOffCounter() < 10) {
+        // 10 seconds not over, return
         return;
     }
+    // 10 second over, reset counter and go further
     setWriteHeatpumpForcedOffCounter(0);
     
     if (app_active_mode_controllerData.heatpumpForcedOff == false){
@@ -350,7 +353,96 @@ bool factorySettingResetInProgress = false;
     WriteSmartEeprom8(SEEP_ADDR_COOLING_CURVE, getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
 
      return;
- } 
+ }
+ 
+ 
+ bool checkForcedOffHeatpump()
+ {
+    // Checks every 10 seconds for the heatpumpForcedOff boolean and turns off
+    // the heatpump if it is true
+    checkHeatpumpForcedOff();
+     
+    if(((GetEvuContact() == true) && (ReadSmartEeprom8(SEEP_ADDR_EVU_CONTACT_ENABLE) == true)) ||
+            ((GetThermostatContact() == false) && (ReadSmartEeprom8(SEEP_ADDR_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT) == true))){
+        // If EVU contact is made, with EVU enabled OR
+        // Thermostat contact is made with Heatpump Switch on Thermostat setting on,
+        // heatpump must be forced off
+        app_active_mode_controllerData.heatpumpForcedOff = true;
+        setWaitingTurningHeatpumpOn(UINT32_MAX);
+        
+        if (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) == true){
+            // Heatpump was on (display), save this and turn off on display
+            WriteSmartEeprom8(SEEP_ADDR_HEATPUMP_WAS_ON_BEFORE_FORCED_OFF, true);
+            WriteSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON, false);
+        }
+        
+        
+        if (ReadSmartEeprom8(SEEP_ADDR_HEATPUMP_WAS_ON_BEFORE_FORCED_OFF) == true){
+            // Can do Circulation pump tasks, if heatpump was on before forced off
+            CIRCULATION_PUMP_Tasks();
+        }
+        
+        
+        // return true: stops the active mode controller
+        return true;
+    }
+    
+    if (app_active_mode_controllerData.heatpumpForcedOff == true){
+        // If HeatpumpForcedOff is true, and the EVU or thermostat doesn't block
+        // the heatpump from going on, put the heatpump back on if it was on
+        // before the blocking 
+        
+        if (ReadSmartEeprom8(SEEP_ADDR_HEATPUMP_WAS_ON_BEFORE_FORCED_OFF) == false){
+            // Heatpump was off before, so keep the heatpump off and reset values
+            app_active_mode_controllerData.heatpumpForcedOff = false;
+            setWaitingTurningHeatpumpOn(UINT32_MAX);
+            
+            // return true: stops the active mode controller, because is off
+            return true;
+        }
+        
+        if (getWaitingTurningHeatpumpOn() >= 0 && getWaitingTurningHeatpumpOn() < 20) {
+            // Wait 20 seconds here and check the heatpump state
+            if (getHeatpumpOnOff() == SET_HEATPUMP_ON){
+                // Heatpump has gone ON, reset states
+                app_active_mode_controllerData.heatpumpForcedOff = false;
+                setWaitingTurningHeatpumpOn(UINT32_MAX);
+                
+                WriteSmartEeprom8(SEEP_ADDR_HEATPUMP_WAS_ON_BEFORE_FORCED_OFF, false);
+                WriteSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON, true);
+                
+                // return false: do active mode controller, because is on
+                return false;
+            }
+            
+            // Can do Circulation pump tasks
+            CIRCULATION_PUMP_Tasks();
+            
+            // return true: stops the active mode controller
+            return true;
+        }
+        
+        // 20 seconds are over, turn ON the heatpump (again) and restart timer
+        ChangeHeatpumpSetting(ADDRESS_ON_OFF, SET_HEATPUMP_ON);
+        setWaitingTurningHeatpumpOn(0);
+        
+        // return true: stops the active mode controller
+        return true;
+    }
+    
+    if (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) == false) {
+        // Heatpump manually set to off on display
+        CIRCULATION_PUMP_Initialize();
+        
+        // return true: stops the active mode controller
+        return true;
+    }
+    
+    // return false: do active mode controller
+    return false;
+ }
+ 
+ 
  
 void callActiveModeTaskHandler() {
     switch(app_active_mode_controllerData.currentRunningMode)
@@ -436,6 +528,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     app_active_mode_controllerData.dip1SwitchCurrentState = GetDip1();
     app_active_mode_controllerData.dip1SwitchPreviousState = GetDip1();
     app_active_mode_controllerData.resetFactorySettings = false;
+    app_active_mode_controllerData.heatpumpForcedOff = false;
     
     // Make sure arrays contain known values
     SetDataInArraysAtStartup();
@@ -542,8 +635,6 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         checkHeatpumpHeatingSetpoint();
         // Every 10 seconds the running mode of the heatpump is checked
         checkHeatpumpRunningMode();
-        // Every 10 seconds is checked if heatpump can be on or off
-        checkHeatpumpForcedOff();
     }
     
     
@@ -551,76 +642,21 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
     if(getsystemOnCounter() < 30) { return; }
     
     
-    /* 
-     * 
-     * If digital input 2 contact is made, with EVU enabled, turn off heatpump
-     * if heatpump was on
-     * 
-     */
-    if((GetDigitalInput2() == true) && (ReadSmartEeprom8(SEEP_ADDR_EVU_CONTACT_ENABLE) == true)){
-        app_active_mode_controllerData.heatpumpForcedOff = true;
-        
-        if (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) == true){
-            WriteSmartEeprom8(SEEP_ADDR_HEATPUMP_WAS_ON_BEFORE_FORCED_OFF, true);
-            WriteSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON, false);
-        }
-        
-        TurnOffHeatingElementHeatingBuffer();
-        TurnOffHeatingElementHotWaterBuffer();
-        
-        setSystemStuckProtectionCounter(0);
-        return;
-    }
-    
-    if (app_active_mode_controllerData.heatpumpForcedOff == true){
-        // Heatpump weer eenmalig aanzetten nadat EVU contact weg is gevallen
-        // Controleren of de wartmepomp voor EVU aan of uit stond. 
-        // - Stond die uit, dan hoeft die natuurlijk niet meer aan
-        // - Stond die aan, moeten we hem aanzetten (en controleren en evenuteel herhalen)
-        
-        if (ReadSmartEeprom8(SEEP_ADDR_HEATPUMP_WAS_ON_BEFORE_FORCED_OFF) == false){
-            // Heatpump was off before EVU
-            app_active_mode_controllerData.heatpumpForcedOff = false;
-            setWaitingTurningHeatpumpOn(UINT32_MAX);
-            return;
-        }
-        
-        // Timer voorbij
-        // Wacht 20 seconden en in deze 20 seconden controleren.
-        // Ondertussen wel door gaan
-        // Als die in 20 seconden niet aan is gegaan herhalen. 
-        if (getWaitingTurningHeatpumpOn() >= 0 && getWaitingTurningHeatpumpOn() < 20) {
-            // wacht en controller
-            if (getHeatpumpOnOff() == SET_HEATPUMP_ON){
-                // Heatpump is back on
-                app_active_mode_controllerData.heatpumpForcedOff = false;
-                setWaitingTurningHeatpumpOn(UINT32_MAX);
-                
-                WriteSmartEeprom8(SEEP_ADDR_HEATPUMP_WAS_ON_BEFORE_FORCED_OFF, false);
-                WriteSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON, true);
-            }
-            
-            return;
-        }
-        
-        ChangeHeatpumpSetting(ADDRESS_ON_OFF, SET_HEATPUMP_ON);
-        setWaitingTurningHeatpumpOn(0);
-    }
-    
-    
     
     /*
      * 
-     * If the pump was turned off using the display we stop regulating everything
-     * Untill the user turns the system on themselves again
-     * 
+     * Check Forced off heatpump, can be:
+     * - User turned off heatpump on display
+     * - EVU is ON and D2 is ON (Circulation pump can be on)
+     * - Setting is ON that heatpump goes on and off together with thermostat contact
+     *
      */
-    if (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) == false) {
-        // Guard against system reset, because it is not actually stuck
-        CIRCULATION_PUMP_Initialize();
+    if (checkForcedOffHeatpump() == true){
+        // Heatpump is forced off, don't go further
         TurnOffHeatingElementHeatingBuffer();
         TurnOffHeatingElementHotWaterBuffer();
         
+        // Guard against system reset, because it is not actually stuck
         setSystemStuckProtectionCounter(0);
         return;
     }

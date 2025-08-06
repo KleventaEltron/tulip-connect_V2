@@ -236,6 +236,7 @@ void restoreEepromValuesToDefault(void)
     
     WriteSmartEeprom8(SEEP_ADDR_EVU_CONTACT_ENABLE, false);
     WriteSmartEeprom8(SEEP_ADDR_HEATPUMP_WAS_ON_BEFORE_FORCED_OFF, false);
+    WriteSmartEeprom8(SEEP_ADDR_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT, false);
 }
 
 void SmartEepromInit(void)
@@ -276,6 +277,7 @@ void SmartEepromInit(void)
     if (thisEepromVersion < 2000005) {
         WriteSmartEeprom8(SEEP_ADDR_EVU_CONTACT_ENABLE, false);
         WriteSmartEeprom8(SEEP_ADDR_HEATPUMP_WAS_ON_BEFORE_FORCED_OFF, false);
+        WriteSmartEeprom8(SEEP_ADDR_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT, false);
     }
 
     //if (thisEepromVersion < 1000013) // 1.0.13
