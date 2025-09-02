@@ -283,6 +283,7 @@ typedef struct{
 } CIRCULATION_PUMP_DATA;
 
 void resetActiveModeStates();
+uint16_t getActiveStateFromActiveMode(RUNNING_MODES state);
 const char * getActiveModeToString(RUNNING_MODES state);
 bool isDefrostingActive();
 bool getResetFactorySettings();

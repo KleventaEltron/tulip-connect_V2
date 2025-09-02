@@ -137,6 +137,8 @@ void COOLING_MODE_Tasks ( void )
                 setActiveModeControllerPumpOffDueToDipSwitch1(true);
             }
             
+            CoolingActiveRelaySet();
+            
             ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, ReadSmartEeprom8(SEEP_ADDR_COOLING_CURVE));
             ChangeHeatpumpSetting(ADDRESS_HEATING_CURVE_SETTING, ReadSmartEeprom8(SEEP_ADDR_HEATING_CURVE));
             

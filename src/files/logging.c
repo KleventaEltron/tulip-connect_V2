@@ -286,8 +286,6 @@ void setLogValue_NUMBER( char* requestBuilder, char settingName[], int value ) {
 
 
 
-
-
 void setLoggingDataPerDeviceType ( char* requestBuilder, char device[]) {
     char hardwareId[50];
    
@@ -440,7 +438,7 @@ void setLoggingDataPerDeviceType ( char* requestBuilder, char device[]) {
             setLogValue_NUMBER(requestBuilder, "WL54", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_INLET_TEMPERATURE));
             setLogValue_NUMBER(requestBuilder, "WL55", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_OUTLET_TEMPERATURE));
             setLogValue_NUMBER(requestBuilder, "WL56", (int16_t)getDataFromMemoryCallable(ADDRESS_EXTERNAL_ENVIRONMENT_TEMPERATURE));
-            setLogValue_NUMBER(requestBuilder, "WL57", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_TANK_TEMPERATURE_2));
+            setLogValue_NUMBER(requestBuilder, "WL57", (int16_t)getActiveStateFromActiveMode(getActiveStateValue()));
             
             setLogValue_NUMBER(requestBuilder, "WL58", (int16_t)getActiveStateValue());
             setLogValue_NUMBER(requestBuilder, "WL59", UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
@@ -981,6 +979,16 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
             break;
         }
         
+        case ADDRESS_HEATING_SET_TEMPERATURE: {
+            WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT, value);
+            break;
+        }
+        
+        case ADDRESS_COOLING_SET_TEMPERATURE: {
+            WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT, value);
+            break;
+        }
+        
         case ADDRESS_HOT_WATER_SET_TEMPERATURE: {
             WriteSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT, value);
             break;
@@ -1127,12 +1135,12 @@ bool sendUpdatedSettingsList ( void ) {
     
     uint16_t bytesSend = NET_PRES_SocketWrite(socket, (uint8_t*) networkBuffer, strlen(networkBuffer));
     
-    getSettingValuesByModusIndex(0x0100, 0x022C);  
-    getSettingValuesByModusIndex(0x0300, 0x0319);
-    getSettingValuesByModusIndex(0x0330, 0x0346);
-    getSettingValuesByModusIndex(0x0360, 0x0363);
-    getSettingValuesByModusIndex(0x0800, 0x0831);    
-    getSettingValuesByModusIndex(0x1000, 0x1024);      
+    getSettingValuesByModusIndex(0x0100, 0x022C);  // 300 
+    getSettingValuesByModusIndex(0x0300, 0x0319);  // 25
+    getSettingValuesByModusIndex(0x0330, 0x0346);  // 22
+    getSettingValuesByModusIndex(0x0360, 0x0363);  // 3
+    getSettingValuesByModusIndex(0x0800, 0x0831);  // 49
+    getSettingValuesByModusIndex(0x1000, 0x1024);  // 36
     
     // Laatste write zodat de server weet dat ontvangen klaar is
     NET_PRES_SocketWrite(socket, "0\r\n\r\n", 5);    

@@ -4635,10 +4635,10 @@
         &lt;ElementPosition dnOrder=&quot;2&quot; id=&quot;Group2&quot; x=&quot;4&quot; y=&quot;343&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;3&quot; id=&quot;Group3&quot; x=&quot;4&quot; y=&quot;392&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;4&quot; id=&quot;Group4&quot; x=&quot;4&quot; y=&quot;443&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;5&quot; id=&quot;HarmonyCore&quot; x=&quot;249&quot; y=&quot;32&quot;/&gt;
+        &lt;ElementPosition dnOrder=&quot;5&quot; id=&quot;HarmonyCore&quot; x=&quot;250&quot; y=&quot;32&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;6&quot; id=&quot;TCP/IP STACK&quot; x=&quot;753&quot; y=&quot;290&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;7&quot; id=&quot;cmsis&quot; x=&quot;7&quot; y=&quot;153&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;8&quot; id=&quot;core&quot; x=&quot;5&quot; y=&quot;98&quot;/&gt;
+        &lt;ElementPosition dnOrder=&quot;8&quot; id=&quot;core&quot; x=&quot;2&quot; y=&quot;98&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;9&quot; id=&quot;dfp&quot; x=&quot;7&quot; y=&quot;126&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;10&quot; id=&quot;drv_sdmmc&quot; x=&quot;467&quot; y=&quot;448&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;11&quot; id=&quot;evsys&quot; x=&quot;5&quot; y=&quot;183&quot;/&gt;
