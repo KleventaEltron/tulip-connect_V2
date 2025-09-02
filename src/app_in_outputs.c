@@ -151,11 +151,12 @@ void APP_IN_OUTPUTS_Tasks ( void )
                 
             }   // End timer 1 sec    
             
+            /*
             if ((!NotInputBtn1_Get()) == true)
             {
                 while(1);
             }
-            
+            */
             break;
         }
         /* TODO: implement your application state machine.*/

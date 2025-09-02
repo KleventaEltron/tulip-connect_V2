@@ -70,9 +70,13 @@ extern "C" {
     
     
 // Digital inputs
-#define GetThermostatContact()    InputExt1_Get()  
-#define GetDigitalInput2()        InputExt2_Get() 
-#define GetDigitalInput3()        InputExt3_Get() 
+#define GetDigitalInput1()  InputExt1_Get()  
+#define GetDigitalInput2()  InputExt2_Get() 
+#define GetDigitalInput3()  InputExt3_Get() 
+    
+#define GetThermostatContact()  GetDigitalInput1()
+#define GetEvuContact()         GetDigitalInput2() 
+
     
 // Dip switches:
 #define GetDip1()   ((NotInputDip1_Get()) ? false : true) 

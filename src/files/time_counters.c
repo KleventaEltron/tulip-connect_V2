@@ -22,6 +22,9 @@ uint32_t systemStuckProtectionCounter = UINT32_MAX;
 uint32_t writeNewSetPointHeatpumpCounter = UINT32_MAX;
 uint32_t waitForSettingEchoProtection = UINT32_MAX;
 uint32_t writeHeatpumpRunningModeCounter = UINT32_MAX;
+uint32_t writeHeatpumpForcedOffCounter = UINT32_MAX;
+uint32_t WaitingTurningHeatpumpOnCounter = UINT32_MAX;
+uint32_t checkHeatpumpStaticSettingsCounter = UINT32_MAX;
 
 //static uint32_t SecondCounterFtp = UINT32_MAX;
 //static uint32_t SecondCounterResetSoftware = UINT32_MAX;
@@ -148,6 +151,18 @@ void UpdateCounters ( void )
             if (writeHeatpumpRunningModeCounter >= 0 && writeHeatpumpRunningModeCounter < UINT32_MAX) {
                 writeHeatpumpRunningModeCounter++;
             }
+            
+            if (writeHeatpumpForcedOffCounter >= 0 && writeHeatpumpForcedOffCounter < UINT32_MAX) {
+                writeHeatpumpForcedOffCounter++;
+            }
+            
+            if (WaitingTurningHeatpumpOnCounter >= 0 && WaitingTurningHeatpumpOnCounter < UINT32_MAX) {
+                WaitingTurningHeatpumpOnCounter++;
+            }
+            
+            if (checkHeatpumpStaticSettingsCounter >= 0 && checkHeatpumpStaticSettingsCounter < UINT32_MAX) {
+                checkHeatpumpStaticSettingsCounter++;
+            }
         }   
 
         if (SecondCounterLeds >= 0 && SecondCounterLeds < UINT32_MAX)
@@ -223,7 +238,29 @@ void setWriteHeatpumpRunningModeCounter(uint32_t value) {
     writeHeatpumpRunningModeCounter = value;
 }
 
+uint32_t getWriteHeatpumpForcedOffCounter() {
+    return writeHeatpumpForcedOffCounter;
+}
 
+void setWriteHeatpumpForcedOffCounter(uint32_t value) {
+    writeHeatpumpForcedOffCounter = value;
+}
+
+uint32_t getWaitingTurningHeatpumpOn() {
+    return WaitingTurningHeatpumpOnCounter;
+}
+
+void setWaitingTurningHeatpumpOn(uint32_t value) {
+    WaitingTurningHeatpumpOnCounter = value;
+}
+
+uint32_t getCheckHeatpumpStaticSettingsCounter() {
+    return checkHeatpumpStaticSettingsCounter;
+}
+
+void setCheckHeatpumpStaticSettingsCounter(uint32_t value) {
+    checkHeatpumpStaticSettingsCounter = value;
+}
 
 bool LedsTimerExpired ( void )
 {

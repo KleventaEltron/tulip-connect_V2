@@ -992,7 +992,17 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
         case ADDRESS_HOT_WATER_SET_TEMPERATURE: {
             WriteSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT, value);
             break;
-        }        
+        }
+
+        case ADDRESS_TULIP_CONNECT_EVU_CONTACT_ENABLE: { 
+            WriteSmartEeprom8(SEEP_ADDR_EVU_CONTACT_ENABLE, value);
+            break;
+        }
+        
+        case ADDRESS_TULIP_CONNECT_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT: { 
+            WriteSmartEeprom8(SEEP_ADDR_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT, value);
+            break;
+        } 
         
         default: {
             ChangeHeatpumpSetting(address, value);

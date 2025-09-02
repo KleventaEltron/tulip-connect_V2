@@ -74,6 +74,10 @@
 #define SEEP_ADDR_HEATING_CURVE                             72 // 1 byte V2-0-1
 #define SEEP_ADDR_COOLING_CURVE                             73 // 1 byte V2-0-1
 
+#define SEEP_ADDR_EVU_CONTACT_ENABLE                        74 // 1 byte V2-0-5
+#define SEEP_ADDR_HEATPUMP_WAS_ON_BEFORE_FORCED_OFF         75 // 1 byte V2-0-5
+#define SEEP_ADDR_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT    76 // 1 byte V2-0-5
+
 #define SEEP_ADDR
 
 //.....
