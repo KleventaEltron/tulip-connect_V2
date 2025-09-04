@@ -255,10 +255,12 @@ uint8_t FillTransmitBuffer(uint8_t* txBuffer, uint8_t* rxBuffer)
     {
         uint16_t data;
         uint8_t j = 3;
+        uint8_t modbusAddress = rxBuffer[MODBUS_ADDRESS_INDEX];
         uint16_t amountOfRegisters = ((uint16_t)rxBuffer[MODBUS_REG_AMOUNT_MSB_INDEX] << 8) + rxBuffer[MODBUS_REG_AMOUNT_LSB_INDEX]; 
         uint16_t readRegisterAddress = ((uint16_t)rxBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] << 8) + rxBuffer[MODBUS_REG_ADDRESS_LSB_INDEX];
 
-        txBuffer[MODBUS_ADDRESS_INDEX]          = 0x01;
+        //txBuffer[MODBUS_ADDRESS_INDEX]          = 0x01;
+        txBuffer[MODBUS_ADDRESS_INDEX]          = modbusAddress;
         txBuffer[MODBUS_COMMAND_INDEX]          = MB_FC_READ_REGS;
         txBuffer[MODBUS_BYTES_RETURNED_INDEX]   = (amountOfRegisters << 1);
         
@@ -405,6 +407,7 @@ void GetDataFromHeatpump(void)
     RealTimeData[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = (GetNtcTemperature(NTC_HEATING_BUFFER) / 10);
     
     
+    RealTimeDataStatussen[ADDRESS_CASCADE_SLAVES_ONLINE_1 - START_ADDRESS_REAL_TIME_DATA_STATUSSEN][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = 0xFFFE;
     
     //TEST
     //RealTimeData[ADDRESS_BUFFER_TANK_FOR_HEATING_TEMPERATURE_VALUE - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = 25;
