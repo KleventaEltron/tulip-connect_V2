@@ -118,6 +118,61 @@ RUNNING_MODES getActiveStateValue() {
     return app_active_mode_controllerData.currentRunningMode;
 }
 
+
+uint16_t getActiveStateFromActiveMode(RUNNING_MODES state){
+    
+    uint16_t activeModeActiveState = 0;
+    switch (state)
+    {
+        case(COOLING): {
+            activeModeActiveState = cooling_mode_data.state;
+            break;
+        }
+        
+        case(HEATING): {
+            activeModeActiveState = heating_mode_data.state;
+            break;
+        }
+        
+        case(HOT_WATER): {
+            activeModeActiveState = hot_water_mode_data.state;
+            break;
+        }
+        
+        case(FLOOR_HEATING): {
+            activeModeActiveState = floor_heating_mode_data.state;
+            break;
+        }
+        
+        case(HOT_WATER_COOLING): {
+            activeModeActiveState = hot_water_cooling_mode_data.state;
+            break;
+        }
+        
+        case(HOT_WATER_HEATING): {
+            activeModeActiveState = hot_water_heating_mode_data.state;
+            break;
+        }
+        
+        case(RESERVED): {
+            activeModeActiveState = 0;
+            break;
+        }
+        
+        case(HOT_WATER_FLOOR_HEATING): {
+            activeModeActiveState = hot_water_floor_heating_mode_data.state ;
+            break;
+        }
+        
+        default:{
+            activeModeActiveState = 0;
+            break;
+        }
+    }
+    return activeModeActiveState;
+}
+
+
 const char * getActiveModeToString(RUNNING_MODES state){
     switch (state)
     {

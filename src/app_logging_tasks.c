@@ -4,6 +4,7 @@
 #include <stdlib.h>                   
 #include <string.h>
 #include <stdio.h>
+#include <xc.h>
 #include "definitions.h"               
 //#include "third_party/../time.h"
 
@@ -370,6 +371,9 @@ void APP_LOGGING_TASKS_Tasks ( void )
             if(getSettingsQueuedAmount() > 0) { break; }
             
             SYS_CONSOLE_PRINT("SETTING QUEUE EMPTY, PROCEEDING!\r\n");
+            
+            setSecondCounterDelayAfterChangingSettings(0);
+            
             app_logging_tasksData.state = APP_LOGGING_TASKS_SEND_NEW_SETTINGS_OVERVIEW;
             break;
         }
@@ -378,10 +382,18 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         case APP_LOGGING_TASKS_SEND_NEW_SETTINGS_OVERVIEW:
         {
+            // Needed because the Heatpump needs some time to actually store the settings
+            // Otherwise we would send back outdated settings
+            if (getSecondCounterDelayAfterChangingSettings() < 10) {
+                break;
+            }
+                
             if(!sendUpdatedSettingsList()) {
+                setSecondCounterDelayAfterChangingSettings(UINT32_MAX);
                 app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
             }
             
+            setSecondCounterDelayAfterChangingSettings(UINT32_MAX);
             app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_CONFIRM_CHANGED_SETTINGS;
             break;
         }

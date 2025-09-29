@@ -28,7 +28,8 @@ uint32_t getSecondCounterHotwaterTask();
 void setSecondCounterHotwaterTask(uint32_t count);
 uint32_t getSecondCounterCirculationPumpTask();
 void setSecondCounterCirculationPumpTask(uint32_t count);
-
+uint32_t getSecondCounterDelayAfterChangingSettings();
+void setSecondCounterDelayAfterChangingSettings(uint32_t count);
 uint32_t getSecondCounterLegionella();
 void setSecondCounterLegionella(uint32_t value);
 uint32_t getWaitingThreeWayValveSwitch();

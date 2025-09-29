@@ -39,7 +39,6 @@ typedef enum
 {
     APP_ACTIVE_MODE_CONTROLLER_STATE_INIT=0,
     APP_ACTIVE_MODE_CONTROLLER_STATE_SERVICE_TASKS,
-
 } APP_ACTIVE_MODE_CONTROLLER_STATES;
     
 typedef struct
@@ -284,6 +283,7 @@ typedef struct{
 } CIRCULATION_PUMP_DATA;
 
 void resetActiveModeStates();
+uint16_t getActiveStateFromActiveMode(RUNNING_MODES state);
 const char * getActiveModeToString(RUNNING_MODES state);
 bool isDefrostingActive();
 bool getResetFactorySettings();

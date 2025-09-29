@@ -41,7 +41,7 @@ void setTemperatureOperatingCycleHotWaterCooling() {
     int16_t coolingSetpoint = TEMPERATURE_ALARM_VALUE;      
     
     if (hot_water_cooling_mode_data.coolingCurveSet) {
-        coolingSetpoint = getHeatpumpCoolingSetpoint();
+        coolingSetpoint = getHeatpumpCoolingSetpoint()*10;
     } else {
         coolingSetpoint = getCoolingSetpoint();
     }        
@@ -193,6 +193,51 @@ int16_t determineCorrectRunningMode() {
     return SET_MODE_COOLING;
 }
 
+bool changeCompensationsHotWaterCooling = false;
+int16_t determineCorrectHotWaterCoolingSetpoint() {
+    int16_t coolingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
+    int16_t coolingSetpoint = TEMPERATURE_ALARM_VALUE;      
+    
+    if (hot_water_cooling_mode_data.coolingCurveSet) {
+        coolingSetpoint = getHeatpumpCoolingSetpoint()*10;   
+        
+        if ((getsystemOnCounter() % 10) == 0) {
+            changeCompensationsHotWaterCooling = true;
+            return coolingSetpoint;
+        }    
+        
+        if (coolingBufferTemperature <= coolingSetpoint && changeCompensationsHotWaterCooling &&
+                (getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE) != 2 
+                || getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE) != 2)) { 
+            ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);
+            ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);            
+            changeCompensationsHotWaterCooling = false;
+        }
+        
+        if (getHeatpumpCompressorFrequency() == 0) {               
+            return coolingSetpoint;
+        }        
+        
+        if (coolingBufferTemperature <= coolingSetpoint) {
+            return coolingSetpoint;
+        }
+        
+        /*
+            if((getHeatpumpReturnWaterTemperature() - coolingSetpoint) < 20  && changeCompensationsHotWaterCooling) {
+                ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE) + 1));
+                ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE) + 1));            
+                changeCompensationsHotWaterCooling = false;
+            } 
+        */ 
+        
+        return coolingSetpoint;
+    } else {
+        coolingSetpoint = getCoolingSetpoint();
+    }           
+  
+    return coolingSetpoint;
+}
+
 
 void HOT_WATER_COOLING_MODE_Tasks ( void )
 {        
@@ -200,7 +245,7 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
     int16_t hotwaterSetpoint = getHotwaterSetpoint();
     int16_t hotwaterDelta = getHotwaterDelta();
     
-    if (getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING) > 0) {
+    if(ReadSmartEeprom16(SEEP_ADDR_COOLING_CURVE) > 0 && ReadSmartEeprom16(SEEP_ADDR_COOLING_CURVE) != UINT16_MAX) {
         hot_water_cooling_mode_data.coolingCurveSet = true; 
     } else {
         hot_water_cooling_mode_data.coolingCurveSet = false; 
@@ -270,7 +315,7 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
     
     setActiveModeControllerHeatpumpSetpointHeating(determineCorrectHotWaterSetpoint());
     
-    setActiveModeControllerHeatpumpSetpointCooling(getCoolingSetpoint());
+    setActiveModeControllerHeatpumpSetpointCooling(determineCorrectHotWaterCoolingSetpoint());
     
     setActiveModeControllerHeatpumpRunningMode(determineCorrectRunningMode());
     
@@ -293,8 +338,15 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
                 setActiveModeControllerPumpOffDueToDipSwitch1(true);
             }
             
-            ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, ReadSmartEeprom8(SEEP_ADDR_COOLING_CURVE));
-            ChangeHeatpumpSetting(ADDRESS_HEATING_CURVE_SETTING, ReadSmartEeprom8(SEEP_ADDR_HEATING_CURVE));
+            CoolingActiveRelaySet();
+            
+            ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);
+            ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);            
+            
+            ChangeHeatpumpSetting(ADDRESS_HEATING_CURVE_SETTING, ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE));
+            ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, ReadSmartEeprom16(SEEP_ADDR_COOLING_CURVE));
+            WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP, UINT16_MAX);
+            WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP, UINT16_MAX);
             
             hot_water_cooling_mode_data.state = HOT_WATER_COOLING_IDLE_COOLING;
             
@@ -350,13 +402,24 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
             
             setSecondCounterHotwaterTask(0);
             
+            CoolingActiveRelaySet();
+            
             //if(regulateOnTempSensorInBufferHotWaterCooling) {
                 //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
             setActiveModeControllerPumpOffDueToDipSwitch1(false);
             //}
             
-            WriteSmartEeprom8(SEEP_ADDR_HEATING_CURVE, getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
-            WriteSmartEeprom8(SEEP_ADDR_COOLING_CURVE, getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
+            if(hot_water_cooling_mode_data.coolingCurveSet) {
+                WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP, getHeatpumpCoolingSetpoint()*10);
+            } else {
+                WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP, UINT16_MAX);
+            }
+            
+            ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);
+            ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);            
+            
+            //WriteSmartEeprom8(SEEP_ADDR_HEATING_CURVE, getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
+            //WriteSmartEeprom8(SEEP_ADDR_COOLING_CURVE, getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
             ChangeHeatpumpSetting(ADDRESS_HEATING_CURVE_SETTING, 0);
             ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, 0);
             
