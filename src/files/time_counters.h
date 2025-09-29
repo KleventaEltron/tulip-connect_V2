@@ -12,8 +12,7 @@
 //#define TENTH_SECOND_COUNTER_1_DAY  36000             // 1 uur
 
 #define SYS_STUCK_TIMER_MAX_LIMIT               300
-//#define SECONDS_IN_DAY                          86400
-#define SECONDS_IN_DAY                          100
+#define SECONDS_IN_DAY                          86400
 
 
 //uint32_t secondCounterLegionella;
@@ -29,7 +28,8 @@ uint32_t getSecondCounterHotwaterTask();
 void setSecondCounterHotwaterTask(uint32_t count);
 uint32_t getSecondCounterCirculationPumpTask();
 void setSecondCounterCirculationPumpTask(uint32_t count);
-
+uint32_t getSecondCounterDelayAfterChangingSettings();
+void setSecondCounterDelayAfterChangingSettings(uint32_t count);
 uint32_t getSecondCounterLegionella();
 void setSecondCounterLegionella(uint32_t value);
 uint32_t getWaitingThreeWayValveSwitch();

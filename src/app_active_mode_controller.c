@@ -43,6 +43,7 @@ bool factorySettingResetInProgress = false;
 
  
  void printDebugInfo() {
+    //printCustomEepromParameters();
     if (DebugDipSwitch() == true) {
         /*
         SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
@@ -75,8 +76,15 @@ bool factorySettingResetInProgress = false;
         SYS_CONSOLE_PRINT(" Sys on time:          %i\n\n", getsystemOnCounter());
         //SYS_CONSOLE_PRINT(" Hot W/Cooling Curve:  %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_COOLING_CURVE_SETTINGS));
         //SYS_CONSOLE_PRINT(" Cooling Curve:        %i\n", getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
+        //SYS_CONSOLE_PRINT(" Heating SETTY WETTY:        %i\n", (getHeatpumpHeatingSetpoint()*10));
         SYS_CONSOLE_PRINT(" Heating Curve:        %i\n", getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
         SYS_CONSOLE_PRINT(" Cooling Curve:        %i\n\n", getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
+        SYS_CONSOLE_PRINT(" Heating Curve seep:        %i\n", ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE));
+        SYS_CONSOLE_PRINT(" Cooling Curve seep:        %i\n\n", ReadSmartEeprom16(SEEP_ADDR_COOLING_CURVE));
+        SYS_CONSOLE_PRINT(" Heating seep temp:        %i\n", ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP));
+        SYS_CONSOLE_PRINT(" Cooling seep temp:        %i\n\n", ReadSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP));
+        SYS_CONSOLE_PRINT(" Return Compensation:        %i\n", (int16_t)getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE));
+        SYS_CONSOLE_PRINT(" Outlet Compensation:        %i\n\n", (int16_t)getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE));        
         //SYS_CONSOLE_PRINT(" Hot W Curve:          %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_CURVE_SETTING));
         //SYS_CONSOLE_PRINT(" UnderF Curve:         %i\n", getDataFromMemoryCallable(ADDRESS_FLOOR_HEATING_CURVE_SETTING));
         
@@ -315,6 +323,18 @@ bool factorySettingResetInProgress = false;
     if (getSterilisationMode() != OFF) {
         return;
     }
+     
+    // Reset was forced from web app
+    if (ReadSmartEeprom8(SEEP_ADDR_SOFTWARE_RESET) == 1) {
+        
+        while(ReadSmartEeprom8(SEEP_ADDR_SOFTWARE_RESET) != 0) {
+            WriteSmartEeprom8(SEEP_ADDR_SOFTWARE_RESET, 0);
+        }
+        
+        SYS_RESET_SoftwareReset();
+        
+        return;
+    } 
     
     // Wait till a day has passed before a reset is possible
     if (getsystemOnCounter() < SECONDS_IN_DAY) {
@@ -330,30 +350,6 @@ bool factorySettingResetInProgress = false;
     return;
  }
  
- 
- 
- 
- 
- void storeHeatingCoolingCurveToEeprom() {
-    if (app_active_mode_controllerData.previousRunningMode == HOT_WATER) {
-        return;
-    }
-    
-    if (app_active_mode_controllerData.previousRunningMode == HOT_WATER_COOLING
-            && getHotWaterCoolingModeData().state >= 3) {
-        return;
-    }
-    
-    if (app_active_mode_controllerData.previousRunningMode == HOT_WATER_HEATING
-            && getHotWaterHeatingModeData().state >= 4) {
-        return;
-    }
-     
-    WriteSmartEeprom8(SEEP_ADDR_HEATING_CURVE, getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
-    WriteSmartEeprom8(SEEP_ADDR_COOLING_CURVE, getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
-
-     return;
- }
  
  
  bool checkForcedOffHeatpump()
@@ -718,7 +714,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
             // Check if the active mode was switched
             if (app_active_mode_controllerData.currentRunningMode != app_active_mode_controllerData.previousRunningMode) {     
                 
-                storeHeatingCoolingCurveToEeprom();
+                //storeHeatingCoolingCurveToEeprom();
                 
                 SYS_CONSOLE_PRINT("Switching to mode %s\r\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
                 resetActiveModeStates();

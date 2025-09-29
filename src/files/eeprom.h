@@ -71,12 +71,38 @@
 
 #define SEEP_ADDR_COOLING_SETPOINT                          70 // 2 bytes V2-0-1
 
-#define SEEP_ADDR_HEATING_CURVE                             72 // 1 byte V2-0-1
-#define SEEP_ADDR_COOLING_CURVE                             73 // 1 byte V2-0-1
-
 #define SEEP_ADDR_EVU_CONTACT_ENABLE                        74 // 1 byte V2-0-5
 #define SEEP_ADDR_HEATPUMP_WAS_ON_BEFORE_FORCED_OFF         75 // 1 byte V2-0-5
 #define SEEP_ADDR_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT    76 // 1 byte V2-0-5
+
+#define SEEP_ADDR_SOFTWARE_RESET                            77 // 1 byte V2-0-5
+#define SEEP_ADDR_SILENT_MODE                               78 // 1 byte V2-0-5
+#define SEEP_ADDR_START_TIME_SILENT_MODE                    79 // 2 byte V2-0-5
+#define SEEP_ADDR_END_TIME_SILENT_MODE                      81 // 2 byte V2-0-5
+#define SEEP_ADDR_BOOST_MODE                                83 // 1 byte V2-0-5
+#define SEEP_ADDR_USE_SILENT_MODE_TIMERS                    84 // 1 byte V2-0-5
+#define SEEP_ADDR_BLOCK_HOTWATER                            85 // 1 byte V2-0-5
+#define SEEP_ADDR_START_TIME_BLOCK_HOTWATER                 86 // 2 byte V2-0-5
+#define SEEP_ADDR_END_TIME_BLOCK_HOTWATER                   88 // 2 byte V2-0-5
+// #define SEEP_ADDR_MINIMUM_TIME_IN_HOTWATER                  87 // 1 byte V2-0-5
+// #define SEEP_ADDR_HOTWATER_ELEMENT_ON_AFTER_TIME            88 // 1 byte V2-0-5
+// #define SEEP_ADDR_HOTWATER_ELEMENT_MAX_ON_TIME              89 // 1 byte V2-0-5
+// #define SEEP_ADDR_PUMP_ON_TIME_AFTER_OFF_TIME_REACHED       90 // 1 byte V2-0-5
+
+#define SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP      90 // 2 bytes V2-0-5 of lager
+#define SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP      92 // 2 bytes V2-0-5 of lager
+
+#define SEEP_ADDR_HEATING_CURVE                             94 // 2 byte V2-0-5
+#define SEEP_ADDR_COOLING_CURVE                             96 // 2 byte V2-0-5
+
+// DIGITAL INPUTS ARE PLACEHOLDER NAMES, CHANGE WHEN CONFIGURABLE THROUGH WEB APP
+#define SEEP_ADDR_DIGITAL_INPUT_TWO                          98 // 1 byte V2-0-5
+#define SEEP_ADDR_DIGITAL_INPUT_THREE                        99 // 1 byte V2-0-5
+
+#define SEEP_ADDR_COOLING_CONTACT_ENABLE                     100 // 1 byte V2-0-5
+// RELAIS OUTPUTS ARE PLACEHOLDER NAMES, CHANGE WHEN CONFIGURABLE THROUGH WEB APP
+#define SEEP_ADDR_RELAIS_OUTPUT_TWO                          101 // 1 byte V2-0-5
+#define SEEP_ADDR_RELAIS_OUTPUT_THREE                        102 // 1 byte V2-0-5
 
 #define SEEP_ADDR
 
@@ -91,5 +117,6 @@ uint16_t ReadSmartEeprom16(uint32_t address);
 uint32_t ReadSmartEeprom32(uint32_t address);
 void SmartEepromInit(void);
 void restoreEepromValuesToDefault(void);
+void printCustomEepromParameters(void);
 
 #endif 

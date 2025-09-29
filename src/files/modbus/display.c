@@ -61,6 +61,34 @@ void ParseDisplayData(uint8_t * rxBuffer)
                 //ChangeHeatpumpSetting(regAddress, data); 
                 break;
             }
+            case ADDRESS_HEATING_FLOOR_HEATING_CURVE_SETTING: {
+                WriteSmartEeprom16(SEEP_ADDR_HEATING_CURVE, data);
+                int16_t heatpumpMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
+                
+                if ((heatpumpMode == HOT_WATER_HEATING && getHotWaterHeatingModeData().state >= 4)
+                    || (heatpumpMode == HOT_WATER_COOLING && getHotWaterCoolingModeData().state >= 3)) {
+                    break;
+                }
+                
+                ChangeHeatpumpSetting(regAddress, data);
+                SetDataInArrays(regAddress, data);                
+                
+                break;
+            }
+            case ADDRESS_HOT_WATER_COOLING_CURVE_SETTINGS: {
+                WriteSmartEeprom16(SEEP_ADDR_COOLING_CURVE, (data >> 8));
+                int16_t heatpumpMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
+                
+                if ((heatpumpMode == HOT_WATER_HEATING && getHotWaterHeatingModeData().state >= 4)
+                    || (heatpumpMode == HOT_WATER_COOLING && getHotWaterCoolingModeData().state >= 3)) {
+                    break;
+                }
+                
+                ChangeHeatpumpSetting(regAddress, data);
+                SetDataInArrays(regAddress, data);                
+                
+                break;
+            }            
             case ADDRESS_COOLING_SET_TEMPERATURE: {
                 WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT, data);
                 break;
@@ -89,6 +117,7 @@ void ParseDisplayData(uint8_t * rxBuffer)
                 
             default: {
                 //SetDataInDisplayArray(regAddress, data);
+                //SYS_CONSOLE_PRINT("************** %i, %i ****************\r\n", regAddress, data);  
                 ChangeHeatpumpSetting(regAddress, data);
                 SetDataInArrays(regAddress, data);
                 break;
@@ -338,6 +367,7 @@ void GetDataFromHeatpump(void)
     
     int16_t heatpumpMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
     UserParameters[ADDRESS_SET_MODE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = heatpumpMode;
+    
     /*
     if ((UserParameters[ADDRESS_SET_MODE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] == SET_MODE_HEATING) && (heatpumpMode == SET_MODE_HOT_WATER_AND_HEATING)){
         // If smartEEprom mode is on Hot Water and Heating, and mode from heatpump is only heating, send to display Hot Water and Heating
@@ -363,9 +393,25 @@ void GetDataFromHeatpump(void)
     {  
         // Other then at first startup, send the setpoint in the eeprom to the display.
         //if (UserParameters[ADDRESS_HEATING_FLOOR_HEATING_CURVE_SETTING - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] == HEATING_CURVE_SETTING_OFF)
-        if ((heatpumpMode == HEATING || heatpumpMode == HOT_WATER_HEATING) && getHeatingModeData().heatingCurveSet) {
+        if (heatpumpMode == HEATING && getHeatingModeData().heatingCurveSet) {
             UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = getHeatpumpHeatingSetpoint();
-        } else {
+        }
+        else if (heatpumpMode == HOT_WATER_HEATING) {
+            if (getHotWaterHeatingModeData().heatingCurveSet) {
+                if (ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP) != UINT16_MAX && ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP) > 0) {
+                    UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = (ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP)/10);
+                } else {
+                    UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = getHeatpumpHeatingSetpoint();
+                }
+                UserParameters[ADDRESS_HEATING_FLOOR_HEATING_CURVE_SETTING - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE);
+            } else if (getHotWaterHeatingModeData().state >= 4 && ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP) != UINT16_MAX && ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP) > 0) {
+                UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = (ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP)/10);
+                UserParameters[ADDRESS_HEATING_FLOOR_HEATING_CURVE_SETTING - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE);
+            } else {
+                UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = heatingSetpoint;
+            }
+        }
+        else {
             UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = heatingSetpoint; 
         }
         
@@ -378,11 +424,24 @@ void GetDataFromHeatpump(void)
     }
     else
     {  
-        // Other then at first startup, send the setpoint in the eeprom to the display.
-        //if (UserParameters[ADDRESS_HEATING_FLOOR_HEATING_CURVE_SETTING - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] == HEATING_CURVE_SETTING_OFF)
-        if ((heatpumpMode == COOLING || heatpumpMode == HOT_WATER_COOLING) && getCoolingModeData().coolingCurveSet) {
+        if (heatpumpMode == COOLING && getCoolingModeData().coolingCurveSet) {
             UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = getHeatpumpCoolingSetpoint();
-        } else {
+        } else if (heatpumpMode == HOT_WATER_COOLING) {
+            if (getHotWaterCoolingModeData().coolingCurveSet) {
+                if (ReadSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP) != UINT16_MAX && ReadSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP) > 0) {
+                    UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = (ReadSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP)/10);
+                } else {
+                    UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = getHeatpumpCoolingSetpoint();
+                }
+                UserParameters[ADDRESS_HOT_WATER_COOLING_CURVE_SETTINGS - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = (ReadSmartEeprom16(SEEP_ADDR_COOLING_CURVE) << 8);
+            } else if (getHotWaterCoolingModeData().state >= 3 && ReadSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP) != UINT16_MAX && ReadSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP) > 0) {
+                UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = (ReadSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP)/10);
+                UserParameters[ADDRESS_HOT_WATER_COOLING_CURVE_SETTINGS - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = (ReadSmartEeprom16(SEEP_ADDR_COOLING_CURVE) << 8);                
+            } else {
+                UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = coolingSetpoint;
+            }
+        } 
+        else {
             UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = coolingSetpoint; 
         }
         
@@ -397,6 +456,7 @@ void GetDataFromHeatpump(void)
     }
     else
     {
+        
         UserParameters[ADDRESS_HOT_WATER_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = hotWaterSetpoint;
     }
     

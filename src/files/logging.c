@@ -286,6 +286,8 @@ void setLogValue_NUMBER( char* requestBuilder, char settingName[], int value ) {
 
 
 
+
+
 void setLoggingDataPerDeviceType ( char* requestBuilder, char device[]) {
     char hardwareId[50];
    
@@ -979,30 +981,89 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
             break;
         }
         
-        case ADDRESS_HEATING_SET_TEMPERATURE: {
-            WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT, value);
-            break;
-        }
-        
-        case ADDRESS_COOLING_SET_TEMPERATURE: {
-            WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT, value);
-            break;
-        }
-        
         case ADDRESS_HOT_WATER_SET_TEMPERATURE: {
             WriteSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT, value);
             break;
         }
 
-        case ADDRESS_TULIP_CONNECT_EVU_CONTACT_ENABLE: { 
+        /*  CUSTOM MODBUS ADRESSEN VANAF 0xC000  */
+        case ADDRESS_TULIP_CONNECT_DIGITAL_INPUT_ONE: { 
+            // IF VALUE IS:
+            // 0 == EVU DISABLED
+            // 1 == EVU ENABLED
             WriteSmartEeprom8(SEEP_ADDR_EVU_CONTACT_ENABLE, value);
             break;
         }
-        
+        case ADDRESS_TULIP_CONNECT_RELAIS_OUTPUT_ONE: {
+            // IF VALUE IS:
+            // 0 == COOLING CONTACT DISABLED
+            // 1 == COOLING CONTACT ENABLED
+            WriteSmartEeprom8(SEEP_ADDR_COOLING_CONTACT_ENABLE, value);
+            break;
+        }
         case ADDRESS_TULIP_CONNECT_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT: { 
             WriteSmartEeprom8(SEEP_ADDR_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT, value);
             break;
-        } 
+        }         
+        case ADDRESS_TULIP_CONNECT_SILENT_MODE: {
+            WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, value);
+            break;     
+        }
+        case ADDRESS_TULIP_CONNECT_START_TIME_SILENT_MODE: {
+            WriteSmartEeprom16(SEEP_ADDR_START_TIME_SILENT_MODE, value);
+            break;               
+        }
+        case ADDRESS_TULIP_CONNECT_END_TIME_SILENT_MODE: {
+            WriteSmartEeprom16(SEEP_ADDR_END_TIME_SILENT_MODE, value);
+            break;               
+        }        
+        case ADDRESS_TULIP_CONNECT_BOOST_MODE: {
+            WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE, value);
+            break;               
+        }               
+        case ADDRESS_TULIP_CONNECT_USE_SILENT_MODE_TIMERS: {
+            WriteSmartEeprom8(SEEP_ADDR_USE_SILENT_MODE_TIMERS, value);
+            break;               
+        }               
+        case ADDRESS_TULIP_CONNECT_BLOCK_HOTWATER: {
+            WriteSmartEeprom8(SEEP_ADDR_BLOCK_HOTWATER, value);
+            break;               
+        }        
+        case ADDRESS_TULIP_CONNECT_START_TIME_BLOCK_HOTWATER: {
+            WriteSmartEeprom16(SEEP_ADDR_END_TIME_BLOCK_HOTWATER, value);
+            break;               
+        }               
+        case ADDRESS_TULIP_CONNECT_END_TIME_BLOCK_HOTWATER: {
+            WriteSmartEeprom16(SEEP_ADDR_START_TIME_BLOCK_HOTWATER, value);
+            break;               
+        }        
+        
+        /* ONDERSTAAND ZIJN ECHTE WAARDES */
+        case ADDRESS_TULIP_CONNECT_SOFTWARE_RESET: {
+            /* LET OP! DIT RESET DE CONNECT DIRECT NA HET OPHALEN VAN DE SETTINGS */
+            WriteSmartEeprom8(SEEP_ADDR_SOFTWARE_RESET, value);
+            break;    
+        }        
+        case ADDRESS_TULIP_CONNECT_MINIMUM_TIME_IN_HOTWATER: {
+            /* Waarde wordt opgestuurd in minuten maar wij regelen op seconden dus *60! */
+            WriteSmartEeprom16(SEEP_ADDR_HOT_WATER_MIN_TIME_IN_HOT_WATER_MODE, (value * 60));
+            break;               
+        }        
+        case ADDRESS_TULIP_CONNECT_HOTWATER_ELEMENT_ON_AFTER_TIME: {
+            /* Waarde wordt opgestuurd in minuten maar wij regelen op seconden dus *60! */
+            WriteSmartEeprom16(SEEP_ADDR_HOT_WATER_RUNNING_TIME_BEFORE_TURNING_ON_HEATING_ELEMENT, (value * 60));
+            break;               
+        }               
+        case ADDRESS_TULIP_CONNECT_HOTWATER_ELEMENT_MAX_ON_TIME: {
+            /* Waarde wordt opgestuurd in minuten maar wij regelen op seconden dus *60! */
+            WriteSmartEeprom16(SEEP_ADDR_HOT_WATER_MAX_TIME_HEATING_ELEMENT_ON_IN_HEATING_MODE_SEC, (value * 60));
+            break;               
+        }               
+        case ADDRESS_TULIP_CONNECT_PUMP_ON_TIME_AFTER_OFF_TIME_REACHED: {
+            WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TIME_AFTER_OFF_TIME_REACHED_SEC, value);
+            break;               
+        }        
+        /* TOT EN MET HIER */
         
         default: {
             ChangeHeatpumpSetting(address, value);
@@ -1119,6 +1180,56 @@ void getSettingValuesByModusIndex (int MODBUS_INDEX_START, int MODBUS_INDEX_END)
 
 
 
+void getSettingValuesByEepromList8Bit(const uint32_t *addresses, size_t count)
+{
+    char chunk[512];
+    memset(chunk, 0, sizeof(chunk));
+    size_t offset = 0;
+
+    for (size_t i = 0; i < count; i++) {
+        int n = snprintf(chunk + offset, sizeof(chunk) - offset, "%u,", (unsigned)ReadSmartEeprom8(addresses[i]));
+
+        if (n < 0 || n >= (int)(sizeof(chunk) - offset)) {
+            // Buffer full: flush and retry this index
+            send_http_chunk(chunk, offset);
+            offset = 0;
+            i--;
+            continue;
+        }
+        offset += (size_t)n;
+    }
+
+    if (offset > 0) {
+        send_http_chunk(chunk, offset);
+    }
+}
+
+void getSettingValuesByEepromList16Bit(const uint32_t *addresses, size_t count)
+{
+    char chunk[512];
+    memset(chunk, 0, sizeof(chunk));
+    size_t offset = 0;
+
+    for (size_t i = 0; i < count; i++) {
+        int n = snprintf(chunk + offset, sizeof(chunk) - offset, "%u,", (unsigned)ReadSmartEeprom16(addresses[i]));
+
+        if (n < 0 || n >= (int)(sizeof(chunk) - offset)) {
+            // Buffer full: flush and retry this index
+            send_http_chunk(chunk, offset);
+            offset = 0;
+            i--;
+            continue;
+        }
+        offset += (size_t)n;
+    }
+
+    if (offset > 0) {
+        send_http_chunk(chunk, offset);
+    }
+}
+
+
+
 
 bool sendUpdatedSettingsList ( void ) {
     char networkBuffer[4096];
@@ -1145,12 +1256,57 @@ bool sendUpdatedSettingsList ( void ) {
     
     uint16_t bytesSend = NET_PRES_SocketWrite(socket, (uint8_t*) networkBuffer, strlen(networkBuffer));
     
-    getSettingValuesByModusIndex(0x0100, 0x022C);  // 300 
-    getSettingValuesByModusIndex(0x0300, 0x0319);  // 25
-    getSettingValuesByModusIndex(0x0330, 0x0346);  // 22
-    getSettingValuesByModusIndex(0x0360, 0x0363);  // 3
-    getSettingValuesByModusIndex(0x0800, 0x0831);  // 49
-    getSettingValuesByModusIndex(0x1000, 0x1024);  // 36
+    getSettingValuesByModusIndex(0x0100, 0x022C);  
+    getSettingValuesByModusIndex(0x0300, 0x0319);
+    getSettingValuesByModusIndex(0x0330, 0x0346);
+    getSettingValuesByModusIndex(0x0360, 0x0363);
+    getSettingValuesByModusIndex(0x0800, 0x0831);    
+    getSettingValuesByModusIndex(0x1000, 0x1024);      
+    
+    
+    const uint32_t eep_addrs_8_bit_1[] = {
+        SEEP_ADDR_EVU_CONTACT_ENABLE,       
+        SEEP_ADDR_HEATPUMP_WAS_ON_BEFORE_FORCED_OFF,     
+        SEEP_ADDR_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT,
+        SEEP_ADDR_SOFTWARE_RESET,                        
+        SEEP_ADDR_SILENT_MODE,      
+    };
+    getSettingValuesByEepromList8Bit(eep_addrs_8_bit_1, sizeof(eep_addrs_8_bit_1)/sizeof(eep_addrs_8_bit_1[0]));  
+   
+    
+    const uint32_t eep_addrs_16_bit_1[] = {    
+        SEEP_ADDR_START_TIME_SILENT_MODE,                
+        SEEP_ADDR_END_TIME_SILENT_MODE,   
+    };
+    getSettingValuesByEepromList16Bit(eep_addrs_16_bit_1, sizeof(eep_addrs_16_bit_1)/sizeof(eep_addrs_16_bit_1[0]));    
+    
+    
+    const uint32_t eep_addrs_8_bit_2[] = {    
+        SEEP_ADDR_BOOST_MODE,                            
+        SEEP_ADDR_USE_SILENT_MODE_TIMERS,                
+        SEEP_ADDR_BLOCK_HOTWATER,                                    
+     };
+    getSettingValuesByEepromList8Bit(eep_addrs_8_bit_2, sizeof(eep_addrs_8_bit_2)/sizeof(eep_addrs_8_bit_2[0]));  
+    
+    const uint32_t eep_addrs_16_bit_2[] = {
+        SEEP_ADDR_START_TIME_BLOCK_HOTWATER,             
+        SEEP_ADDR_END_TIME_BLOCK_HOTWATER,    
+        SEEP_ADDR_HOT_WATER_MIN_TIME_IN_HOT_WATER_MODE,
+        SEEP_ADDR_HOT_WATER_RUNNING_TIME_BEFORE_TURNING_ON_HEATING_ELEMENT,
+        SEEP_ADDR_HOT_WATER_MAX_TIME_HEATING_ELEMENT_ON_IN_HEATING_MODE_SEC,
+        SEEP_ADDR_PUMP_ON_TIME_AFTER_OFF_TIME_REACHED_SEC,
+     };
+    getSettingValuesByEepromList16Bit(eep_addrs_16_bit_2, sizeof(eep_addrs_16_bit_2)/sizeof(eep_addrs_16_bit_2[0]));    
+    
+    
+    const uint32_t eep_addrs_8_bit_3[] = {
+        SEEP_ADDR_DIGITAL_INPUT_TWO,
+        SEEP_ADDR_DIGITAL_INPUT_THREE,
+        SEEP_ADDR_COOLING_CONTACT_ENABLE,
+        SEEP_ADDR_RELAIS_OUTPUT_TWO,
+        SEEP_ADDR_RELAIS_OUTPUT_THREE,
+     };
+    getSettingValuesByEepromList8Bit(eep_addrs_8_bit_3, sizeof(eep_addrs_8_bit_3)/sizeof(eep_addrs_8_bit_3[0]));      
     
     // Laatste write zodat de server weet dat ontvangen klaar is
     NET_PRES_SocketWrite(socket, "0\r\n\r\n", 5);    
