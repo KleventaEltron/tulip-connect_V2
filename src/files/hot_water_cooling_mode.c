@@ -222,11 +222,13 @@ int16_t determineCorrectHotWaterCoolingSetpoint() {
             return coolingSetpoint;
         }
         
-        if((getHeatpumpReturnWaterTemperature() - coolingSetpoint) < 20  && changeCompensationsHotWaterCooling) {
-            ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE) + 1));
-            ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE) + 1));            
-            changeCompensationsHotWaterCooling = false;
-        }  
+        /*
+            if((getHeatpumpReturnWaterTemperature() - coolingSetpoint) < 20  && changeCompensationsHotWaterCooling) {
+                ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE) + 1));
+                ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE) + 1));            
+                changeCompensationsHotWaterCooling = false;
+            } 
+        */ 
         
         return coolingSetpoint;
     } else {
