@@ -195,7 +195,7 @@ const char * getThreeWayValveState(int state) {
 
 uint16_t getHeatpumpCompressorFrequency()
 {
-    return RealTimeData[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    return RealTimeData1[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY - REGISTERS_AMOUNT_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
 }
 
 int16_t getHeatpumpHeatingSetpoint()
@@ -210,7 +210,7 @@ int16_t getHeatpumpCoolingSetpoint()
 
 uint16_t getHeatpumpWaterFlow()
 {
-    return RealTimeData[ADDRESS_WATER_FLOW - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    return RealTimeData1[ADDRESS_WATER_FLOW - REGISTERS_AMOUNT_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
 }
 
 int16_t getHeatpumpRunningMode()
@@ -226,7 +226,7 @@ int16_t getHeatpumpOnOff()
 
 int16_t getHeatpumpReturnWaterTemperature()
 {
-    int16_t returnWaterTemperature = RealTimeData[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    int16_t returnWaterTemperature = RealTimeData1[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - REGISTERS_AMOUNT_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
     
     if (returnWaterTemperature != TEMPERATURE_ALARM_VALUE){
         // If temperature is not an alarm value, do times 10
