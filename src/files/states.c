@@ -195,7 +195,7 @@ const char * getThreeWayValveState(int state) {
 
 uint16_t getHeatpumpCompressorFrequency()
 {
-    return RealTimeData1[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY - REGISTERS_AMOUNT_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    return RealTimeData1[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE];
 }
 
 int16_t getHeatpumpHeatingSetpoint()
@@ -210,7 +210,7 @@ int16_t getHeatpumpCoolingSetpoint()
 
 uint16_t getHeatpumpWaterFlow()
 {
-    return RealTimeData1[ADDRESS_WATER_FLOW - REGISTERS_AMOUNT_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    return RealTimeData1[ADDRESS_WATER_FLOW - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE];
 }
 
 int16_t getHeatpumpRunningMode()
@@ -226,7 +226,7 @@ int16_t getHeatpumpOnOff()
 
 int16_t getHeatpumpReturnWaterTemperature()
 {
-    int16_t returnWaterTemperature = RealTimeData1[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - REGISTERS_AMOUNT_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    int16_t returnWaterTemperature = RealTimeData1[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE];
     
     if (returnWaterTemperature != TEMPERATURE_ALARM_VALUE){
         // If temperature is not an alarm value, do times 10
@@ -307,4 +307,9 @@ int16_t getHotwaterDelta()
     }
     
     return delta;
+}
+
+uint16_t getCascadeSlaveStatus()
+{
+    return RealTimeData1[ADDRESS_CASCADE_SLAVES_ONLINE_1 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE];
 }

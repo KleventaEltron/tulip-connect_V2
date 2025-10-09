@@ -311,6 +311,7 @@ int16_t getHeatingSetpoint();
 int16_t getCoolingSetpoint();
 int16_t getHotwaterSetpoint();
 int16_t getHotwaterDelta();
+uint16_t getCascadeSlaveStatus();
 
 bool getCurrentDip1SwitchState();
 bool getPreviousDip1SwitchState();

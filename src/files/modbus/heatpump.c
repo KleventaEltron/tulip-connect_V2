@@ -9,7 +9,9 @@
 #include "heatpump_parameters.h"
 #include "files\eeprom.h"
 #include "../time_counters.h"
-static uint8_t CommunicationArray[17][8] = 
+#include "../states.h"
+
+static uint8_t CommunicationArray[32][8] = 
 {
     {0x01, 0x03, 0x08, 0x00, 0x00, 0x10, 0x46, 0x66},   // Zelfde
     {0x01, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC5, 0xF1},   // Zelfde
@@ -36,7 +38,7 @@ static uint8_t CommunicationArray[17][8] =
     {0x01, 0x03, 0x04, 0xC8, 0x00, 0x64, 0xC4, 0xEF},   // 01 03 04 C8 00 64 C4 EF
     {0x01, 0x03, 0x06, 0xC8, 0x00, 0x64, 0xC5, 0x57},   // 01 03 06 C8 00 64 C5 57
     {0x01, 0x03, 0x08, 0x40, 0x00, 0x10, 0x47, 0xB2},   // Zelfde
-    {0x01, 0x03, 0x08, 0x80, 0x00, 0x10, 0x47, 0x8E}    // Zelfde
+    {0x01, 0x03, 0x08, 0x80, 0x00, 0x10, 0x47, 0x8E},   // Zelfde
     // Unknown settings:
     // 01 03 03 70 00 30: 0x0370 tm 0x039F  (Unknown settings 1)        // Zelfde
     // 01 03 04 00 00 64: 0x0400 tm 0x0463  (Unknown settings 2)        // Zelfde
@@ -47,6 +49,23 @@ static uint8_t CommunicationArray[17][8] =
     // 01 03 06 B1 00 5F: 0x06B1 tm 0x070F  (Unknown settings 7)        // 0x06C8 tm 0x072B
     // 01 03 08 40 00 10: 0x0840 tm 0x084F  (Unknown settings 8)        // Zelfde
     // 01 03 08 80 00 10: 0x0880 tm 0x088F  (Unknown settings 9)        // Zelfde
+    
+    // Data from slaves if needed
+    {0x02, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC5, 0xC2},   // Slave 1  address 2
+    {0x03, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC4, 0x13},   // Slave 2  address 3
+    {0x04, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC5, 0xA4},   // Slave 3  address 4
+    {0x05, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC4, 0x75},   // Slave 4  address 5
+    {0x06, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC4, 0x46},   // Slave 5  address 6
+    {0x07, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC5, 0x97},   // Slave 6  address 7
+    {0x08, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC5, 0x68},   // Slave 7  address 8
+    {0x09, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC4, 0xB9},   // Slave 8  address 9
+    {0x0A, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC4, 0x8A},   // Slave 9  address 10
+    {0x0B, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC5, 0x5B},   // Slave 10 address 11
+    {0x0C, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC4, 0xEC},   // Slave 11 address 12
+    {0x0D, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC5, 0x3D},   // Slave 12 address 13
+    {0x0E, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC5, 0x0E},   // Slave 13 address 14
+    {0x0F, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC4, 0xDF},   // Slave 14 address 15
+    {0x10, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC6, 0xB0}    // Slave 15 address 16
 };
 /*
 static uint8_t CommunicationArray[17][8] = 
@@ -113,14 +132,14 @@ static void parseWriteReg(uint8_t * rxBuffer)
 
 void saveDataToMemory(uint16_t address, uint16_t data)
 {
-    if ((address >= REGISTERS_AMOUNT_REAL_TIME_DATA_1) && (address < REGISTERS_AMOUNT_REAL_TIME_DATA_1 + REGISTERS_AMOUNT_REAL_TIME_DATA_1))
+    if ((address >= START_ADDRESS_REAL_TIME_DATA_1) && (address < START_ADDRESS_REAL_TIME_DATA_1 + REGISTERS_AMOUNT_REAL_TIME_DATA_1))
     {
-        address -= REGISTERS_AMOUNT_REAL_TIME_DATA_1;
+        address -= START_ADDRESS_REAL_TIME_DATA_1;
         RealTimeData1[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE] = data;
     }
-    else if ((address >= REGISTERS_AMOUNT_REAL_TIME_DATA_2) && (address < REGISTERS_AMOUNT_REAL_TIME_DATA_2 + REGISTERS_AMOUNT_REAL_TIME_DATA_2))
+    else if ((address >= START_ADDRESS_REAL_TIME_DATA_2) && (address < START_ADDRESS_REAL_TIME_DATA_2 + REGISTERS_AMOUNT_REAL_TIME_DATA_2))
     {
-        address -= REGISTERS_AMOUNT_REAL_TIME_DATA_2;
+        address -= START_ADDRESS_REAL_TIME_DATA_2;
         RealTimeData2[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] = data;
     }
     else if ((address >= START_ADDRESS_UNIT_SYSTEM_PARAMETERS) && (address < START_ADDRESS_UNIT_SYSTEM_PARAMETERS + REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETERS))
@@ -293,10 +312,24 @@ void FillTxBuffer(uint8_t * txBuffer)
         txBuffer[MODBUS_CHECKSUM_LSB_INDEX] = (uint8_t)(checksum >> 0);
         txBuffer[MODBUS_CHECKSUM_MSB_INDEX] = (uint8_t)(checksum >> 8);
 
-        if (i < 16)
+        if (i < 16){
+            // Do normal communication array to receive data from master
             i++;
-        else
+        }
+        else{
+            // Reset to start all over again
+            if ((getCascadeSlaveStatus() != 0) && (getCascadeSlaveStatus() != UINT16_MAX)){
+                // Address 0x0029 is not 0 and not max value, so there are slaves in cascade
+                //LedStatus_Toggle();
+                
+                //Hier kijken welke slaves er zijn en daarvan address 0 tm 59 opvragen
+                //Bij het ontvangen van de data moet het dus ook weer duidleijk zijn dat het om een slave gaat zodat het goed wordt opgeslagen.
+                        
+                        
+            }
             i = 0;
+        }
+            
     }
 }
 
@@ -305,15 +338,15 @@ uint16_t getHeatpumpData(uint16_t address)
     uint16_t returnData;
     
     // Known parameters
-    if ((address >= REGISTERS_AMOUNT_REAL_TIME_DATA_1) && (address < REGISTERS_AMOUNT_REAL_TIME_DATA_1 + REGISTERS_AMOUNT_REAL_TIME_DATA_1))
+    if ((address >= START_ADDRESS_REAL_TIME_DATA_1) && (address < START_ADDRESS_REAL_TIME_DATA_1 + REGISTERS_AMOUNT_REAL_TIME_DATA_1))
     {
-        address -= REGISTERS_AMOUNT_REAL_TIME_DATA_1;
+        address -= START_ADDRESS_REAL_TIME_DATA_1;
         //RealTimeDataStatussen[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
         returnData = RealTimeData1[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE];
     }
-    else if ((address >= REGISTERS_AMOUNT_REAL_TIME_DATA_2) && (address < REGISTERS_AMOUNT_REAL_TIME_DATA_2 + REGISTERS_AMOUNT_REAL_TIME_DATA_2))
+    else if ((address >= START_ADDRESS_REAL_TIME_DATA_2) && (address < START_ADDRESS_REAL_TIME_DATA_2 + REGISTERS_AMOUNT_REAL_TIME_DATA_2))
     {
-        address -= REGISTERS_AMOUNT_REAL_TIME_DATA_2;
+        address -= START_ADDRESS_REAL_TIME_DATA_2;
         returnData = RealTimeData2[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
     }
     else if ((address >= START_ADDRESS_UNIT_SYSTEM_PARAMETERS) && (address < START_ADDRESS_UNIT_SYSTEM_PARAMETERS + REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETERS))
