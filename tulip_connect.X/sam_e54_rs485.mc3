@@ -4638,7 +4638,7 @@
         &lt;ElementPosition dnOrder=&quot;5&quot; id=&quot;HarmonyCore&quot; x=&quot;250&quot; y=&quot;32&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;6&quot; id=&quot;TCP/IP STACK&quot; x=&quot;753&quot; y=&quot;290&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;7&quot; id=&quot;cmsis&quot; x=&quot;7&quot; y=&quot;153&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;8&quot; id=&quot;core&quot; x=&quot;2&quot; y=&quot;98&quot;/&gt;
+        &lt;ElementPosition dnOrder=&quot;8&quot; id=&quot;core&quot; x=&quot;2&quot; y=&quot;97&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;9&quot; id=&quot;dfp&quot; x=&quot;7&quot; y=&quot;126&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;10&quot; id=&quot;drv_sdmmc&quot; x=&quot;467&quot; y=&quot;448&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;11&quot; id=&quot;evsys&quot; x=&quot;5&quot; y=&quot;183&quot;/&gt;
@@ -4735,7 +4735,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;APP_START_ADDRESS&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;40000&quot;/&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;0&quot;/&gt;
     &lt;/Values&gt;
   &lt;/core&gt;
 &lt;/core&gt;

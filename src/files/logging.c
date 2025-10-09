@@ -55,6 +55,25 @@ static char readBuffer[READ_BUFFER_SIZE + 1];
 //static uint8_t readBuffer[READ_BUFFER_SIZE + 1];
 //static size_t expectedContentLength = 0;
 
+bool settingChangedInDisplay = false;
+bool newLogRequired = false;
+
+void setSettingChangedInDisplay(bool value) {
+    settingChangedInDisplay = value;
+}
+
+bool getSettingChangedInDisplay() {
+    return settingChangedInDisplay;
+}
+
+void setNewLogRequired(bool value) {
+    newLogRequired = value;
+}
+
+bool getNewLogRequired() {
+    return newLogRequired;
+}
+
 OSAL_MUTEX_DECLARE(loggingMutex);
 
 
@@ -1114,6 +1133,14 @@ bool parse_modbus_settings() {
         return false;
     }
 
+    if (cJSON_GetArraySize(updates) == 0) {
+        SYS_CONSOLE_PRINT("No settings to update\n");
+        buffer_len = 0;
+        free(json_data);
+        cJSON_Delete(root);
+        return false;   // or false, depending on how you want to handle "no updates"
+    }    
+    
     cJSON *item = NULL;
     cJSON_ArrayForEach(item, updates) {
         if (setting_count >= MAX_SETTINGS) break;

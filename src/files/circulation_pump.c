@@ -13,6 +13,7 @@
 #include "circulation_pump.h"
 #include "files\eeprom.h"
 #include "logging.h"
+#include "sterilization.h"
 
 #include "time_counters.h"
 #include "files\eeprom.h"
@@ -130,7 +131,7 @@ bool canPumpRunInThisHeatingState(HEATING_MODE_DATA heatingModeData, COOLING_MOD
             (hotwaterHeatingModeData.state == HOT_WATER_HEATING_IDLE_HEATING) || 
             (hotwaterHeatingModeData.state == HOT_WATER_HEATING_RUNNING_ON_HEATING) ||
             (hotwaterCoolingModeData.state == HOT_WATER_COOLING_IDLE_COOLING) || 
-            (hotwaterCoolingModeData.state == HOT_WATER_COOLING_MODE_RUNNING_ON_COOLING) ) {
+            (hotwaterCoolingModeData.state == HOT_WATER_COOLING_MODE_RUNNING_ON_COOLING)) {
         // Pump can run
         return true;
     }
@@ -152,6 +153,10 @@ bool circulationPumpConditions()
      if ((circulation_pump_data.temperatureTooHighForPumpToBeOn == true) &&
             ((getActiveStateValue() == COOLING) || (getActiveStateValue() == HOT_WATER_COOLING))){
         // Temperature too high in cooling modes
+        return false;
+    }
+    
+    if (getSterilisationMode() == ACTIVE){
         return false;
     }
     

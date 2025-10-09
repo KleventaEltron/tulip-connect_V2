@@ -4,6 +4,7 @@
 #include <stdbool.h>                    // Defines true
 #include "definitions.h"
 #include "time_counters.h"
+#include "logging.h"
 
 volatile bool isTimerExpired = false;
 
@@ -12,6 +13,7 @@ uint32_t SecondCounterHeatingHotWater = UINT32_MAX;
 uint32_t SecondCounterDisplayCommunication = UINT32_MAX;
 uint32_t SecondCounterHeatpumpCommunication = UINT32_MAX;
 uint32_t SecondCounterLogging = UINT32_MAX;
+uint32_t SecondCounterLoggingSettingsOnly = UINT32_MAX;
 uint32_t SecondCounterLoggingSDCard = UINT32_MAX;
 
 // Time counters, when MAX value the counter is off, when 0 counter is on
@@ -51,6 +53,7 @@ void InitTimerCounters ( void )
     SecondCounterDisplayCommunication = 0;
     SecondCounterHeatpumpCommunication = 0;
     SecondCounterLogging = 0;
+    SecondCounterLoggingSettingsOnly = 0;
     //SecondCounterLoggingSDCard = 300;
     SecondCounterLoggingSDCard = 150;
     //SecondCounterFtp = 0;
@@ -134,9 +137,6 @@ void UpdateCounters ( void )
                 SecondCounterCirculationPumpTask++;
             }
             
-            if (SecondCounterDelayAfterChangingSettings >= 0 && SecondCounterDelayAfterChangingSettings < UINT32_MAX) {
-                SecondCounterDelayAfterChangingSettings++;
-            }
             
             if (secondCounterLegionella >= 0 && secondCounterLegionella < UINT32_MAX){
                 secondCounterLegionella++;
@@ -178,6 +178,10 @@ void UpdateCounters ( void )
                 checkHeatpumpStaticSettingsCounter++;
             }
         }   
+        if (SecondCounterDelayAfterChangingSettings >= 0 && SecondCounterDelayAfterChangingSettings < UINT32_MAX) {
+            SecondCounterDelayAfterChangingSettings++;
+        }        
+        
 
         if (SecondCounterLeds >= 0 && SecondCounterLeds < UINT32_MAX)
             SecondCounterLeds++;
@@ -193,6 +197,9 @@ void UpdateCounters ( void )
         
         if (SecondCounterLogging >= 0 && SecondCounterLogging < UINT32_MAX) 
             SecondCounterLogging++;
+        
+        if (SecondCounterLoggingSettingsOnly >= 0 && SecondCounterLoggingSettingsOnly < UINT32_MAX)
+            SecondCounterLoggingSettingsOnly++;
         
         if (SecondCounterLoggingSDCard >= 0 && SecondCounterLoggingSDCard < UINT32_MAX) 
             SecondCounterLoggingSDCard++;
@@ -329,10 +336,19 @@ bool HeatpumpCommunicationTimerExpired ( void )
 }
 
 bool LoggingTimerExpired ( void ) {
-    //if (SecondCounterLogging >= TENTH_SECOND_COUNTER_30_SECONDS) 
+    
+    if ((SecondCounterLogging >= TENTH_SECOND_COUNTER_1_MINUTE) && (getSettingChangedInDisplay() || getNewLogRequired())) {
+        SYS_CONSOLE_PRINT("***** EITHER DISPLAY || OR NEW SETTINGS REQUIRED ***** \r\n");
+        setNewLogRequired(false);
+        SecondCounterLoggingSettingsOnly = 0;
+        SecondCounterLogging = 0;
+        return true;
+    }
+    
     //if (SecondCounterLogging >= TENTH_SECOND_COUNTER_1_MINUTE) 
     if (SecondCounterLogging >= TENTH_SEC0ND_COUNTER_5_MINUTES) 
     {   
+        SecondCounterLoggingSettingsOnly = 0;
         SecondCounterLogging = 0;
         return true;
     }        
@@ -340,6 +356,26 @@ bool LoggingTimerExpired ( void ) {
     {
         return false;
     }
+}
+
+bool LoggingTimerExpiredSettingsInterval ( void ) {
+    //if (SecondCounterLogging >= TENTH_SECOND_COUNTER_30_SECONDS) 
+    //if (SecondCounterLogging >= TENTH_SECOND_COUNTER_1_MINUTE) 
+   if (SecondCounterLoggingSettingsOnly >= TENTH_SECOND_COUNTER_1_MINUTE) 
+    {   
+        SecondCounterLoggingSettingsOnly = 0;
+        return true;
+    }        
+    else
+    {
+        return false;
+    }
+}
+
+void resetLoggingTimers() {
+    SecondCounterLoggingSettingsOnly = 0;
+    SecondCounterLogging = 0;
+    return;
 }
 
 bool LoggingTimerSDCardExpired ( void ) {

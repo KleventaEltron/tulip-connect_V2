@@ -215,7 +215,7 @@ int16_t determineCorrectSetpoint() {
                 changeCompensationsHotWaterHeating = false;
             }
         
-        return heatingSetpoint;
+            return heatingSetpoint;
             
         } else {
             heatingSetpoint = getHeatingSetpoint();

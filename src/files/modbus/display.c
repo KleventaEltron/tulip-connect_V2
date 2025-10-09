@@ -12,6 +12,7 @@
 #include "files\eeprom.h"
 #include "../states.h"
 #include "files/states.h"
+#include "../logging.h"
 //#include "shiftregisters.h
 
 void ParseDisplayData(uint8_t * rxBuffer)
@@ -62,6 +63,9 @@ void ParseDisplayData(uint8_t * rxBuffer)
                 break;
             }
             case ADDRESS_HEATING_FLOOR_HEATING_CURVE_SETTING: {
+                // VALUE IS FOR FLOOR HEATING, DO NOTHINGS
+                if (data >= 256) { break; }
+                
                 WriteSmartEeprom16(SEEP_ADDR_HEATING_CURVE, data);
                 int16_t heatpumpMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
                 
@@ -76,6 +80,9 @@ void ParseDisplayData(uint8_t * rxBuffer)
                 break;
             }
             case ADDRESS_HOT_WATER_COOLING_CURVE_SETTINGS: {
+                // VALUE IS FOR HOT WATER, DO NOTHING
+                if (data <= 255) { break; }
+                
                 WriteSmartEeprom16(SEEP_ADDR_COOLING_CURVE, (data >> 8));
                 int16_t heatpumpMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
                 
@@ -117,7 +124,11 @@ void ParseDisplayData(uint8_t * rxBuffer)
                 
             default: {
                 //SetDataInDisplayArray(regAddress, data);
-                //SYS_CONSOLE_PRINT("************** %i, %i ****************\r\n", regAddress, data);  
+                if (regAddress != ADDRESS_DISPLAY_TIME) {
+                    setSettingChangedInDisplay(true);
+                    SYS_CONSOLE_PRINT("************** %i, %i ****************\r\n", regAddress, data);  
+                }
+                 
                 ChangeHeatpumpSetting(regAddress, data);
                 SetDataInArrays(regAddress, data);
                 break;

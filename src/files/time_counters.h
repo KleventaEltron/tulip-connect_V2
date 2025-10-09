@@ -56,7 +56,9 @@ bool HeatingHotWaterTimerExpired ( void );
 bool DisplayCommunicationTimerExpired ( void );
 bool HeatpumpCommunicationTimerExpired ( void );
 bool LoggingTimerExpired ( void );
+bool LoggingTimerExpiredSettingsInterval ( void );
 bool LoggingTimerSDCardExpired ( void );
+void resetLoggingTimers( void );
 //bool FtpTimerExpired ( void );
 //bool ResetSoftwareTimerExpired ( void );
 
