@@ -11,7 +11,12 @@
 #include "../time_counters.h"
 #include "../states.h"
 
-static uint8_t CommunicationArray[32][8] = 
+#define COMMUNICATION_ARRAY_NORMAL_ROWS 17
+#define COMMUNICATION_ARRAY_EXTRA_ROWS_FOR_CASCADE 15
+#define COMMUNICATION_ARRAY_MAX_ROWS (COMMUNICATION_ARRAY_NORMAL_ROWS + COMMUNICATION_ARRAY_EXTRA_ROWS_FOR_CASCADE)
+#define COMMUNICATION_ARRAY_BYTES_PER_MESSAGE 8
+
+static uint8_t CommunicationArray[COMMUNICATION_ARRAY_MAX_ROWS][COMMUNICATION_ARRAY_BYTES_PER_MESSAGE] = 
 {
     {0x01, 0x03, 0x08, 0x00, 0x00, 0x10, 0x46, 0x66},   // Zelfde
     {0x01, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC5, 0xF1},   // Zelfde
@@ -301,6 +306,39 @@ void FillTxBuffer(uint8_t * txBuffer)
     }
     else
     {
+        // Just asking the normal data
+        bool foundFrame = false;
+        
+        while (!foundFrame) {
+            // Wait for valid frame to send
+            
+            if (i < COMMUNICATION_ARRAY_NORMAL_ROWS) {
+                // First 17 normal rows, always send these
+                foundFrame = true;
+            }
+            else if (i < COMMUNICATION_ARRAY_MAX_ROWS){
+                // Extra 15 rows for cascade slave(s)
+                // First time here i = 17;
+                uint8_t extraIndex = i - (COMMUNICATION_ARRAY_NORMAL_ROWS - 1);  // 0 t/m 14
+
+                uint16_t cascadeSlavesStatus = getCascadeSlaveStatus();
+
+                // controleer of het bijbehorende bit aan staat
+                if ((cascadeSlavesStatus >> extraIndex) & 1) {
+                    // bit is 1 ? Cascade Slave is present
+                    foundFrame = true;
+                } 
+                else {
+                    // bit is 0 ? Cascade Slave is NOT present
+                    i++;
+                }
+            }
+            else {
+                // end
+                i = 0;
+            }
+        }
+
         txBuffer[MODBUS_ADDRESS_INDEX] =            CommunicationArray[i][0];
         txBuffer[MODBUS_COMMAND_INDEX] =            CommunicationArray[i][1];
         txBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] =    CommunicationArray[i][2];
@@ -311,25 +349,12 @@ void FillTxBuffer(uint8_t * txBuffer)
         uint16_t checksum = calculateCRC16(txBuffer, 6);
         txBuffer[MODBUS_CHECKSUM_LSB_INDEX] = (uint8_t)(checksum >> 0);
         txBuffer[MODBUS_CHECKSUM_MSB_INDEX] = (uint8_t)(checksum >> 8);
-
-        if (i < 16){
-            // Do normal communication array to receive data from master
-            i++;
-        }
-        else{
-            // Reset to start all over again
-            if ((getCascadeSlaveStatus() != 0) && (getCascadeSlaveStatus() != UINT16_MAX)){
-                // Address 0x0029 is not 0 and not max value, so there are slaves in cascade
-                //LedStatus_Toggle();
-                
-                //Hier kijken welke slaves er zijn en daarvan address 0 tm 59 opvragen
-                //Bij het ontvangen van de data moet het dus ook weer duidleijk zijn dat het om een slave gaat zodat het goed wordt opgeslagen.
-                        
-                        
-            }
+        
+        i++; 
+        
+        if (i >= COMMUNICATION_ARRAY_MAX_ROWS) {
             i = 0;
         }
-            
     }
 }
 
