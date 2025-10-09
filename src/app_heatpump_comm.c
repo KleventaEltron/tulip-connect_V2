@@ -104,7 +104,7 @@ void APP_ReadCallback(uintptr_t context)
             {
                 case HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP:
                 {   // Eerste byte ontvangen, kijken wat dit is
-                    if (RxBuffer[0] == THIS_DEVICE_ADDRESS)
+                    if (RxBuffer[0] <= CASCADE_SLAVE_15_MODBUS_ADDRESS)
                     {   // Als het het address is van de slave, vraag om de 7 andere bytes die hierna komen.
                         app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DEVICE_ADDRESS_RECEIVED;
                         SERCOM7_USART_Read(&RxBuffer[1], 7);

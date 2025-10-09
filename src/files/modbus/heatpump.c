@@ -267,7 +267,7 @@ static void parseReadRegs(uint8_t * txBuffer, uint8_t * rxBuffer)
 void ParseHeatpumpData(uint8_t * txBuffer, uint8_t * rxBuffer)
 {
     
-    if (rxBuffer[MODBUS_ADDRESS_INDEX] == THIS_DEVICE_ADDRESS)
+    if (rxBuffer[MODBUS_ADDRESS_INDEX] <= CASCADE_SLAVE_15_MODBUS_ADDRESS)
     {   // voor mij
         if (rxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_WRITE_REG)
         {
