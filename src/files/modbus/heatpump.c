@@ -135,12 +135,14 @@ static void parseWriteReg(uint8_t * rxBuffer)
     ConfirmSettingIsEchoed(regAddress, data);
 }
 
-void saveDataToMemory(uint16_t address, uint16_t data)
+void saveDataToMemory(uint16_t address, uint16_t data, uint8_t deviceAddress)
 {
+    deviceAddress -= 1; // Decrease deviceAddress with 1, because pointer in array is always 1 lower than device address in modbus protocol
+    
     if ((address >= START_ADDRESS_REAL_TIME_DATA_1) && (address < START_ADDRESS_REAL_TIME_DATA_1 + REGISTERS_AMOUNT_REAL_TIME_DATA_1))
     {
         address -= START_ADDRESS_REAL_TIME_DATA_1;
-        RealTimeData1[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE] = data;
+        RealTimeData1[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][deviceAddress] = data;
     }
     else if ((address >= START_ADDRESS_REAL_TIME_DATA_2) && (address < START_ADDRESS_REAL_TIME_DATA_2 + REGISTERS_AMOUNT_REAL_TIME_DATA_2))
     {
@@ -251,6 +253,7 @@ static void parseReadRegs(uint8_t * txBuffer, uint8_t * rxBuffer)
     //uint16_t currentAddress;
     uint16_t data;
     uint16_t j = 3;
+    uint8_t  deviceAddress = rxBuffer[MODBUS_ADDRESS_INDEX];
     uint16_t registerAddress = ((uint16_t)txBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] << 8) + txBuffer[MODBUS_REG_ADDRESS_LSB_INDEX];
     uint16_t amountOfRegisters = ((uint16_t)txBuffer[MODBUS_REG_AMOUNT_MSB_INDEX] << 8) + txBuffer[MODBUS_REG_AMOUNT_LSB_INDEX]; 
     //uint8_t  amountOfBytes = rxBuffer[MODBUS_BYTES_RETURNED_INDEX]; 
@@ -260,14 +263,13 @@ static void parseReadRegs(uint8_t * txBuffer, uint8_t * rxBuffer)
         data = ((uint16_t)rxBuffer[j] << 8) + rxBuffer[j + 1];
         j += 2;
         //checkWhatData(i);
-        saveDataToMemory(i, data);
+        saveDataToMemory(i, data, deviceAddress);
     }
 }
 
 void ParseHeatpumpData(uint8_t * txBuffer, uint8_t * rxBuffer)
 {
-    
-    if (rxBuffer[MODBUS_ADDRESS_INDEX] <= CASCADE_SLAVE_15_MODBUS_ADDRESS)
+    if (rxBuffer[MODBUS_ADDRESS_INDEX] == txBuffer[MODBUS_ADDRESS_INDEX])
     {   // voor mij
         if (rxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_WRITE_REG)
         {
@@ -279,7 +281,6 @@ void ParseHeatpumpData(uint8_t * txBuffer, uint8_t * rxBuffer)
         }
     }
     else{} // Niet voor mij
-    
 }
 
 void FillTxBuffer(uint8_t * txBuffer)

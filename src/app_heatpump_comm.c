@@ -55,6 +55,7 @@ static volatile uint32_t CommunicationTimeOutCounter = 0;
 
 static volatile bool doFirstTimeHeatpumpCommunicationSettings = false;
 
+static uint8_t LastSentModbusAddress = UINT8_MAX;
 
 
 
@@ -104,14 +105,14 @@ void APP_ReadCallback(uintptr_t context)
             {
                 case HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP:
                 {   // Eerste byte ontvangen, kijken wat dit is
-                    if (RxBuffer[0] <= CASCADE_SLAVE_15_MODBUS_ADDRESS)
+                    if (RxBuffer[MODBUS_ADDRESS_INDEX] == LastSentModbusAddress)
                     {   // Als het het address is van de slave, vraag om de 7 andere bytes die hierna komen.
                         app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DEVICE_ADDRESS_RECEIVED;
-                        SERCOM7_USART_Read(&RxBuffer[1], 7);
+                        SERCOM7_USART_Read(&RxBuffer[MODBUS_COMMAND_INDEX], 7);
                     }
                     else
                     {   // Wacht op volgende eerste byte
-                        SERCOM7_USART_Read(&RxBuffer[0], 1);
+                        SERCOM7_USART_Read(&RxBuffer[MODBUS_ADDRESS_INDEX], 1);
                     }
                     break;
                 }
@@ -250,6 +251,8 @@ void APP_HEATPUMP_COMM_Tasks ( void )
             
                 SetOutput(LED_RX_HEATPUMP, false);
                 SetOutput(LED_TX_HEATPUMP, false);
+                
+                LastSentModbusAddress = UINT8_MAX;
             
                 //startupSettingsCounter = FillBufferWithStartupSettings(doFirstTimeHeatpumpCommunicationSettings);
                 
@@ -267,6 +270,9 @@ void APP_HEATPUMP_COMM_Tasks ( void )
             //if(setLoggingLock()){
             // Fill buffer with setting to send or with reading data request
                 FillTxBuffer(&TxBuffer[0]);
+                
+                LastSentModbusAddress = TxBuffer[MODBUS_ADDRESS_INDEX];
+                
                 StartTransmittingDataToHeatpump(&TxBuffer[0]);
                 //while(!releaseLoggingLock());
                 app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_SENT;
