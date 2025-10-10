@@ -118,7 +118,7 @@ char * getDisplayStateToString(APP_DISPLAY_COMM_STATES displayState) {
 
 
 
-static uint16_t getDataFromMemory(uint16_t address)
+static uint16_t getDataFromMemory(uint16_t address, uint8_t whichHeatpump)
 {
     uint16_t returnData;
     
@@ -126,8 +126,13 @@ static uint16_t getDataFromMemory(uint16_t address)
     if ((address >= START_ADDRESS_REAL_TIME_DATA_1) && (address < START_ADDRESS_REAL_TIME_DATA_1 + REGISTERS_AMOUNT_REAL_TIME_DATA_1))
     {
         address -= START_ADDRESS_REAL_TIME_DATA_1;
-        //RealTimeDataStatussen[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
-        returnData = RealTimeData1[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY][MASTER_HEATPUMP_IN_CASCADE];
+        
+        if ((whichHeatpump >= MASTER_HEATPUMP_IN_CASCADE) && (whichHeatpump <= SLAVE_HEATPUMP_15_IN_CASCADE)){
+            returnData = RealTimeData1[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY][whichHeatpump];
+        }
+        else{
+            returnData = UINT16_MAX; 
+        }
     }
     else if ((address >= START_ADDRESS_REAL_TIME_DATA_2) && (address < START_ADDRESS_REAL_TIME_DATA_2 + REGISTERS_AMOUNT_REAL_TIME_DATA_2))
     {
@@ -221,7 +226,7 @@ static uint16_t getDataFromMemory(uint16_t address)
 
 
 uint16_t getDataFromMemoryCallable(uint16_t address){
-    return getDataFromMemory(address);
+    return getDataFromMemory(address, MASTER_HEATPUMP_IN_CASCADE);
 }
 
 
@@ -266,7 +271,7 @@ uint8_t FillTransmitBuffer(uint8_t* txBuffer, uint8_t* rxBuffer)
         
         for (uint16_t i = readRegisterAddress; i < (readRegisterAddress + amountOfRegisters); i++)
         {
-            data = getDataFromMemory(i);
+            data = getDataFromMemory(i, (modbusAddress - 1));
             txBuffer[j++] = (uint8_t)(data >> 8);
             txBuffer[j++] = (uint8_t)(data >> 0);
         }               
