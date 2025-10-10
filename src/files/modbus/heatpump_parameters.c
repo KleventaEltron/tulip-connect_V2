@@ -188,8 +188,12 @@ void SetDataInArrays(uint16_t address, uint16_t data)
     if ((address >= START_ADDRESS_REAL_TIME_DATA_1) && (address < START_ADDRESS_REAL_TIME_DATA_1 + REGISTERS_AMOUNT_REAL_TIME_DATA_1))
     {
         address -= START_ADDRESS_REAL_TIME_DATA_1;
-        RealTimeData1[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE] = data;
-        RealTimeData1[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY][MASTER_HEATPUMP_IN_CASCADE] = data;
+        
+        for (uint8_t i = 0; i < MAX_AMOUNT_HEATPUMPS_IN_CASCADE; i++){
+            // For all heatpumps in cascade
+            RealTimeData1[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][i] = data;
+            RealTimeData1[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY][i] = data;
+        }
     }
     else if ((address >= START_ADDRESS_REAL_TIME_DATA_2) && (address < START_ADDRESS_REAL_TIME_DATA_2 + REGISTERS_AMOUNT_REAL_TIME_DATA_2))
     {

@@ -285,8 +285,13 @@ uint8_t FillTransmitBuffer(uint8_t* txBuffer, uint8_t* rxBuffer)
 void GetDataFromHeatpump(void)
 {    
     // Known parameters
-    for (uint16_t i = 0; i < REGISTERS_AMOUNT_REAL_TIME_DATA_1; i++)
-        RealTimeData1[i][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY][MASTER_HEATPUMP_IN_CASCADE] = RealTimeData1[i][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE];
+    for (uint16_t i = 0; i < REGISTERS_AMOUNT_REAL_TIME_DATA_1; i++){
+        // For all registers in REAL_TIME_DATA_1
+        for (uint8_t j = 0; j < MAX_AMOUNT_HEATPUMPS_IN_CASCADE; j++){
+            // For all heatpumps in cascade
+            RealTimeData1[i][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY][j] = RealTimeData1[i][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][j];
+        }
+    }    
     
     for (uint16_t i = 0; i < REGISTERS_AMOUNT_REAL_TIME_DATA_2; i++)
         RealTimeData2[i][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = RealTimeData2[i][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
