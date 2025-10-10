@@ -117,7 +117,7 @@ void adjustSetpointOffsetHotWater()
         return;
     }
     
-    if ((getHeatpumpReturnWaterTemperature() >= (getHotwaterSetpoint() + hot_water_heating_mode_data.setpointHotWaterOffset - 20)) && (hot_water_heating_mode_data.setpointHotWaterOffset != 0) && (hot_water_heating_mode_data.setpointHotWaterOffset != TEMPERATURE_ALARM_VALUE)){   
+    if ((getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) >= (getHotwaterSetpoint() + hot_water_heating_mode_data.setpointHotWaterOffset - 20)) && (hot_water_heating_mode_data.setpointHotWaterOffset != 0) && (hot_water_heating_mode_data.setpointHotWaterOffset != TEMPERATURE_ALARM_VALUE)){   
         // Retour water temperature has come within 2 degree celcius of setpoint, increase offset with 2 degrees
         hot_water_heating_mode_data.setpointHotWaterOffset += ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT_OFFSET_STEPS);  
         return;
@@ -201,19 +201,19 @@ int16_t determineCorrectSetpoint() {
             return heatingSetpoint;
         }    
 
-        if (getHeatpumpCompressorFrequency() == 0) {
+        if (getHeatpumpCompressorFrequency(MASTER_HEATPUMP_IN_CASCADE) == 0) {
             hot_water_heating_mode_data.stepperSetpoint = heatingSetpoint;
             return heatingSetpoint;
         }
 
-        if ((heatingSetpoint - getHeatpumpReturnWaterTemperature()) > 50) {
-            hot_water_heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature() + 20;
+        if ((heatingSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) > 50) {
+            hot_water_heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20;
             return hot_water_heating_mode_data.stepperSetpoint;
         }
 
 
-        if (getHeatpumpReturnWaterTemperature() >= (hot_water_heating_mode_data.stepperSetpoint - 20) && (hot_water_heating_mode_data.stepperSetpoint - getHeatpumpReturnWaterTemperature()) <= 20) {
-            hot_water_heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature() + 20;
+        if (getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) >= (hot_water_heating_mode_data.stepperSetpoint - 20) && (hot_water_heating_mode_data.stepperSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) <= 20) {
+            hot_water_heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20;
             return hot_water_heating_mode_data.stepperSetpoint;
             //heatingSetpoint += 20;
         }
@@ -369,7 +369,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         // 1
         case HOT_WATER_HEATING_IDLE_HEATING:{
             
-            if (getHeatpumpCompressorFrequency() != 0){
+            if (getHeatpumpCompressorFrequency(MASTER_HEATPUMP_IN_CASCADE) != 0){
                 // Compressor is running
                 setSecondCounterHeatingTask(0);
                 hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
@@ -389,7 +389,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         // 2
         case HOT_WATER_HEATING_RUNNING_ON_HEATING:{
             
-            if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
+            if ((getHeatpumpCompressorFrequency(MASTER_HEATPUMP_IN_CASCADE) == 0) && (isDefrostingActive() == false)){
                 // Compressor is not running and is also not in defrosting
                 //TurnOffHeatingElementHeatingBuffer();
                 hot_water_heating_mode_data.HeatingElementOn = false;
@@ -429,7 +429,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         // 3
         case HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON:{
             
-            if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
+            if ((getHeatpumpCompressorFrequency(MASTER_HEATPUMP_IN_CASCADE) == 0) && (isDefrostingActive() == false)){
                 // Compressor is not running and is also not in defrosting
                 //TurnOffHeatingElementHeatingBuffer();
                 hot_water_heating_mode_data.HeatingElementOn = false;
@@ -523,7 +523,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             
             adjustSetpointOffsetHotWater();
             
-            if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
+            if ((getHeatpumpCompressorFrequency(MASTER_HEATPUMP_IN_CASCADE) == 0) && (isDefrostingActive() == false)){
                 // Compressor is not running and is also not in defrosting, so go back to heating
                 //TurnOffHeatingElementHotWaterBuffer();
                 hot_water_heating_mode_data.HotwaterElementOn = false;
@@ -552,7 +552,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             
             adjustSetpointOffsetHotWater();
             
-            if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
+            if ((getHeatpumpCompressorFrequency(MASTER_HEATPUMP_IN_CASCADE) == 0) && (isDefrostingActive() == false)){
                 // Compressor is not running and is also not in defrosting, so go back to heating
                 //TurnOffHeatingElementHotWaterBuffer();
                 hot_water_heating_mode_data.HotwaterElementOn = false;

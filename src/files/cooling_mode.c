@@ -146,7 +146,7 @@ void COOLING_MODE_Tasks ( void )
         
         case COOLING_IDLE:{
             
-            if (getHeatpumpCompressorFrequency() != 0){
+            if (getHeatpumpCompressorFrequency(MASTER_HEATPUMP_IN_CASCADE) != 0){
                 // Compressor is running
                 
                 if(regulateOnTempSensorInBufferCooling) {
@@ -163,7 +163,7 @@ void COOLING_MODE_Tasks ( void )
         
         case COOLING_RUNNING:{
             
-            if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
+            if ((getHeatpumpCompressorFrequency(MASTER_HEATPUMP_IN_CASCADE) == 0) && (isDefrostingActive() == false)){
                 // Compressor is not running and is also not in defrosting
                 if(regulateOnTempSensorInBufferCooling) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);

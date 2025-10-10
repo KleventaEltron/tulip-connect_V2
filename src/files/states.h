@@ -289,13 +289,13 @@ bool isDefrostingActive();
 bool getResetFactorySettings();
 void setResetFactorySettings();
 bool getFactorySettingsResetInProgress();
-uint16_t getHeatpumpCompressorFrequency();
+uint16_t getHeatpumpCompressorFrequency(uint8_t whichHeatpump);
 int16_t getHeatpumpHeatingSetpoint();
 int16_t getHeatpumpCoolingSetpoint();
 uint16_t getHeatpumpWaterFlow();
 int16_t getHeatpumpRunningMode();
 int16_t getHeatpumpOnOff();
-int16_t getHeatpumpReturnWaterTemperature();
+int16_t getHeatpumpReturnWaterTemperature(uint8_t whichHeatpump);
 const char * getThreeWayValveState(int state);
 
 void setActiveModeControllerPumpOffDueToDipSwitch1 (bool target);

@@ -193,9 +193,9 @@ const char * getThreeWayValveState(int state) {
     return "-1, Unkown";
 }
 
-uint16_t getHeatpumpCompressorFrequency()
+uint16_t getHeatpumpCompressorFrequency(uint8_t whichHeatpump)
 {
-    return RealTimeData1[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE];
+    return RealTimeData1[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][whichHeatpump];
 }
 
 int16_t getHeatpumpHeatingSetpoint()
@@ -224,9 +224,9 @@ int16_t getHeatpumpOnOff()
 }
 
 
-int16_t getHeatpumpReturnWaterTemperature()
+int16_t getHeatpumpReturnWaterTemperature(uint8_t whichHeatpump)
 {
-    int16_t returnWaterTemperature = RealTimeData1[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE];
+    int16_t returnWaterTemperature = RealTimeData1[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][whichHeatpump];
     
     if (returnWaterTemperature != TEMPERATURE_ALARM_VALUE){
         // If temperature is not an alarm value, do times 10
