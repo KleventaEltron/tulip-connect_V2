@@ -271,4 +271,3 @@ SECTIONS
         *(.pbss .pbss.*)
     } > bkupram
 }
-

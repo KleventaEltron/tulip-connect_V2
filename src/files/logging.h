@@ -142,6 +142,11 @@ bool readServerResponseDone();
 bool parse_modbus_settings();
 bool sendUpdatedSettingsList ( void );
 bool readServerResponseUpdatedSettingsDone();
+void setSettingChangedInDisplay(bool value);
+bool getSettingChangedInDisplay();
+void setNewLogRequired(bool value);
+bool getNewLogRequired();
+
 //extern char NTP_TIME_BUFFER[40];
 
 #endif

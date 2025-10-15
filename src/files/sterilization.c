@@ -47,6 +47,23 @@ void checkNeedForSterilization() {
         setSterilisationMode(ACTIVE);
         setActiveModeControllerHeatpumpRunningMode(SET_MODE_HEATING);
         setActiveModeControllerPumpOffDueToDipSwitch1(false);
+        
+        ChangeHeatpumpSetting(ADDRESS_HEATING_CURVE_SETTING, 0);
+        ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, 0);
+        
+        if(ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE) > 0 && ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE) != UINT16_MAX) {
+            WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP, getHeatpumpHeatingSetpoint()*10);
+        } else {
+            WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP, UINT16_MAX);
+        }
+        
+        if(ReadSmartEeprom16(SEEP_ADDR_COOLING_CURVE) > 0 && ReadSmartEeprom16(SEEP_ADDR_COOLING_CURVE) != UINT16_MAX) {
+            WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP, getHeatpumpCoolingSetpoint()*10);
+        } else {
+            WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP, UINT16_MAX);
+        }  
+        
+        resetActiveModeStates();
     }        
 }
 

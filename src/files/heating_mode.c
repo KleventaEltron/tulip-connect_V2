@@ -28,6 +28,8 @@ bool getHeatingElementBoolFromHeatingMode() {
 
 
 bool changeSetting = false;
+bool changeCompensationsHeating = false;
+
 void setTemperatureOperatingCycleHeating() {
     if ((getsystemOnCounter() % 10) == 0) {
         changeSetting = true;
@@ -43,7 +45,7 @@ void setTemperatureOperatingCycleHeating() {
     int16_t heatingSetpoint = TEMPERATURE_ALARM_VALUE; 
     
     if (heating_mode_data.heatingCurveSet) {
-        heatingSetpoint = getHeatpumpHeatingSetpoint();
+        heatingSetpoint = getHeatpumpHeatingSetpoint()*10;
     } else {
         heatingSetpoint = getHeatingSetpoint();
     }   
@@ -73,7 +75,42 @@ void setTemperatureOperatingCycleHeating() {
 
 int16_t determineCorrectHeatingSetpoint() {
     int16_t heatingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
-    int16_t heatingSetpoint = getHeatingSetpoint(); 
+    int16_t heatingSetpoint = TEMPERATURE_ALARM_VALUE; 
+    
+    if (heating_mode_data.heatingCurveSet) {
+        heatingSetpoint = getHeatpumpHeatingSetpoint()*10;
+        
+        if ((getsystemOnCounter() % 10) == 0) {
+            changeCompensationsHeating = true;
+            return heatingSetpoint;
+        }    
+        
+        if (heatingBufferTemperature >= heatingSetpoint && changeCompensationsHeating && 
+                (getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE) != 2 
+                || getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE) != 2)) { 
+            ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);
+            ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);
+            changeCompensationsHeating = false;
+        }
+        
+        if (getHeatpumpCompressorFrequency() == 0) {
+            return heatingSetpoint;
+        }             
+        
+        if (heatingBufferTemperature >= heatingSetpoint) {
+            return heatingSetpoint;
+        }
+        
+        if((heatingSetpoint - getHeatpumpReturnWaterTemperature()) < 20  && changeCompensationsHeating) {
+            ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE) - 1));
+            ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE) - 1));            
+            changeCompensationsHeating = false;
+        }
+        
+        return heatingSetpoint;
+    } else {
+        heatingSetpoint = getHeatingSetpoint();
+    }   
     
     if (!regulateOnTempSensorInBufferHeating) {
         heating_mode_data.stepperSetpoint = heatingSetpoint;
@@ -169,12 +206,24 @@ void HEATING_MODE_Tasks ( void )
     
     int16_t heatingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
     
-    if (getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING) > 0) {
+//    if (getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING) > 0) {
+//        heating_mode_data.heatingCurveSet = true; 
+//        if (getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING) != ReadSmartEeprom8(ADDRESS_HEATING_CURVE_SETTING)) {
+//            WriteSmartEeprom8(SEEP_ADDR_HEATING_CURVE, getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
+//        }    
+//    } else {
+//        heating_mode_data.heatingCurveSet = false; 
+//        if (getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING) != ReadSmartEeprom8(ADDRESS_HEATING_CURVE_SETTING)) {
+//            WriteSmartEeprom8(SEEP_ADDR_HEATING_CURVE, 0);
+//        }         
+//    }
+
+    if(ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE) > 0 && ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE) != UINT16_MAX) {
         heating_mode_data.heatingCurveSet = true; 
     } else {
         heating_mode_data.heatingCurveSet = false; 
     }
-
+    
     //int16_t heatingSetpoint = getHeatingSetpoint();
    
     bool currentDip1SwitchState = getCurrentDip1SwitchState();
@@ -211,10 +260,15 @@ void HEATING_MODE_Tasks ( void )
             if(regulateOnTempSensorInBufferHeating) {
                 // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                 setActiveModeControllerPumpOffDueToDipSwitch1(true);
-            }
+            }   
             
-            ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, ReadSmartEeprom8(SEEP_ADDR_COOLING_CURVE));
-            ChangeHeatpumpSetting(ADDRESS_HEATING_CURVE_SETTING, ReadSmartEeprom8(SEEP_ADDR_HEATING_CURVE));
+            ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);
+            ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);
+            
+            ChangeHeatpumpSetting(ADDRESS_HEATING_CURVE_SETTING, ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE));
+            ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, ReadSmartEeprom16(SEEP_ADDR_COOLING_CURVE));
+            WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP, UINT16_MAX);
+            WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP, UINT16_MAX);
             
             heating_mode_data.state = HEATING_IDLE;
             break;

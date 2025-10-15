@@ -4,6 +4,7 @@
 #include <stdlib.h>                   
 #include <string.h>
 #include <stdio.h>
+#include <xc.h>
 #include "definitions.h"               
 //#include "third_party/../time.h"
 
@@ -22,11 +23,6 @@
 #define LOGGING_TIMEOUT_MS 200000
 #define TCPIP_STACK_INDEX_0 0
 
-/*
- Test comment added to top of TEST BRANCH
- 
- */
-
 //int stackResetCount = 0;
 //int TcpIPStackResetCount = 0;  
 
@@ -36,6 +32,8 @@ TCPIP_NET_HANDLE        netH;
 SYS_STATUS              tcpipStat;
 IPV4_ADDR               ipAddr;
     
+bool onlyDoSettings = false;
+bool firstStartAfterBoot = true;
 
 void TC2_Callback_InterruptHandler(TC_TIMER_STATUS status, uintptr_t context)
 {           
@@ -78,8 +76,14 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         case APP_LOGGING_TASKS_IDLE:
         {
+            if (LoggingTimerExpiredSettingsInterval() && !onlyDoSettings) {
+                SYS_CONSOLE_PRINT("***** ONLY DO SETTINGS ***** \r\n");
+                app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_LOGGING_UNLOCK;
+                onlyDoSettings = true;
+            }            
             /* Wait for next logging timer trigger */
             if (LoggingTimerExpired()) {
+                onlyDoSettings = false;
                 app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_LOGGING_UNLOCK;
             }
             
@@ -98,6 +102,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
             
             if (netH == NULL) {
                 //SYS_CONSOLE_PRINT("Error: Network interface not found! Setting up new interface\n");
+                onlyDoSettings = false;
                 app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;
                 if(!setupNewTcpipStack()){
                     while(!releaseLoggingLock());
@@ -111,6 +116,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
                 SYS_CONSOLE_PRINT("Ethernet cable is DISCONNECTED!\n");
                 TCPIP_STACK_Deinitialize(sysObj.tcpip);
                 increaseTcpIpResetCounter();
+                onlyDoSettings = false;
                 app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;
                 while(!releaseLoggingLock());
                 break;
@@ -243,7 +249,12 @@ void APP_LOGGING_TASKS_Tasks ( void )
                     break;
                     
                 case SSL_NEGOTIATION_SUCCES:
-                    app_logging_tasksData.state = APP_LOGGING_TASKS_SEND_REQUEST_SSL;
+                    if (onlyDoSettings) {
+                        SYS_CONSOLE_PRINT("***** SKIPPING INTIAL SETTINGS LOG ***** \r\n");
+                        app_logging_tasksData.state = APP_LOGGING_TASKS_REQUEST_UPDATE_SETTINGS;
+                    } else {
+                        app_logging_tasksData.state = APP_LOGGING_TASKS_SEND_REQUEST_SSL;
+                    }
                     break;
             }
             break;
@@ -297,7 +308,11 @@ void APP_LOGGING_TASKS_Tasks ( void )
             if(!areUpdateSettingsAvailable()) {
             //if(!readNetworkBufferBodySslResponse()) {
                 SYS_CONSOLE_PRINT("No update settings avialable, closing connection!\r\n");
-                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+                if (getSettingChangedInDisplay()) {
+                    app_logging_tasksData.state = APP_LOGGING_TASKS_REQUEST_UPDATE_SETTINGS;
+                } else {
+                    app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION; 
+                }
                 break;
             }                  
             
@@ -353,13 +368,22 @@ void APP_LOGGING_TASKS_Tasks ( void )
         case APP_LOGGING_TASKS_PARSE_UPDATE_SETTINGS:
         {
             if (parse_modbus_settings()) {
-                SYS_CONSOLE_PRINT("Done receiving data from server, SETTING PARSed!\r\n");
+                SYS_CONSOLE_PRINT("Done receiving data from server, SETTING PARSED!\r\n");
+                resetLoggingTimers();
+                setNewLogRequired(true);
                 app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_NEW_SETTINGS_CHANGED;      
                 break;
             }
             
-            SYS_CONSOLE_PRINT("COULD NOT PARSE NEW SETTINGS!\r\n");
-            app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+            if (firstStartAfterBoot || getSettingChangedInDisplay()) {
+                SYS_CONSOLE_PRINT("NOTHING BULL STILL GOING ON BECAUSE FIRST LOG OR DISPLAY CHANGE!\r\n");
+                firstStartAfterBoot = false;
+                setSettingChangedInDisplay(false);
+                app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_NEW_SETTINGS_CHANGED;
+            } else {
+                SYS_CONSOLE_PRINT("COULD NOT PARSE (OR THERE WERE NO) NEW SETTINGS! QUITTING\r\n");
+                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+            }
             break; 
         }
         
@@ -370,6 +394,9 @@ void APP_LOGGING_TASKS_Tasks ( void )
             if(getSettingsQueuedAmount() > 0) { break; }
             
             SYS_CONSOLE_PRINT("SETTING QUEUE EMPTY, PROCEEDING!\r\n");
+            
+            setSecondCounterDelayAfterChangingSettings(0);
+            
             app_logging_tasksData.state = APP_LOGGING_TASKS_SEND_NEW_SETTINGS_OVERVIEW;
             break;
         }
@@ -378,10 +405,18 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         case APP_LOGGING_TASKS_SEND_NEW_SETTINGS_OVERVIEW:
         {
+            // Needed because the Heatpump needs some time to actually store the settings
+            // Otherwise we would send back outdated settings
+            if (getSecondCounterDelayAfterChangingSettings() < 50) {
+                break;
+            }
+                
             if(!sendUpdatedSettingsList()) {
+                setSecondCounterDelayAfterChangingSettings(UINT32_MAX);
                 app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
             }
             
+            setSecondCounterDelayAfterChangingSettings(UINT32_MAX);
             app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_CONFIRM_CHANGED_SETTINGS;
             break;
         }
@@ -414,9 +449,11 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         case APP_LOGGING_TASKS_CLOSE_CONNECTION:
         {
+            SYS_CONSOLE_PRINT("******** CLOSING CONNECTION **********!\r\n");
             TC2_TimerStop();
             closeSocket();
             while(!releaseLoggingLock());
+            onlyDoSettings = false;
             app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;
             break;
         }

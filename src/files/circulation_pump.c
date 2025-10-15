@@ -13,6 +13,7 @@
 #include "circulation_pump.h"
 #include "files\eeprom.h"
 #include "logging.h"
+#include "sterilization.h"
 
 #include "time_counters.h"
 #include "files\eeprom.h"
@@ -130,7 +131,7 @@ bool canPumpRunInThisHeatingState(HEATING_MODE_DATA heatingModeData, COOLING_MOD
             (hotwaterHeatingModeData.state == HOT_WATER_HEATING_IDLE_HEATING) || 
             (hotwaterHeatingModeData.state == HOT_WATER_HEATING_RUNNING_ON_HEATING) ||
             (hotwaterCoolingModeData.state == HOT_WATER_COOLING_IDLE_COOLING) || 
-            (hotwaterCoolingModeData.state == HOT_WATER_COOLING_MODE_RUNNING_ON_COOLING) ) {
+            (hotwaterCoolingModeData.state == HOT_WATER_COOLING_MODE_RUNNING_ON_COOLING)) {
         // Pump can run
         return true;
     }
@@ -152,6 +153,10 @@ bool circulationPumpConditions()
      if ((circulation_pump_data.temperatureTooHighForPumpToBeOn == true) &&
             ((getActiveStateValue() == COOLING) || (getActiveStateValue() == HOT_WATER_COOLING))){
         // Temperature too high in cooling modes
+        return false;
+    }
+    
+    if (getSterilisationMode() == ACTIVE){
         return false;
     }
     
@@ -184,9 +189,24 @@ void CIRCULATION_PUMP_Tasks()
     //if (GetNtcTemperature(NTC_HEATING_BUFFER < ))
     //    temperatureTooLow
     
-    checkLowBufferTemperature(GetNtcTemperature(NTC_HEATING_BUFFER), getHeatingSetpoint(), ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW), ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP));
+    int16_t heatingSetpoint = INT16_MAX;
+    if (getHotWaterHeatingModeData().heatingCurveSet || getHeatingModeData().heatingCurveSet) {
+        heatingSetpoint = getHeatpumpHeatingSetpoint()*10;
+    } else {
+        heatingSetpoint = getHeatingSetpoint();
+    }
     
-    checkHighBufferTemperature(GetNtcTemperature(NTC_HEATING_BUFFER), getCoolingSetpoint(), ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH), ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP));
+    int16_t coolingSetpoint = INT16_MAX;
+    if (getHotWaterCoolingModeData().coolingCurveSet || getCoolingModeData().coolingCurveSet) {
+        coolingSetpoint = getHeatpumpCoolingSetpoint()*10;
+    } else {
+        coolingSetpoint = getCoolingSetpoint();
+    }    
+    
+    
+    checkLowBufferTemperature(GetNtcTemperature(NTC_HEATING_BUFFER), heatingSetpoint, ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW), ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP));
+    
+    checkHighBufferTemperature(GetNtcTemperature(NTC_HEATING_BUFFER), coolingSetpoint, ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH), ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP));
     
     switch ( circulation_pump_data.state )
     {
