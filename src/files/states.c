@@ -248,6 +248,23 @@ const char * getThreeWayValveState(int state) {
     return "-1, Unkown";
 }
 
+uint16_t getActiveCompressorsMask()
+{
+    uint16_t mask = 0;
+
+    for (uint8_t i = 0; i < MAX_AMOUNT_HEATPUMPS_IN_CASCADE; i++) {
+        // For all heatpumps
+        uint16_t freq = getHeatpumpCompressorFrequency(i);
+        
+        if ((freq != 0) && (freq != UINT16_MAX)) {
+            // 
+            mask |= (uint16_t)(1 << i);
+        }
+    }
+
+    return mask;
+}
+
 uint16_t getHeatpumpCompressorFrequency(uint8_t whichHeatpump)
 {
     return RealTimeData1[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][whichHeatpump];

@@ -285,10 +285,12 @@ typedef struct{
 void resetActiveModeStates();
 uint16_t getActiveStateFromActiveMode(RUNNING_MODES state);
 const char * getActiveModeToString(RUNNING_MODES state);
-bool isDefrostingActive();
+//bool isDefrostingActive();
+uint16_t getDefrostingActiveMask();
 bool getResetFactorySettings();
 void setResetFactorySettings();
 bool getFactorySettingsResetInProgress();
+uint16_t getActiveCompressorsMask();
 uint16_t getHeatpumpCompressorFrequency(uint8_t whichHeatpump);
 int16_t getHeatpumpHeatingSetpoint();
 int16_t getHeatpumpCoolingSetpoint();

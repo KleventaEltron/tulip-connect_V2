@@ -28,6 +28,7 @@
 #include "files/defrosting.h"
 #include "files/modbus/display.h"
 #include "files/eeprom.h"
+#include "files/i2c/mac.h"
 
 #include "files/circulation_pump.h"
 
@@ -107,16 +108,26 @@ bool factorySettingResetInProgress = false;
         }
         
         SYS_CONSOLE_PRINT("\r\nHEATPUMP:\n");
-        SYS_CONSOLE_PRINT(" Setpoint Heating:     %i\n", getHeatpumpHeatingSetpoint());
-        SYS_CONSOLE_PRINT(" Setpoint Cooling:     %i\n", getHeatpumpCoolingSetpoint());
-        SYS_CONSOLE_PRINT(" Heatpump mode:        %i\n\n", getHeatpumpRunningMode());
-        SYS_CONSOLE_PRINT(" Compressor master:    %i\n", getHeatpumpCompressorFrequency(MASTER_HEATPUMP_IN_CASCADE));
-        SYS_CONSOLE_PRINT(" Compressor slave:     %i\n\n", getHeatpumpCompressorFrequency(SLAVE_HEATPUMP_1_IN_CASCADE));
+        //SYS_CONSOLE_PRINT(" FW:                  %x:%x:%x:%x:%x:%x:%x:%x\n", eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]);
+        SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
+        SYS_CONSOLE_PRINT(" Active mode:         %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
+        SYS_CONSOLE_PRINT(" Setpoint Heating:    %i\n", getHeatpumpHeatingSetpoint());
+        SYS_CONSOLE_PRINT(" Setpoint Cooling:    %i\n", getHeatpumpCoolingSetpoint());
+        SYS_CONSOLE_PRINT(" Heatpump mode:       %i\n", getHeatpumpRunningMode());
+        SYS_CONSOLE_PRINT(" Heatpump ON:         %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
+        SYS_CONSOLE_PRINT(" Display pump on:     %s\n\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
+        SYS_CONSOLE_PRINT(" Heating Curve:       %i\n", getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
+        SYS_CONSOLE_PRINT(" Cooling Curve:       %i\n\n", getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
+        SYS_CONSOLE_PRINT(" Compressor master:   %i\n", getHeatpumpCompressorFrequency(MASTER_HEATPUMP_IN_CASCADE));
+        SYS_CONSOLE_PRINT(" Compressor slave:    %i\n\n", getHeatpumpCompressorFrequency(SLAVE_HEATPUMP_1_IN_CASCADE));
         //SYS_CONSOLE_PRINT(" Waterflow:            %i\n", getHeatpumpWaterFlow());
         SYS_CONSOLE_PRINT(" Inlet temp. master:  %i\n", getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE));
         SYS_CONSOLE_PRINT(" Inlet temp. slave:   %i\n\n", getHeatpumpReturnWaterTemperature(SLAVE_HEATPUMP_1_IN_CASCADE));
         SYS_CONSOLE_PRINT(" Outlet temp. master: %i\n", RealTimeData1[ADDRESS_WATER_OUTLET_TEMPERATURE_T7 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE]);
         SYS_CONSOLE_PRINT(" Outlet temp. slave:  %i\n\n", RealTimeData1[ADDRESS_WATER_OUTLET_TEMPERATURE_T7 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][SLAVE_HEATPUMP_1_IN_CASCADE]);
+        SYS_CONSOLE_PRINT(" Compr. running?:     %x\n\n", getActiveCompressorsMask());
+        SYS_CONSOLE_PRINT(" Defrosting active:   %x\n\n", getDefrostingActiveMask());
+        //SYS_CONSOLE_PRINT(" Inlet temp. slave:   %i\n\n", getHeatpumpReturnWaterTemperature(SLAVE_HEATPUMP_1_IN_CASCADE));
         /*
         SYS_CONSOLE_PRINT("\r\nCIRCULATION PUMP:\n");
         SYS_CONSOLE_PRINT(" State:                %s\n", getCirculationPumpStateToString());
@@ -137,7 +148,7 @@ bool factorySettingResetInProgress = false;
         SYS_CONSOLE_PRINT(" 3-way needed state:   %s\n", getThreeWayValveState(getNeededValvePosition()));
         //SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getWaitingThreeWayValveSwitch());
         */
-        /*
+        
         if (getSterilisationMode() != OFF) {
             SYS_CONSOLE_PRINT("\r\nSTERILIZATION:\n");
             SYS_CONSOLE_PRINT(" Sterilisation active: %s\n", getSterilizationState(getSterilisationMode()));
@@ -233,7 +244,7 @@ bool factorySettingResetInProgress = false;
                 SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
             }
         }
-        */
+        
     }
     return;
  }

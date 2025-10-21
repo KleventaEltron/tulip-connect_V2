@@ -160,7 +160,7 @@ bool circulationPumpConditions()
         return false;
     }
     
-    if (isDefrostingActive() == true){
+    if (getDefrostingActiveMask() != 0){
         // Defrosting active
         return false;
     }
