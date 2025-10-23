@@ -2883,6 +2883,9 @@ ${DISTDIR}/tulip_connect.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}: ${OBJECTFILES}  nbpro
 	@${MKDIR} ${DISTDIR} 
 	${MP_CC} $(MP_EXTRA_LD_PRE)  -mprocessor=$(MP_PROCESSOR_OPTION)  -nostartfiles -mno-device-startup-code -o ${DISTDIR}/tulip_connect.X.${IMAGE_TYPE}.${DEBUGGABLE_SUFFIX} ${OBJECTFILES_QUOTED_IF_SPACED}          -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -Wl,--defsym=__MPLAB_BUILD=1$(MP_EXTRA_LD_POST)$(MP_LINKER_FILE_OPTION),--defsym=_min_heap_size=160000,--gc-sections,-Map="${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map",-DROM_LENGTH=0x100000,-DROM_ORIGIN=0x0,-s,--memorysummary,${DISTDIR}/memoryfile.xml,--dinit-compression=0 -mdfp="${DFP_DIR}"
 	${MP_CC_DIR}\\xc32-bin2hex ${DISTDIR}/tulip_connect.X.${IMAGE_TYPE}.${DEBUGGABLE_SUFFIX} 
+	@echo Normalizing hex file
+	@"C:/Program Files/Microchip/MPLABX/v6.25/mplab_platform/platform/../mplab_ide/modules/../../bin/hexmate" --edf="C:/Program Files/Microchip/MPLABX/v6.25/mplab_platform/platform/../mplab_ide/modules/../../dat/en_msgs.txt" ${DISTDIR}/tulip_connect.X.${IMAGE_TYPE}.hex -o${DISTDIR}/tulip_connect.X.${IMAGE_TYPE}.hex
+
 endif
 
 
