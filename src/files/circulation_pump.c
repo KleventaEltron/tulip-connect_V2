@@ -141,6 +141,13 @@ bool canPumpRunInThisHeatingState(HEATING_MODE_DATA heatingModeData, COOLING_MOD
     }
 }
 
+bool hasActiveNonDefrostingUnitDuringDefrost(uint16_t defrostMask, uint16_t compressorMask)
+{
+    // Check for active compressor but is not in defrosting:
+    uint16_t activeNotDef = (uint16_t)(compressorMask & (uint16_t)(~defrostMask));
+    
+    return activeNotDef != 0;
+}
 
 bool circulationPumpConditions()
 {
@@ -160,9 +167,12 @@ bool circulationPumpConditions()
         return false;
     }
     
-    if (getDefrostingActiveMask() != 0){
-        // Defrosting active
-        return false;
+    uint16_t defrostingMask = getDefrostingActiveMask();
+    if (defrostingMask != 0){
+        // One or more heatpumps in defrosting
+        if (hasActiveNonDefrostingUnitDuringDefrost(defrostingMask, getActiveCompressorsMask()) == false){
+            return false;
+        }
     }
     
     if (canPumpRunInThisHeatingState(getHeatingModeData(), getCoolingModeData(), getHotWaterHeatingModeData(), getHotWaterCoolingModeData()) == false){
