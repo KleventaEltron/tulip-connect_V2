@@ -186,7 +186,9 @@ void COOLING_MODE_Tasks ( void )
                 setActiveModeControllerPumpOffDueToDipSwitch1(true);
             }
              
-            CoolingActiveRelaySet();
+            if (ReadSmartEeprom8(SEEP_ADDR_COOLING_CONTACT_ENABLE) == true) {
+                CoolingActiveRelaySet();
+            }
             
             ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);
             ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);            

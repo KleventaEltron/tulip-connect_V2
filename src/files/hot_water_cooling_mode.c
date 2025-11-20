@@ -309,8 +309,10 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
         // Not in hot water state yet
         // Not on one of the hot water states or doing passive hot water
         // Hot water buffer is lower than setpoint - delta
-        hot_water_cooling_mode_data.state = HOT_WATER_COOLING_INITIALIZE_HOT_WATER;
-        return;
+        if( blockHotWaterBasedOnTimers() == false ) { 
+            hot_water_cooling_mode_data.state = HOT_WATER_COOLING_INITIALIZE_HOT_WATER;
+            return;
+        }
     }
     
     setActiveModeControllerHeatpumpSetpointHeating(determineCorrectHotWaterSetpoint());
@@ -338,7 +340,9 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
                 setActiveModeControllerPumpOffDueToDipSwitch1(true);
             }
             
-            CoolingActiveRelaySet();
+            if (ReadSmartEeprom8(SEEP_ADDR_COOLING_CONTACT_ENABLE) == true) {
+                CoolingActiveRelaySet();
+            }
             
             ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);
             ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);            
@@ -402,7 +406,9 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
             
             setSecondCounterHotwaterTask(0);
             
-            CoolingActiveRelaySet();
+            if (ReadSmartEeprom8(SEEP_ADDR_COOLING_CONTACT_ENABLE) == true) {
+                CoolingActiveRelaySet();
+            }
             
             //if(regulateOnTempSensorInBufferHotWaterCooling) {
                 //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);

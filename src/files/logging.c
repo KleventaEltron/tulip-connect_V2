@@ -995,24 +995,46 @@ bool readServerResponseDone() {
 
 void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
     switch(address) {
+        /* DONE */
         case ADDRESS_SET_MODE: {
             WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, value);
             break;
         }
-        
+        /* DONE */
+        case ADDRESS_COOLING_SET_TEMPERATURE: {
+            WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT, value);
+            ChangeHeatpumpSetting(address, value);
+            break;
+        }
+        /* DONE */
+        case ADDRESS_HEATING_SET_TEMPERATURE: {
+            WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT, value);
+            ChangeHeatpumpSetting(address, value);
+            break;
+        }
+        /* DONE */
         case ADDRESS_HOT_WATER_SET_TEMPERATURE: {
             WriteSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT, value);
             break;
         }
+        /* DONE */
+        case ADDRESS_ON_OFF:{
+            WriteSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON, value);
+            ChangeHeatpumpSetting(address, value);
+            break;
+        }
 
+        /* DONE */
         /*  CUSTOM MODBUS ADRESSEN VANAF 0xC000  */
-        case ADDRESS_TULIP_CONNECT_DIGITAL_INPUT_ONE: { 
+        case ADDRESS_TULIP_CONNECT_DIGITAL_INPUT_THREE: { 
             // IF VALUE IS:
             // 0 == EVU DISABLED
             // 1 == EVU ENABLED
             WriteSmartEeprom8(SEEP_ADDR_EVU_CONTACT_ENABLE, value);
             break;
         }
+        
+        /* DONE */
         case ADDRESS_TULIP_CONNECT_RELAIS_OUTPUT_ONE: {
             // IF VALUE IS:
             // 0 == COOLING CONTACT DISABLED
@@ -1020,38 +1042,66 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
             WriteSmartEeprom8(SEEP_ADDR_COOLING_CONTACT_ENABLE, value);
             break;
         }
+        
+        /* DONE */
         case ADDRESS_TULIP_CONNECT_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT: { 
             WriteSmartEeprom8(SEEP_ADDR_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT, value);
             break;
-        }         
+        }  
+        
+        /* DONE */
         case ADDRESS_TULIP_CONNECT_SILENT_MODE: {
             WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, value);
+            if (value == 0 && ReadSmartEeprom8(SEEP_ADDR_BOOST_MODE) == 0) {
+                ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 0);
+            } else {
+                ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 2);
+            }
             break;     
         }
+        
+        /* DONE */
+        case ADDRESS_TULIP_CONNECT_BOOST_MODE: {
+            WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE, value);
+            if (value == 0 && ReadSmartEeprom8(SEEP_ADDR_SILENT_MODE) == 0) {
+                ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 0);
+            } else {
+                ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 1);
+            }
+            break;               
+        }             
+        
+        /* DONE */
         case ADDRESS_TULIP_CONNECT_START_TIME_SILENT_MODE: {
             WriteSmartEeprom16(SEEP_ADDR_START_TIME_SILENT_MODE, value);
             break;               
         }
+        
+        /* DONE */
         case ADDRESS_TULIP_CONNECT_END_TIME_SILENT_MODE: {
             WriteSmartEeprom16(SEEP_ADDR_END_TIME_SILENT_MODE, value);
             break;               
-        }        
-        case ADDRESS_TULIP_CONNECT_BOOST_MODE: {
-            WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE, value);
-            break;               
-        }               
+        }     
+          
+        /* DONE */
         case ADDRESS_TULIP_CONNECT_USE_SILENT_MODE_TIMERS: {
             WriteSmartEeprom8(SEEP_ADDR_USE_SILENT_MODE_TIMERS, value);
             break;               
         }               
+        
+        /* DONE */
         case ADDRESS_TULIP_CONNECT_BLOCK_HOTWATER: {
             WriteSmartEeprom8(SEEP_ADDR_BLOCK_HOTWATER, value);
             break;               
         }        
+        
+        /* DONE */
         case ADDRESS_TULIP_CONNECT_START_TIME_BLOCK_HOTWATER: {
             WriteSmartEeprom16(SEEP_ADDR_END_TIME_BLOCK_HOTWATER, value);
             break;               
-        }               
+        }         
+        
+        /* DONE */
         case ADDRESS_TULIP_CONNECT_END_TIME_BLOCK_HOTWATER: {
             WriteSmartEeprom16(SEEP_ADDR_START_TIME_BLOCK_HOTWATER, value);
             break;               
@@ -1082,6 +1132,11 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
             WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TIME_AFTER_OFF_TIME_REACHED_SEC, value);
             break;               
         }        
+        
+        case ADDRESS_TULIP_CONNECT_DEGREES_PER_MINUTE_DELTA: {
+            WriteSmartEeprom16(SEEP_ADDR_HEATING_TIME_CONSTANT_SEC, (value * 60));
+            break;
+        }
         /* TOT EN MET HIER */
         
         default: {
@@ -1328,12 +1383,21 @@ bool sendUpdatedSettingsList ( void ) {
     
     const uint32_t eep_addrs_8_bit_3[] = {
         SEEP_ADDR_DIGITAL_INPUT_TWO,
-        SEEP_ADDR_DIGITAL_INPUT_THREE,
+        SEEP_ADDR_DIGITAL_INPUT_ONE,
         SEEP_ADDR_COOLING_CONTACT_ENABLE,
         SEEP_ADDR_RELAIS_OUTPUT_TWO,
         SEEP_ADDR_RELAIS_OUTPUT_THREE,
      };
     getSettingValuesByEepromList8Bit(eep_addrs_8_bit_3, sizeof(eep_addrs_8_bit_3)/sizeof(eep_addrs_8_bit_3[0]));      
+    
+    
+    const uint32_t eep_addrs_16_bit_3[] = {
+        SEEP_ADDR_HEATING_TIME_CONSTANT_SEC,             
+     };
+    
+    getSettingValuesByEepromList16Bit(eep_addrs_16_bit_3, sizeof(eep_addrs_16_bit_3)/sizeof(eep_addrs_16_bit_3[0]));    
+        
+    
     
     // Laatste write zodat de server weet dat ontvangen klaar is
     NET_PRES_SocketWrite(socket, "0\r\n\r\n", 5);    

@@ -353,8 +353,10 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         if ((getSecondCounterHotwaterTask() != UINT32_MAX) && (getSecondCounterHotwaterTask() >= ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_MAX_TIME_HEATING_ELEMENT_ON_IN_HEATING_MODE_SEC))) {
             // Is more than 2 hours in passive hot water, so go back to active
             hot_water_heating_mode_data.hotwaterPassive = false;
-            hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HOT_WATER;
-            return;
+            if( blockHotWaterBasedOnTimers() == false ) { 
+                hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HOT_WATER;
+                return;
+            }
         }
     }
     
@@ -362,8 +364,10 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         // Not in hot water state yet
         // Not on one of the hot water states or doing passive hot water
         // Hot water buffer is lower than setpoint - delta
-        hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HOT_WATER;
-        return;
+        if( blockHotWaterBasedOnTimers() == false ) { 
+            hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HOT_WATER;
+            return;
+        }
     }
     
     setTemperatureOperatingCycleHotWaterHeating();

@@ -106,7 +106,9 @@ void resetActiveModeStates() {
             
     if(app_active_mode_controllerData.currentRunningMode == COOLING 
             || app_active_mode_controllerData.currentRunningMode == HOT_WATER_COOLING) {
-        CoolingActiveRelaySet();
+        if (ReadSmartEeprom8(SEEP_ADDR_COOLING_CONTACT_ENABLE) == true) {
+            CoolingActiveRelaySet();
+        }
     } else {
         CoolingActiveRelayClear();
     }
@@ -362,4 +364,42 @@ int16_t getHotwaterDelta()
     }
     
     return delta;
+}
+
+
+bool blockHotWaterBasedOnTimers(void) 
+{
+    if (ReadSmartEeprom8(SEEP_ADDR_BLOCK_HOTWATER) == false) {
+        return false;
+    }
+
+    // Get current time from heatpump
+    uint16_t raw = UserParameters[ADDRESS_DISPLAY_TIME - START_ADDRESS_USER_PARAMETERS]
+                                  [PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+
+    uint8_t hours   = (uint8_t)(raw >> 8);    
+    uint8_t minutes = (uint8_t)(raw & 0xFF);  
+
+    uint16_t currentDisplayTimeAdjusted = (uint16_t)hours * 60u + (uint16_t)minutes;
+
+    uint16_t start = ReadSmartEeprom16(SEEP_ADDR_START_TIME_BLOCK_HOTWATER);
+    uint16_t end   = ReadSmartEeprom16(SEEP_ADDR_END_TIME_BLOCK_HOTWATER);
+
+    bool in_window;
+
+    if (start <= end) {
+        // voor bijv start 10:30 tot eind 20:00
+        in_window = (currentDisplayTimeAdjusted >= start &&
+                     currentDisplayTimeAdjusted <  end);
+    } else {
+        // voor bijv start 20:00 tot eind 06:30
+        in_window = (currentDisplayTimeAdjusted >= start ||
+                     currentDisplayTimeAdjusted <  end);
+    }
+
+    if (in_window) {
+        return false;
+    }
+
+    return true;
 }

@@ -56,6 +56,16 @@ void ParseDisplayData(uint8_t * rxBuffer)
 
                 break;
             }
+            case ADDRESS_FREQUENCY_CONVERSION_MODE: {
+                if (data == 2) {
+                    WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, true);
+                } else {
+                    WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, false);
+                }
+                ChangeHeatpumpSetting(regAddress, data);
+                SetDataInArrays(regAddress, data);                       
+                break;
+            }
             case ADDRESS_HEATING_SET_TEMPERATURE: {
                 //if (UserParameters[ADDRESS_HEATING_FLOOR_HEATING_CURVE_SETTING - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] == HEATING_CURVE_SETTING_OFF)
                     WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT, data);
@@ -112,6 +122,8 @@ void ParseDisplayData(uint8_t * rxBuffer)
                 SetDataInArrays(regAddress, data);
                 break;
             }    
+            
+           
             // RESET NAAR FABRIEKS PARAMETERS
             case ADDRESS_CREW_CONTROL:{
                 

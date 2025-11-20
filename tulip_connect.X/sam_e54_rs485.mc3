@@ -4597,7 +4597,7 @@
     &lt;ComponentGraph dnOrder=&quot;8&quot; id=&quot;Group4&quot;&gt;
       &lt;ElementPositions dnOrder=&quot;0&quot;&gt;
         &lt;ElementPosition dnOrder=&quot;0&quot; id=&quot;tc1&quot; x=&quot;20&quot; y=&quot;20&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;1&quot; id=&quot;tc2&quot; x=&quot;182&quot; y=&quot;17&quot;/&gt;
+        &lt;ElementPosition dnOrder=&quot;1&quot; id=&quot;tc2&quot; x=&quot;182&quot; y=&quot;20&quot;/&gt;
       &lt;/ElementPositions&gt;
     &lt;/ComponentGraph&gt;
     &lt;ComponentGraph dnOrder=&quot;9&quot; id=&quot;NETWORK LAYER&quot;&gt;
@@ -32848,7 +32848,7 @@
       &lt;/Long&gt;
     &lt;/Attributes&gt;
     &lt;Values dnOrder=&quot;1&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;tc2&quot; value=&quot;3515624&quot;/&gt;
+      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;tc2&quot; value=&quot;7031249&quot;/&gt;
     &lt;/Values&gt;
   &lt;/tc2&gt;
 &lt;/tc2&gt;
@@ -32864,7 +32864,7 @@
       &lt;/Float&gt;
     &lt;/Attributes&gt;
     &lt;Values dnOrder=&quot;1&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;15000.0&quot;/&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;30000.0&quot;/&gt;
     &lt;/Values&gt;
   &lt;/tc2&gt;
 &lt;/tc2&gt;
@@ -36606,7 +36606,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\definitions.h</file>
-         <hash>c669e8ef63f722b4299cc0d7f85dfdc5d94ba1c766737ca8c47763b3f76e91da</hash>
+         <hash>8f89b816449d94ecec2acd357ace341929cf7a5709ef2bffb10a2055783b5bea</hash>
       </entry>
       <entry>
          <file>..\src\config\default\device.h</file>
@@ -37506,7 +37506,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\peripheral\tc\plib_tc2.c</file>
-         <hash>b37ce49d270e7f8ce8ea4918afcb8bd16a17566a11376a5a1cd6fd6369919ec0</hash>
+         <hash>db976913706a8b2ab55a9aefc9e84b8039cea41df2c07ff710be040cafd9ac3e</hash>
       </entry>
       <entry>
          <file>..\src\config\default\peripheral\tc\plib_tc2.h</file>

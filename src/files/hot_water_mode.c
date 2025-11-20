@@ -208,6 +208,10 @@ void HOT_WATER_MODE_Tasks ( void )
         
         case HOT_WATER_IDLE:{
             
+            if( blockHotWaterBasedOnTimers() ) { 
+                break; 
+            }
+            
             if (getHeatpumpCompressorFrequency() != 0){
                 // Compressor is running
                 setSecondCounterHotwaterTask(0);

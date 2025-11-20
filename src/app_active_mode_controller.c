@@ -43,7 +43,7 @@ bool factorySettingResetInProgress = false;
 
  
  void printDebugInfo() {
-    //printCustomEepromParameters();
+    printCustomEepromParameters();
     if (DebugDipSwitch() == true) {
         /*
         SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
@@ -352,6 +352,66 @@ bool factorySettingResetInProgress = false;
  
  
  
+ 
+ void checkActivateSilentModeTimers() {
+     
+     if (getCheckSilentModeOnTimerCounter() < 10) {
+         return;
+     }
+     
+    /* Silent mode should always be acitve */
+    if (ReadSmartEeprom8(SEEP_ADDR_SILENT_MODE) == true) {
+        setCheckSilentModeOnTimerCounter(0);
+        return;
+    }     
+     
+    /* No need to set */
+    if (ReadSmartEeprom8(SEEP_ADDR_USE_SILENT_MODE_TIMERS) == false) {
+        if (getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE) != 2) {
+            return;
+        }
+        ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 0);
+        setCheckSilentModeOnTimerCounter(0);
+        return;
+    }
+
+    uint16_t raw = UserParameters[ADDRESS_DISPLAY_TIME - START_ADDRESS_USER_PARAMETERS]
+                                      [PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+
+    uint8_t hours   = (uint8_t)(raw >> 8);   // high byte
+    uint8_t minutes = (uint8_t)(raw & 0xFF); // low byte
+
+    uint16_t currentDisplayTimeAdjusted = (uint16_t)hours * 60u + (uint16_t)minutes;
+    
+    /* Active silent mode */
+    if (currentDisplayTimeAdjusted >= ReadSmartEeprom16(SEEP_ADDR_START_TIME_SILENT_MODE) && getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE) != 2) {
+        ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 2);
+        setCheckSilentModeOnTimerCounter(0);
+        return;
+    }
+    /* Active silent mode */
+    if (currentDisplayTimeAdjusted < ReadSmartEeprom16(SEEP_ADDR_END_TIME_SILENT_MODE) && getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE) != 2) {
+        ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 2);
+        setCheckSilentModeOnTimerCounter(0);
+        return;
+    }
+    
+    /* Disable silent mode */
+    if (currentDisplayTimeAdjusted < ReadSmartEeprom16(SEEP_ADDR_START_TIME_SILENT_MODE) 
+            && currentDisplayTimeAdjusted >= ReadSmartEeprom16(SEEP_ADDR_END_TIME_SILENT_MODE) 
+            && getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE) == 2) {
+        ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 0);
+        setCheckSilentModeOnTimerCounter(0);
+        return;
+    }    
+    
+    setCheckSilentModeOnTimerCounter(0);
+    return;
+ }
+ 
+ 
+ 
+ 
  bool checkForcedOffHeatpump()
  {
     // Checks every 10 seconds for the heatpumpForcedOff boolean and turns off
@@ -532,6 +592,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     // Start the counter for checking and writing the correct setpoint
     setWriteNewSetPointHeatpumpCounter(0); 
     setWriteHeatpumpRunningModeCounter(0); 
+    setCheckSilentModeOnTimerCounter(0);
     
     // Initialize every active mode
     HEATING_MODE_Initialize();
@@ -627,12 +688,16 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         // Every 10 seconds the setpoint in the heatpump is checked
         checkHeatpumpHeatingSetpoint();
         // Every 10 seconds the running mode of the heatpump is checked
-        checkHeatpumpRunningMode();
+        checkHeatpumpRunningMode();     
     }
     
     
     // Wait 30 seconds to receive data from heatpump before doing anything
     if(getsystemOnCounter() < 30) { return; }
+    
+    
+    // Check if silent mode needs to be activated based on Time of day
+    checkActivateSilentModeTimers();       
     
     
     

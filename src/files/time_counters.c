@@ -22,6 +22,7 @@ uint32_t secondCounterLegionella = UINT32_MAX;
 uint32_t waitingThreeWayValveSwitch = UINT32_MAX;
 uint32_t systemStuckProtectionCounter = UINT32_MAX;
 uint32_t writeNewSetPointHeatpumpCounter = UINT32_MAX;
+uint32_t checkSilentModeOnTimerCounter = UINT32_MAX;
 uint32_t waitForSettingEchoProtection = UINT32_MAX;
 uint32_t writeHeatpumpRunningModeCounter = UINT32_MAX;
 uint32_t writeHeatpumpForcedOffCounter = UINT32_MAX;
@@ -154,6 +155,10 @@ void UpdateCounters ( void )
                 writeNewSetPointHeatpumpCounter++;
             }
             
+            if (checkSilentModeOnTimerCounter >= 0 && checkSilentModeOnTimerCounter < UINT32_MAX) {
+                checkSilentModeOnTimerCounter++;
+            }
+            
             if (systemOnCounter >= 0 && systemOnCounter < UINT32_MAX) {
                 systemOnCounter++;
             }
@@ -241,6 +246,14 @@ uint32_t getWriteNewSetPointHeatpumpCounter() {
 
 void setWriteNewSetPointHeatpumpCounter(uint32_t value) {
     writeNewSetPointHeatpumpCounter = value;
+}
+
+uint32_t getCheckSilentModeOnTimerCounter() {
+    return checkSilentModeOnTimerCounter;
+}
+
+void setCheckSilentModeOnTimerCounter(uint32_t value) {
+    checkSilentModeOnTimerCounter = value;
 }
 
 uint32_t getsystemOnCounter() {
@@ -336,7 +349,7 @@ bool HeatpumpCommunicationTimerExpired ( void )
 }
 
 bool LoggingTimerExpired ( void ) {
-    
+    //if ((SecondCounterLogging >= TENTH_SECOND_COUNTER_1_MINUTE) && (getSettingChangedInDisplay() || getNewLogRequired())) {
     if ((SecondCounterLogging >= TENTH_SECOND_COUNTER_1_MINUTE) && (getSettingChangedInDisplay() || getNewLogRequired())) {
         SYS_CONSOLE_PRINT("***** EITHER DISPLAY || OR NEW SETTINGS REQUIRED ***** \r\n");
         setNewLogRequired(false);
@@ -360,8 +373,9 @@ bool LoggingTimerExpired ( void ) {
 
 bool LoggingTimerExpiredSettingsInterval ( void ) {
     //if (SecondCounterLogging >= TENTH_SECOND_COUNTER_30_SECONDS) 
-    //if (SecondCounterLogging >= TENTH_SECOND_COUNTER_1_MINUTE) 
-   if (SecondCounterLoggingSettingsOnly >= TENTH_SECOND_COUNTER_1_MINUTE) 
+    //if (SecondCounterLoggingSettingsOnly >= TENTH_SEC0ND_COUNTER_5_MINUTES) 
+    if (SecondCounterLoggingSettingsOnly >= TENTH_SECOND_COUNTER_1_MINUTE) 
+    //if (SecondCounterLoggingSettingsOnly >= TENTH_SECOND_COUNTER_30_SECONDS) 
     {   
         SecondCounterLoggingSettingsOnly = 0;
         return true;
