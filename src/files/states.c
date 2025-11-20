@@ -250,9 +250,26 @@ const char * getThreeWayValveState(int state) {
     return "-1, Unkown";
 }
 
-uint16_t getHeatpumpCompressorFrequency()
+uint16_t getActiveCompressorsMask()
 {
-    return RealTimeData[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    uint16_t mask = 0;
+
+    for (uint8_t i = 0; i < MAX_AMOUNT_HEATPUMPS_IN_CASCADE; i++) {
+        // For all heatpumps
+        uint16_t freq = getHeatpumpCompressorFrequency(i);
+        
+        if ((freq != 0) && (freq != UINT16_MAX)) {
+            // 
+            mask |= (uint16_t)(1 << i);
+        }
+    }
+
+    return mask;
+}
+
+uint16_t getHeatpumpCompressorFrequency(uint8_t whichHeatpump)
+{
+    return RealTimeData1[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][whichHeatpump];
 }
 
 int16_t getHeatpumpHeatingSetpoint()
@@ -267,7 +284,7 @@ int16_t getHeatpumpCoolingSetpoint()
 
 uint16_t getHeatpumpWaterFlow()
 {
-    return RealTimeData[ADDRESS_WATER_FLOW - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    return RealTimeData1[ADDRESS_WATER_FLOW - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE];
 }
 
 int16_t getHeatpumpRunningMode()
@@ -281,9 +298,9 @@ int16_t getHeatpumpOnOff()
 }
 
 
-int16_t getHeatpumpReturnWaterTemperature()
+int16_t getHeatpumpReturnWaterTemperature(uint8_t whichHeatpump)
 {
-    int16_t returnWaterTemperature = RealTimeData[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    int16_t returnWaterTemperature = RealTimeData1[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][whichHeatpump];
     
     if (returnWaterTemperature != TEMPERATURE_ALARM_VALUE){
         // If temperature is not an alarm value, do times 10
@@ -402,4 +419,9 @@ bool blockHotWaterBasedOnTimers(void)
     }
 
     return true;
+}
+
+uint16_t getCascadeSlaveStatus()
+{
+    return RealTimeData1[ADDRESS_CASCADE_SLAVES_ONLINE_1 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE];
 }

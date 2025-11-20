@@ -39,7 +39,7 @@ void adjustSetpointOffsetHotWaterMode()
         return;
     }
     
-    if ((getHeatpumpReturnWaterTemperature() >= (getHotwaterSetpoint() + hot_water_mode_data.setpointHotWaterOffset - 20)) 
+    if ((getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) >= (getHotwaterSetpoint() + hot_water_mode_data.setpointHotWaterOffset - 20)) 
             && (hot_water_mode_data.setpointHotWaterOffset != 0) 
             && (hot_water_mode_data.setpointHotWaterOffset != TEMPERATURE_ALARM_VALUE)){   
         // Retour water temperature has come within 2 degree celcius of setpoint, increase offset with 2 degrees
@@ -212,7 +212,7 @@ void HOT_WATER_MODE_Tasks ( void )
                 break; 
             }
             
-            if (getHeatpumpCompressorFrequency() != 0){
+            if (getActiveCompressorsMask() != 0){
                 // Compressor is running
                 setSecondCounterHotwaterTask(0);
                 //hot_water_mode_data.initialBufferTemp = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
@@ -233,7 +233,7 @@ void HOT_WATER_MODE_Tasks ( void )
             
             adjustSetpointOffsetHotWaterMode();
             
-            if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
+            if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting, so go back to heating
                 //TurnOffHeatingElementHotWaterBuffer();
                 hot_water_mode_data.HotwaterElementOn = false;
@@ -264,7 +264,7 @@ void HOT_WATER_MODE_Tasks ( void )
             
             adjustSetpointOffsetHotWaterMode();
             
-            if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
+            if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting, so go back to heating
                 //TurnOffHeatingElementHotWaterBuffer();
                 if(regulateOnTempSensorInBufferHotWater) {

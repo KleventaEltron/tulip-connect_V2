@@ -84,7 +84,7 @@ void APP_ReadCallbackDisplay(uintptr_t context)
             {
                 case DISPLAY_COMM_STATUS_WAITING_FOR_DATA_FROM_DISPLAY:
                 {   // Eerste byte ontvangen, kijken wat dit is
-                    if (RxBuffer[0] == THIS_DEVICE_ADDRESS)
+                    if (RxBuffer[0] == THIS_DEVICE_ADDRESS || RxBuffer[0] <= 16)
                     {   // Als het het address is van de modbus slave, vraag om de 7 andere bytes die hierna komen.
                         app_display_commData.commStatus = DISPLAY_COMM_STATUS_DEVICE_ADDRESS_RECEIVED;
                         SERCOM1_USART_Read(&RxBuffer[1], 7);

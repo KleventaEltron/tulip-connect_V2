@@ -84,7 +84,7 @@ int16_t determineCorrectCoolingSetpoint() {
             changeCompensationsCooling = false;
         }
         
-        if (getHeatpumpCompressorFrequency() == 0) {
+        if (getActiveCompressorsMask() == 0) {
             return coolingSetpoint;
         }          
         
@@ -204,7 +204,7 @@ void COOLING_MODE_Tasks ( void )
         
         case COOLING_IDLE:{
             
-            if (getHeatpumpCompressorFrequency() != 0){
+            if (getActiveCompressorsMask() != 0){
                 // Compressor is running
                 
                 if(regulateOnTempSensorInBufferCooling) {
@@ -221,7 +221,7 @@ void COOLING_MODE_Tasks ( void )
         
         case COOLING_RUNNING:{
             
-            if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
+            if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
                 if(regulateOnTempSensorInBufferCooling) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);

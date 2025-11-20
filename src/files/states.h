@@ -285,17 +285,19 @@ typedef struct{
 void resetActiveModeStates();
 uint16_t getActiveStateFromActiveMode(RUNNING_MODES state);
 const char * getActiveModeToString(RUNNING_MODES state);
-bool isDefrostingActive();
+//bool isDefrostingActive();
+uint16_t getDefrostingActiveMask();
 bool getResetFactorySettings();
 void setResetFactorySettings();
 bool getFactorySettingsResetInProgress();
-uint16_t getHeatpumpCompressorFrequency();
+uint16_t getActiveCompressorsMask();
+uint16_t getHeatpumpCompressorFrequency(uint8_t whichHeatpump);
 int16_t getHeatpumpHeatingSetpoint();
 int16_t getHeatpumpCoolingSetpoint();
 uint16_t getHeatpumpWaterFlow();
 int16_t getHeatpumpRunningMode();
 int16_t getHeatpumpOnOff();
-int16_t getHeatpumpReturnWaterTemperature();
+int16_t getHeatpumpReturnWaterTemperature(uint8_t whichHeatpump);
 const char * getThreeWayValveState(int state);
 bool blockHotWaterBasedOnTimers(void);
 
@@ -312,6 +314,7 @@ int16_t getHeatingSetpoint();
 int16_t getCoolingSetpoint();
 int16_t getHotwaterSetpoint();
 int16_t getHotwaterDelta();
+uint16_t getCascadeSlaveStatus();
 
 bool getCurrentDip1SwitchState();
 bool getPreviousDip1SwitchState();
