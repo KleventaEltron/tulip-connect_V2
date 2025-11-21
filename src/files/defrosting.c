@@ -25,16 +25,25 @@ bool getDefrostingElementOnState()
     return defrostingHotwaterElementOn;
 }
 
-bool isDefrostingActive()
+bool isDefrostingActive(void)
 {
-    if (RealTimeDataStatussen[ADDRESS_RUNNING_STATUS_1 - START_ADDRESS_REAL_TIME_DATA_STATUSSEN][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] & (1 << RUNNING_STATUS_1_SYSTEM_DEFROST_BIT)){
-        // Defrosting bit high and thus active
+    uint16_t value = RealTimeDataStatussen[ADDRESS_RUNNING_STATUS_1 - START_ADDRESS_REAL_TIME_DATA_STATUSSEN][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+
+    if (value & (1U << RUNNING_STATUS_1_SYSTEM_DEFROST_BIT)) {
         return true;
     }
-    else{
-        return false;
+
+    if (value & (1U << RUNNING_STATUS_1_PRIMARY_ANTI_FREEZE_BIT)) {
+        return true;
     }
+
+    if (value & (1U << RUNNING_STATUS_1_SECONDARY_ANTI_FREEZE_BIT)) {
+        return true;
+    }
+
+    return false;
 }
+
 
 void CheckDefrosting(HOT_WATER_HEATING_MODE_STATES currentHotWaterHeatingModeState, STERILIZATION_MODE currentSterilizationModeState)
 {    
