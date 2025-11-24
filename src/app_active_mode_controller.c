@@ -68,6 +68,7 @@ bool factorySettingResetInProgress = false;
            
         SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
         SYS_CONSOLE_PRINT(" FW:                   %d-%d-%d\n", (int)((THIS_FIRMWARE_VERSION / 1000000)), (int)((THIS_FIRMWARE_VERSION / 1000) % 1000), (int)(THIS_FIRMWARE_VERSION % 1000));
+        SYS_CONSOLE_PRINT(" Return diff:          %i\n", getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE));
         SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
         SYS_CONSOLE_PRINT(" Heatpump ON:          %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
         SYS_CONSOLE_PRINT(" Display pump on:      %s\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
@@ -84,7 +85,8 @@ bool factorySettingResetInProgress = false;
         SYS_CONSOLE_PRINT(" Heating seep temp:        %i\n", ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP));
         SYS_CONSOLE_PRINT(" Cooling seep temp:        %i\n\n", ReadSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP));
         SYS_CONSOLE_PRINT(" Return Compensation:        %i\n", (int16_t)getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE));
-        SYS_CONSOLE_PRINT(" Outlet Compensation:        %i\n\n", (int16_t)getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE));        
+        SYS_CONSOLE_PRINT(" Outlet Compensation:        %i\n\n", (int16_t)getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE));    
+        
         //SYS_CONSOLE_PRINT(" Hot W Curve:          %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_CURVE_SETTING));
         //SYS_CONSOLE_PRINT(" UnderF Curve:         %i\n", getDataFromMemoryCallable(ADDRESS_FLOOR_HEATING_CURVE_SETTING));
         

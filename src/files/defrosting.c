@@ -33,14 +33,6 @@ bool isDefrostingActive(void)
         return true;
     }
 
-    if (value & (1U << RUNNING_STATUS_1_PRIMARY_ANTI_FREEZE_BIT)) {
-        return true;
-    }
-
-    if (value & (1U << RUNNING_STATUS_1_SECONDARY_ANTI_FREEZE_BIT)) {
-        return true;
-    }
-
     return false;
 }
 
