@@ -27,6 +27,14 @@ void setTemperatureOperatingCycleCooling() {
         return;
     }    
     
+    if (checkIfDefrostingActive()) {
+        if(getActiveModeControllerPumpOffDueToDipSwitch1()) {
+            setActiveModeControllerPumpOffDueToDipSwitch1(false);
+        }
+        changeSettingCooling = false;
+        return;
+    }        
+    
     if (!regulateOnTempSensorInBufferCooling) {
         changeSettingCooling = false;
         return;
@@ -84,7 +92,7 @@ int16_t determineCorrectCoolingSetpoint() {
             changeCompensationsCooling = false;
         }
         
-        if (getHeatpumpCompressorFrequency() == 0) {
+        if (getActiveCompressorsMask() == 0) {
             return coolingSetpoint;
         }          
         
@@ -181,12 +189,14 @@ void COOLING_MODE_Tasks ( void )
     switch ( cooling_mode_data.state )
     {
         case COOLING_INITIALIZE:{
-            if(regulateOnTempSensorInBufferCooling) {
+            if(regulateOnTempSensorInBufferCooling && !checkIfDefrostingActive()) {
                 //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                 setActiveModeControllerPumpOffDueToDipSwitch1(true);
             }
              
-            CoolingActiveRelaySet();
+            if (ReadSmartEeprom8(SEEP_ADDR_COOLING_CONTACT_ENABLE) == true) {
+                CoolingActiveRelaySet();
+            }
             
             ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);
             ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);            
@@ -202,7 +212,7 @@ void COOLING_MODE_Tasks ( void )
         
         case COOLING_IDLE:{
             
-            if (getHeatpumpCompressorFrequency() != 0){
+            if (getActiveCompressorsMask() != 0){
                 // Compressor is running
                 
                 if(regulateOnTempSensorInBufferCooling) {
@@ -219,9 +229,9 @@ void COOLING_MODE_Tasks ( void )
         
         case COOLING_RUNNING:{
             
-            if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
+            if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
-                if(regulateOnTempSensorInBufferCooling) {
+                if(regulateOnTempSensorInBufferCooling && !checkIfDefrostingActive()) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                     setActiveModeControllerPumpOffDueToDipSwitch1(true);
                 }                

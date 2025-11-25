@@ -8,8 +8,8 @@
 #include "../time_counters.h"
 
 // Known parameters
-uint16_t RealTimeDataStatussen  [REGISTERS_AMOUNT_REAL_TIME_DATA_STATUSSEN] [PARAMETERS_ARRAY_LENGTH]; 
-uint16_t RealTimeData           [REGISTERS_AMOUNT_REAL_TIME_DATA]           [PARAMETERS_ARRAY_LENGTH]; 
+uint16_t RealTimeData1          [REGISTERS_AMOUNT_REAL_TIME_DATA_1]         [PARAMETERS_ARRAY_LENGTH] [MAX_AMOUNT_HEATPUMPS_IN_CASCADE]; 
+uint16_t RealTimeData2          [REGISTERS_AMOUNT_REAL_TIME_DATA_2]         [PARAMETERS_ARRAY_LENGTH]; 
 uint16_t UnitSystemParameters   [REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETERS]   [PARAMETERS_ARRAY_LENGTH]; 
 uint16_t UserParameters         [REGISTERS_AMOUNT_USER_PARAMETERS]          [PARAMETERS_ARRAY_LENGTH]; 
 uint16_t UserOrder              [REGISTERS_AMOUNT_USER_ORDER]               [PARAMETERS_ARRAY_LENGTH]; 
@@ -185,17 +185,21 @@ void ChangeHeatpumpSetting(uint16_t reg, uint16_t data)
 void SetDataInArrays(uint16_t address, uint16_t data)
 {
     // Known parameters
-    if ((address >= START_ADDRESS_REAL_TIME_DATA_STATUSSEN) && (address < START_ADDRESS_REAL_TIME_DATA_STATUSSEN + REGISTERS_AMOUNT_REAL_TIME_DATA_STATUSSEN))
+    if ((address >= START_ADDRESS_REAL_TIME_DATA_1) && (address < START_ADDRESS_REAL_TIME_DATA_1 + REGISTERS_AMOUNT_REAL_TIME_DATA_1))
     {
-        address -= START_ADDRESS_REAL_TIME_DATA_STATUSSEN;
-        RealTimeDataStatussen[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] = data;
-        RealTimeDataStatussen[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = data;
+        address -= START_ADDRESS_REAL_TIME_DATA_1;
+        
+        for (uint8_t i = 0; i < MAX_AMOUNT_HEATPUMPS_IN_CASCADE; i++){
+            // For all heatpumps in cascade
+            RealTimeData1[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][i] = data;
+            RealTimeData1[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY][i] = data;
+        }
     }
-    else if ((address >= START_ADDRESS_REAL_TIME_DATA) && (address < START_ADDRESS_REAL_TIME_DATA + REGISTERS_AMOUNT_REAL_TIME_DATA))
+    else if ((address >= START_ADDRESS_REAL_TIME_DATA_2) && (address < START_ADDRESS_REAL_TIME_DATA_2 + REGISTERS_AMOUNT_REAL_TIME_DATA_2))
     {
-        address -= START_ADDRESS_REAL_TIME_DATA;
-        RealTimeData[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] = data;
-        RealTimeData[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = data;
+        address -= START_ADDRESS_REAL_TIME_DATA_2;
+        RealTimeData2[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] = data;
+        RealTimeData2[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = data;
     }
     else if ((address >= START_ADDRESS_UNIT_SYSTEM_PARAMETERS) && (address < START_ADDRESS_UNIT_SYSTEM_PARAMETERS + REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETERS))
     {
@@ -242,7 +246,12 @@ void SetDataInArraysAtStartup(void)
     //for (i = START_ADDRESS_REAL_TIME_DATA_STATUSSEN; i < (START_ADDRESS_REAL_TIME_DATA_STATUSSEN + REGISTERS_AMOUNT_REAL_TIME_DATA_STATUSSEN); i++)
     //    SetDataInArrays(i, UINT16_MAX);
     
-    for (i = START_ADDRESS_REAL_TIME_DATA; i < (START_ADDRESS_REAL_TIME_DATA + REGISTERS_AMOUNT_REAL_TIME_DATA); i++)
+    SetDataInArrays(ADDRESS_CASCADE_SLAVES_ONLINE_1, UINT16_MAX); 
+    
+    for (i = ADDRESS_COMPRESSOR_OPERATING_FREQUENCY; i < (ADDRESS_COMPRESSOR_OPERATING_FREQUENCY + (REGISTERS_AMOUNT_REAL_TIME_DATA_1 - ADDRESS_COMPRESSOR_OPERATING_FREQUENCY)); i++)
+        SetDataInArrays(i, UINT16_MAX);
+    
+    for (i = START_ADDRESS_REAL_TIME_DATA_2; i < (START_ADDRESS_REAL_TIME_DATA_2 + REGISTERS_AMOUNT_REAL_TIME_DATA_2); i++)
         SetDataInArrays(i, UINT16_MAX);
     
     for (i = START_ADDRESS_UNIT_SYSTEM_PARAMETERS; i < (START_ADDRESS_UNIT_SYSTEM_PARAMETERS + REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETERS); i++)

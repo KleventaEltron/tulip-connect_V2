@@ -27,6 +27,14 @@ void setTemperatureOperatingCycleHotWaterCooling() {
         return;
     }    
     
+    if (checkIfDefrostingActive()) {
+        if(getActiveModeControllerPumpOffDueToDipSwitch1()) {
+            setActiveModeControllerPumpOffDueToDipSwitch1(false);
+        }
+        changeSettingHotWaterCooling = false;
+        return;
+    }      
+    
     if (!regulateOnTempSensorInBufferHotWaterCooling) {
         changeSettingHotWaterCooling = false;
         return;
@@ -161,7 +169,7 @@ void adjustSetpointOffset()
         return;
     }
     
-    if ((getHeatpumpReturnWaterTemperature() >= (hotwaterSetpoint + hot_water_cooling_mode_data.setpointHotWaterOffset - 20)) && (hot_water_cooling_mode_data.setpointHotWaterOffset != 0) && (hot_water_cooling_mode_data.setpointHotWaterOffset != TEMPERATURE_ALARM_VALUE)){   
+    if ((getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) >= (hotwaterSetpoint + hot_water_cooling_mode_data.setpointHotWaterOffset - 20)) && (hot_water_cooling_mode_data.setpointHotWaterOffset != 0) && (hot_water_cooling_mode_data.setpointHotWaterOffset != TEMPERATURE_ALARM_VALUE)){   
         // Retour water temperature has come within 2 degree celcius of setpoint, increase offset with 2 degrees
         hot_water_cooling_mode_data.setpointHotWaterOffset += ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT_OFFSET_STEPS);  
         return;
@@ -214,7 +222,7 @@ int16_t determineCorrectHotWaterCoolingSetpoint() {
             changeCompensationsHotWaterCooling = false;
         }
         
-        if (getHeatpumpCompressorFrequency() == 0) {               
+        if (getActiveCompressorsMask() == 0) {               
             return coolingSetpoint;
         }        
         
@@ -309,8 +317,10 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
         // Not in hot water state yet
         // Not on one of the hot water states or doing passive hot water
         // Hot water buffer is lower than setpoint - delta
-        hot_water_cooling_mode_data.state = HOT_WATER_COOLING_INITIALIZE_HOT_WATER;
-        return;
+        if( blockHotWaterBasedOnTimers() == false ) { 
+            hot_water_cooling_mode_data.state = HOT_WATER_COOLING_INITIALIZE_HOT_WATER;
+            return;
+        }
     }
     
     setActiveModeControllerHeatpumpSetpointHeating(determineCorrectHotWaterSetpoint());
@@ -333,12 +343,14 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
         case HOT_WATER_COOLING_INITIALIZE_COOLING:{
             // 0: Init cooling
             
-            if(regulateOnTempSensorInBufferHotWaterCooling) {
+            if(regulateOnTempSensorInBufferHotWaterCooling && !checkIfDefrostingActive()) {
                 //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                 setActiveModeControllerPumpOffDueToDipSwitch1(true);
             }
             
-            CoolingActiveRelaySet();
+            if (ReadSmartEeprom8(SEEP_ADDR_COOLING_CONTACT_ENABLE) == true) {
+                CoolingActiveRelaySet();
+            }
             
             ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);
             ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, 2);            
@@ -356,7 +368,7 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
         case HOT_WATER_COOLING_IDLE_COOLING:{
             // 1: Idle cooling
             
-            if (getHeatpumpCompressorFrequency() != 0){
+            if (getActiveCompressorsMask() != 0){
                 // Compressor is running
                 if(regulateOnTempSensorInBufferHotWaterCooling) {
                     setActiveModeControllerPumpOffDueToDipSwitch1(false);
@@ -373,10 +385,10 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
         case HOT_WATER_COOLING_MODE_RUNNING_ON_COOLING:{
             // 2: Running cooling
             
-            if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
+            if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
                 
-                if(regulateOnTempSensorInBufferHotWaterCooling) {
+                if(regulateOnTempSensorInBufferHotWaterCooling && !checkIfDefrostingActive()) {
                     setActiveModeControllerPumpOffDueToDipSwitch1(true);
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                 }
@@ -402,7 +414,9 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
             
             setSecondCounterHotwaterTask(0);
             
-            CoolingActiveRelaySet();
+            if (ReadSmartEeprom8(SEEP_ADDR_COOLING_CONTACT_ENABLE) == true) {
+                CoolingActiveRelaySet();
+            }
             
             //if(regulateOnTempSensorInBufferHotWaterCooling) {
                 //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
@@ -451,7 +465,7 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
             
             adjustSetpointOffset();
             
-            if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
+            if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting, so go back to heating
                 
                 hot_water_cooling_mode_data.HotwaterElementOn = false;
@@ -480,7 +494,7 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
             
             adjustSetpointOffset();
             
-            if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
+            if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting, so go back to heating
 
                 hot_water_cooling_mode_data.HotwaterElementOn = false;

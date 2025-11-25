@@ -126,7 +126,7 @@ bool sterilisationIsActivelyRunning() {
         sterilizationTemperatureOffset = ReadSmartEeprom16(SEEP_ADDR_STERILIZATION_SETPOINT_OFFSET_START);  
     }        
                
-    uint16_t retourWaterTemperature = getHeatpumpReturnWaterTemperature();
+    uint16_t retourWaterTemperature = getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE);
     int16_t sterilizationTemperature = (UnitSystemParameterL[ADDRESS_STERILIZATION_TEMPERATURE_SETTING - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] * 10);        
        
     if ((retourWaterTemperature >= (sterilizationTemperature + sterilizationTemperatureOffset - 20)) && (sterilizationTemperatureOffset != 0) && (sterilizationTemperatureOffset != TEMPERATURE_ALARM_VALUE)) {   

@@ -56,6 +56,16 @@ void ParseDisplayData(uint8_t * rxBuffer)
 
                 break;
             }
+            case ADDRESS_FREQUENCY_CONVERSION_MODE: {
+                if (data == 2) {
+                    WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, true);
+                } else {
+                    WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, false);
+                }
+                ChangeHeatpumpSetting(regAddress, data);
+                SetDataInArrays(regAddress, data);                       
+                break;
+            }
             case ADDRESS_HEATING_SET_TEMPERATURE: {
                 //if (UserParameters[ADDRESS_HEATING_FLOOR_HEATING_CURVE_SETTING - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] == HEATING_CURVE_SETTING_OFF)
                     WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT, data);
@@ -112,6 +122,8 @@ void ParseDisplayData(uint8_t * rxBuffer)
                 SetDataInArrays(regAddress, data);
                 break;
             }    
+            
+           
             // RESET NAAR FABRIEKS PARAMETERS
             case ADDRESS_CREW_CONTROL:{
                 
@@ -158,21 +170,26 @@ char * getDisplayStateToString(APP_DISPLAY_COMM_STATES displayState) {
 
 
 
-static uint16_t getDataFromMemory(uint16_t address)
+static uint16_t getDataFromMemory(uint16_t address, uint8_t whichHeatpump)
 {
     uint16_t returnData;
     
     // Known parameters
-    if ((address >= START_ADDRESS_REAL_TIME_DATA_STATUSSEN) && (address < START_ADDRESS_REAL_TIME_DATA_STATUSSEN + REGISTERS_AMOUNT_REAL_TIME_DATA_STATUSSEN))
+    if ((address >= START_ADDRESS_REAL_TIME_DATA_1) && (address < START_ADDRESS_REAL_TIME_DATA_1 + REGISTERS_AMOUNT_REAL_TIME_DATA_1))
     {
-        address -= START_ADDRESS_REAL_TIME_DATA_STATUSSEN;
-        //RealTimeDataStatussen[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
-        returnData = RealTimeDataStatussen[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY];
+        address -= START_ADDRESS_REAL_TIME_DATA_1;
+        
+        if ((whichHeatpump >= MASTER_HEATPUMP_IN_CASCADE) && (whichHeatpump <= SLAVE_HEATPUMP_15_IN_CASCADE)){
+            returnData = RealTimeData1[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY][whichHeatpump];
+        }
+        else{
+            returnData = UINT16_MAX; 
+        }
     }
-    else if ((address >= START_ADDRESS_REAL_TIME_DATA) && (address < START_ADDRESS_REAL_TIME_DATA + REGISTERS_AMOUNT_REAL_TIME_DATA))
+    else if ((address >= START_ADDRESS_REAL_TIME_DATA_2) && (address < START_ADDRESS_REAL_TIME_DATA_2 + REGISTERS_AMOUNT_REAL_TIME_DATA_2))
     {
-        address -= START_ADDRESS_REAL_TIME_DATA;
-        returnData = RealTimeData[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY];
+        address -= START_ADDRESS_REAL_TIME_DATA_2;
+        returnData = RealTimeData2[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY];
     }
     else if ((address >= START_ADDRESS_UNIT_SYSTEM_PARAMETERS) && (address < START_ADDRESS_UNIT_SYSTEM_PARAMETERS + REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETERS))
     {
@@ -261,7 +278,7 @@ static uint16_t getDataFromMemory(uint16_t address)
 
 
 uint16_t getDataFromMemoryCallable(uint16_t address){
-    return getDataFromMemory(address);
+    return getDataFromMemory(address, MASTER_HEATPUMP_IN_CASCADE);
 }
 
 
@@ -295,16 +312,18 @@ uint8_t FillTransmitBuffer(uint8_t* txBuffer, uint8_t* rxBuffer)
     {
         uint16_t data;
         uint8_t j = 3;
+        uint8_t modbusAddress = rxBuffer[MODBUS_ADDRESS_INDEX];
         uint16_t amountOfRegisters = ((uint16_t)rxBuffer[MODBUS_REG_AMOUNT_MSB_INDEX] << 8) + rxBuffer[MODBUS_REG_AMOUNT_LSB_INDEX]; 
         uint16_t readRegisterAddress = ((uint16_t)rxBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] << 8) + rxBuffer[MODBUS_REG_ADDRESS_LSB_INDEX];
 
-        txBuffer[MODBUS_ADDRESS_INDEX]          = 0x01;
+        //txBuffer[MODBUS_ADDRESS_INDEX]          = 0x01;
+        txBuffer[MODBUS_ADDRESS_INDEX]          = modbusAddress;
         txBuffer[MODBUS_COMMAND_INDEX]          = MB_FC_READ_REGS;
         txBuffer[MODBUS_BYTES_RETURNED_INDEX]   = (amountOfRegisters << 1);
         
         for (uint16_t i = readRegisterAddress; i < (readRegisterAddress + amountOfRegisters); i++)
         {
-            data = getDataFromMemory(i);
+            data = getDataFromMemory(i, (modbusAddress - 1));
             txBuffer[j++] = (uint8_t)(data >> 8);
             txBuffer[j++] = (uint8_t)(data >> 0);
         }               
@@ -323,11 +342,16 @@ uint8_t FillTransmitBuffer(uint8_t* txBuffer, uint8_t* rxBuffer)
 void GetDataFromHeatpump(void)
 {    
     // Known parameters
-    for (uint16_t i = 0; i < REGISTERS_AMOUNT_REAL_TIME_DATA_STATUSSEN; i++)
-        RealTimeDataStatussen[i][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = RealTimeDataStatussen[i][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    for (uint16_t i = 0; i < REGISTERS_AMOUNT_REAL_TIME_DATA_1; i++){
+        // For all registers in REAL_TIME_DATA_1
+        for (uint8_t j = 0; j < MAX_AMOUNT_HEATPUMPS_IN_CASCADE; j++){
+            // For all heatpumps in cascade
+            RealTimeData1[i][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY][j] = RealTimeData1[i][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][j];
+        }
+    }    
     
-    for (uint16_t i = 0; i < REGISTERS_AMOUNT_REAL_TIME_DATA; i++)
-        RealTimeData[i][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = RealTimeData[i][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    for (uint16_t i = 0; i < REGISTERS_AMOUNT_REAL_TIME_DATA_2; i++)
+        RealTimeData2[i][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = RealTimeData2[i][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
     
     for (uint16_t i = 0; i < REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETERS; i++)
         UnitSystemParameters[i][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = UnitSystemParameters[i][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
@@ -472,10 +496,11 @@ void GetDataFromHeatpump(void)
     }
     
     // For displaying the NTC's on the display:
-    RealTimeData[ADDRESS_WATER_TANK_TEMPERATURE - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = (GetNtcTemperature(NTC_HOT_WATER_BUFFER) / 10); 
-    RealTimeData[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = (GetNtcTemperature(NTC_HEATING_BUFFER) / 10);
+    RealTimeData1[ADDRESS_WATER_TANK_TEMPERATURE - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY][MASTER_HEATPUMP_IN_CASCADE] = (GetNtcTemperature(NTC_HOT_WATER_BUFFER) / 10); 
+    RealTimeData1[ADDRESS_RETURN_WATER_TEMPERATURE_T6 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY][MASTER_HEATPUMP_IN_CASCADE] = (GetNtcTemperature(NTC_HEATING_BUFFER) / 10);
     
-    
+    // Test for displaying more slaves in cascade
+    //RealTimeData1[ADDRESS_CASCADE_SLAVES_ONLINE_1 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY][MASTER_HEATPUMP_IN_CASCADE] = 0x0001;
     
     //TEST
     //RealTimeData[ADDRESS_BUFFER_TANK_FOR_HEATING_TEMPERATURE_VALUE - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = 25;

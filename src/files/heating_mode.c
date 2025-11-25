@@ -34,7 +34,16 @@ void setTemperatureOperatingCycleHeating() {
     if ((getsystemOnCounter() % 10) == 0) {
         changeSetting = true;
         return;
-    }    
+    }
+
+    if (checkIfDefrostingActive()) {
+        if(getActiveModeControllerPumpOffDueToDipSwitch1()) {
+            setActiveModeControllerPumpOffDueToDipSwitch1(false);
+        }
+        changeSetting = false;
+        return;
+    }
+    
     
     if (!regulateOnTempSensorInBufferHeating) {
         changeSetting = false;
@@ -93,7 +102,7 @@ int16_t determineCorrectHeatingSetpoint() {
             changeCompensationsHeating = false;
         }
         
-        if (getHeatpumpCompressorFrequency() == 0) {
+        if (getActiveCompressorsMask() == 0) {
             return heatingSetpoint;
         }             
         
@@ -101,7 +110,7 @@ int16_t determineCorrectHeatingSetpoint() {
             return heatingSetpoint;
         }
         
-        if((heatingSetpoint - getHeatpumpReturnWaterTemperature()) < 20  && changeCompensationsHeating) {
+        if((heatingSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) < 20  && changeCompensationsHeating) {
             ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE) - 1));
             ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE) - 1));            
             changeCompensationsHeating = false;
@@ -129,19 +138,19 @@ int16_t determineCorrectHeatingSetpoint() {
         return heatingSetpoint;
     }    
     
-    if (getHeatpumpCompressorFrequency() == 0) {
+    if (getActiveCompressorsMask() == 0) {
         heating_mode_data.stepperSetpoint = heatingSetpoint;
         return heatingSetpoint;
     }
     
-    if ((heatingSetpoint - getHeatpumpReturnWaterTemperature()) > 50) {
-        heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature() + 20;
+    if ((heatingSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) > 50) {
+        heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20;
         return heating_mode_data.stepperSetpoint;
     }
 
     
-    if (getHeatpumpReturnWaterTemperature() >= (heating_mode_data.stepperSetpoint - 20) && (heating_mode_data.stepperSetpoint - getHeatpumpReturnWaterTemperature()) <= 20) {
-        heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature() + 20;
+    if (getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) >= (heating_mode_data.stepperSetpoint - 20) && (heating_mode_data.stepperSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) <= 20) {
+        heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20;
         return heating_mode_data.stepperSetpoint;
         //heatingSetpoint += 20;
     }
@@ -257,7 +266,7 @@ void HEATING_MODE_Tasks ( void )
             heating_mode_data.stepperSetpoint = TEMPERATURE_ALARM_VALUE;
             setSecondCounterHeatingTask(UINT32_MAX);
             
-            if(regulateOnTempSensorInBufferHeating) {
+            if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
                 // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                 setActiveModeControllerPumpOffDueToDipSwitch1(true);
             }   
@@ -275,11 +284,11 @@ void HEATING_MODE_Tasks ( void )
         }
         
         case HEATING_IDLE:{                
-            if (getHeatpumpCompressorFrequency() != 0){
+            if (getActiveCompressorsMask() != 0){
                 // Compressor is running
                 setSecondCounterHeatingTask(0);
                 heating_mode_data.initialBufferTemp = heatingBufferTemperature;
-                heating_mode_data.stepperSetpoint = (getHeatpumpReturnWaterTemperature() + 20);
+                heating_mode_data.stepperSetpoint = (getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20);
                 
                 if(regulateOnTempSensorInBufferHeating) {
                     // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
@@ -295,14 +304,14 @@ void HEATING_MODE_Tasks ( void )
         
         case HEATING_RUNNING:{
             
-            if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
+            if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
                 //TurnOffHeatingElementHeatingBuffer();
                 heating_mode_data.HeatingElementOn = false;
                 heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
                 
-                if(regulateOnTempSensorInBufferHeating) {
+                if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                     setActiveModeControllerPumpOffDueToDipSwitch1(true);
                 }
@@ -334,14 +343,14 @@ void HEATING_MODE_Tasks ( void )
         
         case HEATING_RUNNING_WITH_ELEMENT_ON:{
             
-            if ((getHeatpumpCompressorFrequency() == 0) && (isDefrostingActive() == false)){
+            if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
                 //TurnOffHeatingElementHeatingBuffer();
                 heating_mode_data.HeatingElementOn = false;
                 heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
 
-                if(regulateOnTempSensorInBufferHeating) {
+                if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                     setActiveModeControllerPumpOffDueToDipSwitch1(true);
                 }

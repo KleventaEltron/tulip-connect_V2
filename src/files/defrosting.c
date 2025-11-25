@@ -25,16 +25,47 @@ bool getDefrostingElementOnState()
     return defrostingHotwaterElementOn;
 }
 
-bool isDefrostingActive(void)
+/*
+bool isDefrostingActiveIndex(uint8_t whichHeatpump)
 {
-    uint16_t value = RealTimeDataStatussen[ADDRESS_RUNNING_STATUS_1 - START_ADDRESS_REAL_TIME_DATA_STATUSSEN][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    uint16_t state = RealTimeData1[ADDRESS_RUNNING_STATUS_1 - START_ADDRESS_REAL_TIME_DATA_1]
+                                 [PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]
+                                 [whichHeatpump];
 
-    if (value & (1U << RUNNING_STATUS_1_SYSTEM_DEFROST_BIT)) {
+    return ( (state & (uint16_t)(1 << RUNNING_STATUS_1_SYSTEM_DEFROST_BIT)) != 0 );
+}
+*/
+
+uint16_t getDefrostingActiveMask()
+{
+    uint16_t mask = 0;
+    
+    for (uint8_t i = 0; i < MAX_AMOUNT_HEATPUMPS_IN_CASCADE; i++) {
+        // For all heatpumps
+        uint16_t state = RealTimeData1[ADDRESS_RUNNING_STATUS_1 - START_ADDRESS_REAL_TIME_DATA_1]
+                                     [PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]
+                                     [i];
+
+        if ( (state & (uint16_t)(1 << RUNNING_STATUS_1_SYSTEM_DEFROST_BIT)) != 0 ) {
+            // Defrost bit is high (defrosting active)
+            mask |= (uint16_t)(1 << i);
+        }
+    }
+    
+    return mask;
+}
+
+/*
+bool isDefrostingActive()
+{
+    if (RealTimeData1[ADDRESS_RUNNING_STATUS_1 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE] & (1 << RUNNING_STATUS_1_SYSTEM_DEFROST_BIT)){
+        // Defrosting bit high and thus active
         return true;
     }
 
     return false;
 }
+*/
 
 
 void CheckDefrosting(HOT_WATER_HEATING_MODE_STATES currentHotWaterHeatingModeState, STERILIZATION_MODE currentSterilizationModeState)
@@ -72,9 +103,9 @@ void CheckDefrosting(HOT_WATER_HEATING_MODE_STATES currentHotWaterHeatingModeSta
         }
     }
     
-    bool defrostingActiveInHeatpump = isDefrostingActive();
+    bool defrostingActiveInHeatpump = getDefrostingActiveMask();
     
-    if (defrostingActiveInHeatpump == true){
+    if (defrostingActiveInHeatpump != 0){
         // Defrosting is active in heatpump
         if (initialDefrostingTemperature == TEMPERATURE_ALARM_VALUE){
             // Initial defrosting temperature is alarm value (undefined), so give it a start value

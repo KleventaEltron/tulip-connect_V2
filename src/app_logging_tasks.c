@@ -407,7 +407,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
         {
             // Needed because the Heatpump needs some time to actually store the settings
             // Otherwise we would send back outdated settings
-            if (getSecondCounterDelayAfterChangingSettings() < 50) {
+            if (getSecondCounterDelayAfterChangingSettings() < 100) {
                 break;
             }
                 

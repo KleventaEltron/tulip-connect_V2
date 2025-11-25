@@ -111,7 +111,7 @@ bool neededThreeWayValveState(RUNNING_MODES selectedRunningMode) {
 
 void switchThreeWayValve() {
     // Heatpump must be off, and water flow must be 0 before we are allowed to switch the valve
-    if (RealTimeData[ADDRESS_WATER_FLOW - START_ADDRESS_REAL_TIME_DATA][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] != 0) {
+    if (getHeatpumpWaterFlow() != 0) {
         ChangeHeatpumpSetting(ADDRESS_ON_OFF, SET_HEATPUMP_OFF);
         setWaitingThreeWayValveSwitch(0);
         return;
