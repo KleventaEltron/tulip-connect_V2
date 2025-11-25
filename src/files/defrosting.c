@@ -62,11 +62,11 @@ bool isDefrostingActive()
         // Defrosting bit high and thus active
         return true;
     }
-    else{
-        return false;
-    }
+
+    return false;
 }
 */
+
 
 void CheckDefrosting(HOT_WATER_HEATING_MODE_STATES currentHotWaterHeatingModeState, STERILIZATION_MODE currentSterilizationModeState)
 {    
