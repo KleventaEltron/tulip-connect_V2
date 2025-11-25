@@ -39,6 +39,13 @@ bool getActiveModeControllerPumpOffDueToDipSwitch1() {
     return app_active_mode_controllerData.pumpOffDueToDipSwitch1;
 }
 
+
+bool checkIfDefrostingActive(void) {
+    uint16_t runningStatusOne = getDataFromMemoryCallable(ADDRESS_RUNNING_STATUS_1);
+    return (runningStatusOne & (1u << 1)) != 0;
+}
+
+
 void setActiveModeControllerHeatpumpSetpointHeating(int16_t newSetpoint) {
     app_active_mode_controllerData.setPointHeating = newSetpoint;
 }

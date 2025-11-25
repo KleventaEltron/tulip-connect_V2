@@ -44,65 +44,8 @@ bool factorySettingResetInProgress = false;
 
  
  void printDebugInfo() {
-    printCustomEepromParameters();
+    //printCustomEepromParameters();
     if (DebugDipSwitch() == true) {
-        /*
-        SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
-        SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
-        SYS_CONSOLE_PRINT(" 3-way valve mode:     %s\n", getThreeWayValveState(getStatus3WayValve()));
-        SYS_CONSOLE_PRINT(" 3-way needed state:   %s\n\n", getThreeWayValveState(getNeededValvePosition()));
-        SYS_CONSOLE_PRINT(" Heatpump state:       %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Display pump on:      %s\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Sterilisation active: %s\n\n", getSterilizationState(getSterilisationMode()));
-        SYS_CONSOLE_PRINT(" Counters:\n"
-                          "   Legionella:               %i\n"
-                          "   3-Way switch:             %i\n"
-                          "   Sys stuck protection:     %i\n"
-                          "   Day Counter:              %i\n"
-                          "   System On:                %i\n\n", getSecondCounterLegionella(), getWaitingThreeWayValveSwitch(), getSystemStuckProtectionCounter(),  ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION), getsystemOnCounter());
-        SYS_CONSOLE_PRINT(" Pumpstate:            %s\n", getCirculationPumpStateToString());
-        SYS_CONSOLE_PRINT(" Heatpump Setpoint:    %i\n", app_active_mode_controllerData.setPoint);
-        SYS_CONSOLE_PRINT(" Buffer:               %d\n", GetNtcTemperature(NTC_HEATING_BUFFER));
-        SYS_CONSOLE_PRINT(" Temp too low:         %d\n", getCircPumpData().temperatureTooLowForPumpToBeOn);
-        SYS_CONSOLE_PRINT(" Counter:              %d\n", (int)getSecondCounterCirculationPumpTask());
-        */
-        /*   
-        SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
-        SYS_CONSOLE_PRINT(" FW:                   %d-%d-%d\n", (int)((THIS_FIRMWARE_VERSION / 1000000)), (int)((THIS_FIRMWARE_VERSION / 1000) % 1000), (int)(THIS_FIRMWARE_VERSION % 1000));
-        SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
-        SYS_CONSOLE_PRINT(" Heatpump ON:          %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Display pump on:      %s\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Pump on Dip1:         %s\n", (!getActiveModeControllerPumpOffDueToDipSwitch1() ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Sys stuck protection: %i\n", getSystemStuckProtectionCounter());
-        SYS_CONSOLE_PRINT(" Sys on time:          %i\n\n", getsystemOnCounter());
-        //SYS_CONSOLE_PRINT(" Hot W/Cooling Curve:  %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_COOLING_CURVE_SETTINGS));
-        //SYS_CONSOLE_PRINT(" Cooling Curve:        %i\n", getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
-        //SYS_CONSOLE_PRINT(" Heating SETTY WETTY:        %i\n", (getHeatpumpHeatingSetpoint()*10));
-        SYS_CONSOLE_PRINT(" Heating Curve:        %i\n", getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
-        SYS_CONSOLE_PRINT(" Cooling Curve:        %i\n\n", getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
-        SYS_CONSOLE_PRINT(" Heating Curve seep:        %i\n", ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE));
-        SYS_CONSOLE_PRINT(" Cooling Curve seep:        %i\n\n", ReadSmartEeprom16(SEEP_ADDR_COOLING_CURVE));
-        SYS_CONSOLE_PRINT(" Heating seep temp:        %i\n", ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP));
-        SYS_CONSOLE_PRINT(" Cooling seep temp:        %i\n\n", ReadSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP));
-        SYS_CONSOLE_PRINT(" Return Compensation:        %i\n", (int16_t)getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE));
-        SYS_CONSOLE_PRINT(" Outlet Compensation:        %i\n\n", (int16_t)getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE));        
-        //SYS_CONSOLE_PRINT(" Hot W Curve:          %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_CURVE_SETTING));
-        //SYS_CONSOLE_PRINT(" UnderF Curve:         %i\n", getDataFromMemoryCallable(ADDRESS_FLOOR_HEATING_CURVE_SETTING));
-        */
-        /* EVU and thermostat
-        SYS_CONSOLE_PRINT("\r\nEVU:\n");
-        SYS_CONSOLE_PRINT(" EVU enabled:           %s\n", (ReadSmartEeprom8(SEEP_ADDR_EVU_CONTACT_ENABLE) ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" EVU contact:           %s\n\n", (GetDigitalInput2() ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Forced off:            %s\n", (app_active_mode_controllerData.heatpumpForcedOff ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Display was on:        %s\n\n", (ReadSmartEeprom8(SEEP_ADDR_HEATPUMP_WAS_ON_BEFORE_FORCED_OFF) ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Forced off counter:    %i\n", getWriteHeatpumpForcedOffCounter());
-        SYS_CONSOLE_PRINT(" HP turning on counter: %i\n\n", getWaitingTurningHeatpumpOn());
-        SYS_CONSOLE_PRINT(" Heatpump ON:           %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Display pump on:       %s\n\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" SW HP on thermostat:   %s\n", (ReadSmartEeprom8(SEEP_ADDR_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT) ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Thermostat contact:    %s\n", (GetThermostatContact() ? "True" : "False"));
-        */
-        
         if(GetDip3()) {
             printHeadOfStringBuffer();
         }
@@ -127,27 +70,6 @@ bool factorySettingResetInProgress = false;
         SYS_CONSOLE_PRINT(" Outlet temp. slave:  %i\n\n", RealTimeData1[ADDRESS_WATER_OUTLET_TEMPERATURE_T7 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][SLAVE_HEATPUMP_1_IN_CASCADE]);
         SYS_CONSOLE_PRINT(" Compr. running?:     %x\n\n", getActiveCompressorsMask());
         SYS_CONSOLE_PRINT(" Defrosting active:   %x\n\n", getDefrostingActiveMask());
-        //SYS_CONSOLE_PRINT(" Inlet temp. slave:   %i\n\n", getHeatpumpReturnWaterTemperature(SLAVE_HEATPUMP_1_IN_CASCADE));
-        /*
-        SYS_CONSOLE_PRINT("\r\nCIRCULATION PUMP:\n");
-        SYS_CONSOLE_PRINT(" State:                %s\n", getCirculationPumpStateToString());
-        SYS_CONSOLE_PRINT(" Pump ON:              %s\n", getStatusCirculationPump() ? "True" : "False");
-        SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterCirculationPumpTask());
-        SYS_CONSOLE_PRINT(" Temp. too low:        %s\n\n", getCirculationPumpData().temperatureTooLowForPumpToBeOn ? "True" : "False");
-        */
-        /*
-        SYS_CONSOLE_PRINT("\r\nDefrosting:\n");
-        SYS_CONSOLE_PRINT(" Defrosting active:    %s\n", isDefrostingActive() ? "True" : "False");
-        SYS_CONSOLE_PRINT(" Hotwater buffer:      %i\n", GetNtcTemperature(NTC_HOT_WATER_BUFFER));
-        SYS_CONSOLE_PRINT(" Initial defrost temp :%i\n", getInitialDefrostingTemperature());
-        SYS_CONSOLE_PRINT(" Defrosting element:   %s\n\n", getDefrostingElementOnState() ? "True" : "False");
-        */
-        /*
-        SYS_CONSOLE_PRINT("\r\n3-WAY VALVE:\n");
-        SYS_CONSOLE_PRINT(" 3-way valve mode:     %s\n", getThreeWayValveState(getStatus3WayValve()));
-        SYS_CONSOLE_PRINT(" 3-way needed state:   %s\n", getThreeWayValveState(getNeededValvePosition()));
-        //SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getWaitingThreeWayValveSwitch());
-        */
         
         if (getSterilisationMode() != OFF) {
             SYS_CONSOLE_PRINT("\r\nSTERILIZATION:\n");
@@ -159,14 +81,6 @@ bool factorySettingResetInProgress = false;
             SYS_CONSOLE_PRINT(" Ster. offset:         %i\n", getSterilizationTemperatureOffset());
             SYS_CONSOLE_PRINT(" Ster. element:        %s\n", getSterilizationElementOnState() ? "True" : "False");
             SYS_CONSOLE_PRINT(" Day counter:          %i\n\n", ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION));
-
-            //SYS_CONSOLE_PRINT(" Day counter:          %i\n", ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION));
-            //SYS_CONSOLE_PRINT(" Ster. run time:       %i\n", UnitSystemParameterL[ADDRESS_STERILIZATION_RUN_TIME - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
-            //SYS_CONSOLE_PRINT(" Ster. function:       %i\n", UnitSystemParameterL[ADDRESS_HIGH_TEMPERATURE_STERILIZATION_FUNCTION - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
-            //SYS_CONSOLE_PRINT(" Ster. start time:     %i\n", UnitSystemParameterL[ADDRESS_STERILIZATION_START_TIME - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
-            //SYS_CONSOLE_PRINT(" Ster. interval days:  %i\n", UnitSystemParameterL[ADDRESS_STERILIZATION_INTERVAL_DAYS - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
-            //SYS_CONSOLE_PRINT(" Current hour:         %i\n", (uint8_t)(UserParameters[ADDRESS_DISPLAY_TIME - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] >> 8));
-            //SYS_CONSOLE_PRINT(" Current minute:       %i\n\n", (uint8_t)UserParameters[ADDRESS_DISPLAY_TIME - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
         }
         else {
             int16_t heatpumpMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
@@ -180,8 +94,6 @@ bool factorySettingResetInProgress = false;
                 SYS_CONSOLE_PRINT(" Initial buffer temp.: %i\n", getHeatingModeData().initialBufferTemp);
                 SYS_CONSOLE_PRINT(" Stepper setpoint:     %i\n", getHeatingModeData().stepperSetpoint);
                 SYS_CONSOLE_PRINT(" Heating setpoint:     %i\n", getHeatingSetpoint());
-                //SYS_CONSOLE_PRINT(" Conditioning offset:  %i\n", getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE));
-                //SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
                 SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
                 SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getSecondCounterHeatingTask());
             }
@@ -194,7 +106,6 @@ bool factorySettingResetInProgress = false;
                 SYS_CONSOLE_PRINT(" Cooling setpoint:     %i\n", getCoolingSetpoint());
                 SYS_CONSOLE_PRINT(" Cooling buffer:       %i\n", GetNtcTemperature(NTC_HEATING_BUFFER));
                 SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
-                //SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
             }
             
             if (heatpumpMode == HOT_WATER) {
@@ -223,7 +134,6 @@ bool factorySettingResetInProgress = false;
                 SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterHotwaterTask());
                 SYS_CONSOLE_PRINT(" Hotwater element:     %s\n", getStatusHeatingElementHotWaterBuffer() ? "True" : "False");
                 SYS_CONSOLE_PRINT(" Hot water passive:    %s\n\n", getHotWaterHeatingModeData().hotwaterPassive ? "True" : "False");
-                //SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
                 SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
             }
             

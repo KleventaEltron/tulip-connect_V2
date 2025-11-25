@@ -27,6 +27,14 @@ void setTemperatureOperatingCycleHotWaterCooling() {
         return;
     }    
     
+    if (checkIfDefrostingActive()) {
+        if(getActiveModeControllerPumpOffDueToDipSwitch1()) {
+            setActiveModeControllerPumpOffDueToDipSwitch1(false);
+        }
+        changeSettingHotWaterCooling = false;
+        return;
+    }      
+    
     if (!regulateOnTempSensorInBufferHotWaterCooling) {
         changeSettingHotWaterCooling = false;
         return;
@@ -335,7 +343,7 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
         case HOT_WATER_COOLING_INITIALIZE_COOLING:{
             // 0: Init cooling
             
-            if(regulateOnTempSensorInBufferHotWaterCooling) {
+            if(regulateOnTempSensorInBufferHotWaterCooling && !checkIfDefrostingActive()) {
                 //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                 setActiveModeControllerPumpOffDueToDipSwitch1(true);
             }
@@ -380,7 +388,7 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
             if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
                 
-                if(regulateOnTempSensorInBufferHotWaterCooling) {
+                if(regulateOnTempSensorInBufferHotWaterCooling && !checkIfDefrostingActive()) {
                     setActiveModeControllerPumpOffDueToDipSwitch1(true);
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                 }

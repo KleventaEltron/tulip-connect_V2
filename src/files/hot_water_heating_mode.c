@@ -130,7 +130,15 @@ void setTemperatureOperatingCycleHotWaterHeating() {
     if ((getsystemOnCounter() % 10) == 0) {
         changeSettingHotWaterHeating = true;
         return;
-    }    
+    }
+
+    if (checkIfDefrostingActive()) {
+        if(getActiveModeControllerPumpOffDueToDipSwitch1()) {
+            setActiveModeControllerPumpOffDueToDipSwitch1(false);
+        }
+        changeSettingHotWaterHeating = false;
+        return;
+    }
           
     if (!regulateOnTempSensorInBufferHotWaterHeating) {
         changeSettingHotWaterHeating = false;
@@ -391,7 +399,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             hot_water_heating_mode_data.HeatingElementOn = false;
             setSecondCounterHeatingTask(UINT32_MAX);
             
-            if (regulateOnTempSensorInBufferHotWaterHeating) {
+            if (regulateOnTempSensorInBufferHotWaterHeating && !checkIfDefrostingActive()) {
                 // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                 setActiveModeControllerPumpOffDueToDipSwitch1(true);
             }
@@ -439,7 +447,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                 hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
                 
-                if (regulateOnTempSensorInBufferHotWaterHeating) {
+                if (regulateOnTempSensorInBufferHotWaterHeating && !checkIfDefrostingActive()) {
                     // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                     setActiveModeControllerPumpOffDueToDipSwitch1(true);
                 }
@@ -479,7 +487,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                 hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
                 
-                if (regulateOnTempSensorInBufferHotWaterHeating) {
+                if (regulateOnTempSensorInBufferHotWaterHeating && !checkIfDefrostingActive()) {
                     // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                     setActiveModeControllerPumpOffDueToDipSwitch1(true);
                 }

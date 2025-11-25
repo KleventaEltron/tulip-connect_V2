@@ -27,6 +27,14 @@ void setTemperatureOperatingCycleCooling() {
         return;
     }    
     
+    if (checkIfDefrostingActive()) {
+        if(getActiveModeControllerPumpOffDueToDipSwitch1()) {
+            setActiveModeControllerPumpOffDueToDipSwitch1(false);
+        }
+        changeSettingCooling = false;
+        return;
+    }        
+    
     if (!regulateOnTempSensorInBufferCooling) {
         changeSettingCooling = false;
         return;
@@ -181,7 +189,7 @@ void COOLING_MODE_Tasks ( void )
     switch ( cooling_mode_data.state )
     {
         case COOLING_INITIALIZE:{
-            if(regulateOnTempSensorInBufferCooling) {
+            if(regulateOnTempSensorInBufferCooling && !checkIfDefrostingActive()) {
                 //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                 setActiveModeControllerPumpOffDueToDipSwitch1(true);
             }
@@ -223,7 +231,7 @@ void COOLING_MODE_Tasks ( void )
             
             if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
-                if(regulateOnTempSensorInBufferCooling) {
+                if(regulateOnTempSensorInBufferCooling && !checkIfDefrostingActive()) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                     setActiveModeControllerPumpOffDueToDipSwitch1(true);
                 }                

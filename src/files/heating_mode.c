@@ -34,7 +34,16 @@ void setTemperatureOperatingCycleHeating() {
     if ((getsystemOnCounter() % 10) == 0) {
         changeSetting = true;
         return;
-    }    
+    }
+
+    if (checkIfDefrostingActive()) {
+        if(getActiveModeControllerPumpOffDueToDipSwitch1()) {
+            setActiveModeControllerPumpOffDueToDipSwitch1(false);
+        }
+        changeSetting = false;
+        return;
+    }
+    
     
     if (!regulateOnTempSensorInBufferHeating) {
         changeSetting = false;
@@ -257,7 +266,7 @@ void HEATING_MODE_Tasks ( void )
             heating_mode_data.stepperSetpoint = TEMPERATURE_ALARM_VALUE;
             setSecondCounterHeatingTask(UINT32_MAX);
             
-            if(regulateOnTempSensorInBufferHeating) {
+            if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
                 // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                 setActiveModeControllerPumpOffDueToDipSwitch1(true);
             }   
@@ -302,7 +311,7 @@ void HEATING_MODE_Tasks ( void )
                 heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
                 
-                if(regulateOnTempSensorInBufferHeating) {
+                if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                     setActiveModeControllerPumpOffDueToDipSwitch1(true);
                 }
@@ -341,7 +350,7 @@ void HEATING_MODE_Tasks ( void )
                 heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
 
-                if(regulateOnTempSensorInBufferHeating) {
+                if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                     setActiveModeControllerPumpOffDueToDipSwitch1(true);
                 }

@@ -300,6 +300,7 @@ int16_t getHeatpumpOnOff();
 int16_t getHeatpumpReturnWaterTemperature(uint8_t whichHeatpump);
 const char * getThreeWayValveState(int state);
 bool blockHotWaterBasedOnTimers(void);
+bool checkIfDefrostingActive(void);
 
 void setActiveModeControllerPumpOffDueToDipSwitch1 (bool target);
 bool getActiveModeControllerPumpOffDueToDipSwitch1 ();
