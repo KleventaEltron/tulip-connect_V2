@@ -524,6 +524,9 @@ void CheckHeatpumpStaticSettings() {
         ChangeHeatpumpSetting(ADDRESS_DEVICE_REACHING_TARGET_TEMPERATURE_AND_SHUTDOWN_MODE, 1);
     }
     
+    if (getHeatpumpData(ADDRESS_WATER_FLOW_SWITCH_PROTECTION_LOCK_SETTING) != 1) { 
+        ChangeHeatpumpSetting(ADDRESS_WATER_FLOW_SWITCH_PROTECTION_LOCK_SETTING, 1);
+    }
     
     uint16_t correctWaterFlowProtectionValue = getWaterFlowProtectionValue(getHeatpumpData(ADDRESS_CURRENT_UNIT_TOOLING_NO));
     
