@@ -1129,7 +1129,7 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
             break;               
         }               
         case ADDRESS_TULIP_CONNECT_PUMP_ON_TIME_AFTER_OFF_TIME_REACHED: {
-            WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TIME_AFTER_OFF_TIME_REACHED_SEC, value);
+            WriteSmartEeprom16(SEEP_ADDR_PUMP_LAG_TIME_AFTER_THERMOSTAT_CONTACT_DISCONNECTED_SEC, value);
             break;               
         }        
         
@@ -1345,6 +1345,16 @@ bool sendUpdatedSettingsList ( void ) {
     getSettingValuesByModusIndex(0x0800, 0x0831);    
     getSettingValuesByModusIndex(0x1000, 0x1024);      
     
+    if (ReadSmartEeprom16(ADDRESS_FREQUENCY_CONVERSION_MODE) == 2) {
+        WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, true);
+        WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE, false);
+    } else if (ReadSmartEeprom16(ADDRESS_FREQUENCY_CONVERSION_MODE) == 1) {
+        WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, false);
+        WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE, true);
+    } else {
+        WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, false);
+        WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE, false);
+    }    
     
     const uint32_t eep_addrs_8_bit_1[] = {
         SEEP_ADDR_EVU_CONTACT_ENABLE,       
@@ -1376,7 +1386,7 @@ bool sendUpdatedSettingsList ( void ) {
         SEEP_ADDR_HOT_WATER_MIN_TIME_IN_HOT_WATER_MODE,
         SEEP_ADDR_HOT_WATER_RUNNING_TIME_BEFORE_TURNING_ON_HEATING_ELEMENT,
         SEEP_ADDR_HOT_WATER_MAX_TIME_HEATING_ELEMENT_ON_IN_HEATING_MODE_SEC,
-        SEEP_ADDR_PUMP_ON_TIME_AFTER_OFF_TIME_REACHED_SEC,
+        SEEP_ADDR_PUMP_LAG_TIME_AFTER_THERMOSTAT_CONTACT_DISCONNECTED_SEC,
      };
     getSettingValuesByEepromList16Bit(eep_addrs_16_bit_2, sizeof(eep_addrs_16_bit_2)/sizeof(eep_addrs_16_bit_2[0]));    
     

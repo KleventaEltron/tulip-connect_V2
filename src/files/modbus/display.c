@@ -59,8 +59,13 @@ void ParseDisplayData(uint8_t * rxBuffer)
             case ADDRESS_FREQUENCY_CONVERSION_MODE: {
                 if (data == 2) {
                     WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, true);
+                    WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE, false);
+                } else if (data == 1) {
+                    WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, false);
+                    WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE, true);
                 } else {
                     WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, false);
+                    WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE, false);
                 }
                 ChangeHeatpumpSetting(regAddress, data);
                 SetDataInArrays(regAddress, data);                       

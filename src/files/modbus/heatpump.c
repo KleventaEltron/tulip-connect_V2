@@ -494,6 +494,7 @@ void FillBufferWithStartupSettings(bool doFirstTimeHeatpumpCommunicationSettings
         ChangeHeatpumpSetting(ADDRESS_STERILIZATION_START_TIME, 14); 
         ChangeHeatpumpSetting(ADDRESS_STERILIZATION_RUN_TIME, 10); 
         ChangeHeatpumpSetting(ADDRESS_STERILIZATION_TEMPERATURE_SETTING, 65); 
+        ChangeHeatpumpSetting(ADDRESS_HIGH_TEMPERATURE_STERILIZATION_FUNCTION, 0);
     }      
 }
 
@@ -515,11 +516,7 @@ void CheckHeatpumpStaticSettings() {
     if (getHeatpumpData(ADDRESS_UNIT_TEMPERATURE_CONTROL_METHOD) != UNIT_TEMPERATURE_CONTROL_METHOD_RETURN_WATER) { 
         ChangeHeatpumpSetting(ADDRESS_UNIT_TEMPERATURE_CONTROL_METHOD, UNIT_TEMPERATURE_CONTROL_METHOD_RETURN_WATER);
     }
-    
-    if (getHeatpumpData(ADDRESS_HIGH_TEMPERATURE_STERILIZATION_FUNCTION) != 0) { 
-        ChangeHeatpumpSetting(ADDRESS_HIGH_TEMPERATURE_STERILIZATION_FUNCTION, 0);
-    }
-    
+
     if (getHeatpumpData(ADDRESS_DEVICE_REACHING_TARGET_TEMPERATURE_AND_SHUTDOWN_MODE) != 1) { 
         ChangeHeatpumpSetting(ADDRESS_DEVICE_REACHING_TARGET_TEMPERATURE_AND_SHUTDOWN_MODE, 1);
     }
@@ -527,6 +524,14 @@ void CheckHeatpumpStaticSettings() {
     if (getHeatpumpData(ADDRESS_WATER_FLOW_SWITCH_PROTECTION_LOCK_SETTING) != 1) { 
         ChangeHeatpumpSetting(ADDRESS_WATER_FLOW_SWITCH_PROTECTION_LOCK_SETTING, 1);
     }
+    
+    if (getHeatpumpData(ADDRESS_COOLING_ANTI_FREEZE_MODE) != 1) {
+        ChangeHeatpumpSetting(ADDRESS_COOLING_ANTI_FREEZE_MODE, 1);
+    }
+    
+    if (getHeatpumpData(ADDRESS_COOLING_ANTI_FREEZE_TEMPERATURE_VALUE) != 0) {
+        ChangeHeatpumpSetting(ADDRESS_COOLING_ANTI_FREEZE_TEMPERATURE_VALUE, 0);
+    }    
     
     uint16_t correctWaterFlowProtectionValue = getWaterFlowProtectionValue(getHeatpumpData(ADDRESS_CURRENT_UNIT_TOOLING_NO));
     

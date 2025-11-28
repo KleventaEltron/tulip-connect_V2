@@ -733,6 +733,16 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
     CheckDefrosting(getHotWaterHeatingModeData().state, getSterilisationMode());
     
     
+    
+    /*
+     *
+     * circulatiepomp tasks
+     * 
+     */
+    CIRCULATION_PUMP_Tasks();    
+   
+    
+    
     /*
      *
      * If sterilization is actively running we must return until it is either
@@ -743,9 +753,6 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         return;
     }      
     
-    
-    
-    CIRCULATION_PUMP_Tasks();
     
     
     
