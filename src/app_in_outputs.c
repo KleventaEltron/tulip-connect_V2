@@ -142,6 +142,7 @@ void APP_IN_OUTPUTS_Tasks ( void )
                     {   // HIGH Z
                         RelayPotfree2_Toggle();
                     }
+                 * 
                 }
                 else
                 {   // External pulldown
@@ -157,6 +158,14 @@ void APP_IN_OUTPUTS_Tasks ( void )
                 while(1);
             }
             */
+            
+            if (GetDigitalInput2() == true) {
+                LedStatus_Set();
+            }
+            else{
+                LedStatus_Clear();
+            }
+            
             break;
         }
         /* TODO: implement your application state machine.*/

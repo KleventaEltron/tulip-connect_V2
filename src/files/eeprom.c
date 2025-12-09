@@ -257,7 +257,11 @@ void restoreEepromValuesToDefault(void)
     WriteSmartEeprom8(SEEP_ADDR_DIGITAL_INPUT_ONE, 0);
     WriteSmartEeprom8(SEEP_ADDR_COOLING_CONTACT_ENABLE, true);
     WriteSmartEeprom8(SEEP_ADDR_RELAIS_OUTPUT_TWO, 0);
-    WriteSmartEeprom8(SEEP_ADDR_RELAIS_OUTPUT_THREE, 0);    
+    WriteSmartEeprom8(SEEP_ADDR_RELAIS_OUTPUT_THREE, 0);
+
+    WriteSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_ENABLED, false);
+    WriteSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH_IN_EMERGENCY_MODE, 200);
+    WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP_IN_EMERGENCY_MODE, 20);
 }
 
 
@@ -348,6 +352,12 @@ void SmartEepromInit(void)
         WriteSmartEeprom8(SEEP_ADDR_COOLING_CONTACT_ENABLE, 1);
         WriteSmartEeprom8(SEEP_ADDR_RELAIS_OUTPUT_TWO, 0);
         WriteSmartEeprom8(SEEP_ADDR_RELAIS_OUTPUT_THREE, 0);
+    }
+    
+    if (thisEepromVersion < 2000011) {
+        WriteSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_ENABLED, false);
+        WriteSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH_IN_EMERGENCY_MODE, 200);
+        WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP_IN_EMERGENCY_MODE, 20);
     }
     
 
