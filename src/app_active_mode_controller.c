@@ -351,9 +351,14 @@ bool factorySettingResetInProgress = false;
      
     /* No need to set */
     if (ReadSmartEeprom8(SEEP_ADDR_USE_SILENT_MODE_TIMERS) == false) {
+        if(ReadSmartEeprom8(SEEP_ADDR_SILENT_MODE) == true) {
+            return;
+        }
+        
         if (getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE) != 2) {
             return;
         }
+        
         ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 0);
         setCheckSilentModeOnTimerCounter(0);
         return;

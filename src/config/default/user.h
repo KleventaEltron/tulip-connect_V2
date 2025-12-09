@@ -77,7 +77,6 @@ extern "C" {
 #define GetThermostatContact()  GetDigitalInput1()
 #define GetEvuContact()         GetDigitalInput3() 
 
-    
 // Dip switches:
 #define GetDip1()   ((NotInputDip1_Get()) ? false : true) 
 #define GetDip2()   ((NotInputDip2_Get()) ? false : true)
