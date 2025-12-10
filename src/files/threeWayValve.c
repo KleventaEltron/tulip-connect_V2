@@ -151,7 +151,7 @@ bool validateThreeWayValveStateOkay(RUNNING_MODES currentRunningMode) {
         return false;
     }
     // Reset system stuck counter
-    setSystemStuckProtectionCounter(0);    
+    //setSystemStuckProtectionCounter(0);    
     return true;
 }
 

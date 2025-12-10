@@ -75,7 +75,7 @@ bool factorySettingResetInProgress = false;
         SYS_CONSOLE_PRINT(" Heatpump ON:          %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
         SYS_CONSOLE_PRINT(" Display pump on:      %s\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
         SYS_CONSOLE_PRINT(" Pump on Dip1:         %s\n", (!getActiveModeControllerPumpOffDueToDipSwitch1() ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Sys stuck protection: %i\n", getSystemStuckProtectionCounter());
+        //SYS_CONSOLE_PRINT(" Sys stuck protection: %i\n", getSystemStuckProtectionCounter());
         SYS_CONSOLE_PRINT(" Sys on time:          %i\n\n", getsystemOnCounter());
         //SYS_CONSOLE_PRINT(" Hot W/Cooling Curve:  %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_COOLING_CURVE_SETTINGS));
         //SYS_CONSOLE_PRINT(" Cooling Curve:        %i\n", getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
@@ -577,7 +577,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     app_active_mode_controllerData.heatpumpForcedOff = false;
     
     // Reset the system stuck protection counter
-    setSystemStuckProtectionCounter(0);
+    //setSystemStuckProtectionCounter(0);
     
     // Start the counter for checking and writing the correct setpoint
     setWriteNewSetPointHeatpumpCounter(0); 
@@ -632,9 +632,9 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
      * Functions as a watchdog timer, if it is not constantly reset the system is stuck
      * 
      */ 
-    if (getSystemStuckProtectionCounter() >= SYS_STUCK_TIMER_MAX_LIMIT) {
-        SYS_RESET_SoftwareReset();
-    }    
+    //if (getSystemStuckProtectionCounter() >= SYS_STUCK_TIMER_MAX_LIMIT) {
+    //    SYS_RESET_SoftwareReset();
+    //}    
  
         
     /*
@@ -705,7 +705,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         TurnOffHeatingElementHotWaterBuffer();
         
         // Guard against system reset, because it is not actually stuck
-        setSystemStuckProtectionCounter(0);
+        //setSystemStuckProtectionCounter(0);
         return;
     }
     
