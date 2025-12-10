@@ -127,8 +127,17 @@ void APP_IN_OUTPUTS_Tasks ( void )
                 
                 SetOrClearAlarmLed();
                 
+                // From hardware rev.3 the Connect has a power resistor to quickly discharge the supercapacitor for faster turning off
                 if (RevNum >= 3){
                     // 
+                    if (getPowerFailStatus() == false) {
+                        // Is low, so no mains power
+                        EnableFastDischargePower(); // Enable the power resistor 
+                    }
+                    else {
+                        // Is high, has mains power
+                        DisableFastDischargePower(); // Enable the power resistor 
+                    }
                 }
                 
                 if (GetDigitalInput2() == true) {

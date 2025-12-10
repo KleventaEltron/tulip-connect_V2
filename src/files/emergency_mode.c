@@ -34,6 +34,7 @@ bool getHotWaterElementBoolFromEmergencyMode() {
 void EmergencyModeTasks()
 {      
     int16_t  heatingSetpoint = getHeatingSetpoint();
+    int16_t  hotwaterSetpoint = getHotwaterSetpoint();
     int16_t  delta = getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE);
     RUNNING_MODES currentRunningMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
     
@@ -60,5 +61,22 @@ void EmergencyModeTasks()
     else {
         // No heating mode
         HeatingElementOn = false;
+    }
+    
+    if (currentRunningMode == HOT_WATER || currentRunningMode == HOT_WATER_HEATING || currentRunningMode == HOT_WATER_COOLING){
+        // Hot water mode is active
+        if (hotwaterBoilerTemperature <= (hotwaterSetpoint - delta)) {
+            // Hot water temperature is lower than setpoint - delta
+            HotwaterElementOn = true;
+        }
+
+        if (hotwaterBoilerTemperature >= hotwaterSetpoint) {
+            // Hot water temperature reached setpoint
+            HotwaterElementOn = false;
+        }
+    } 
+    else {
+        // No hot water mode
+        HotwaterElementOn = false;
     }
 }
