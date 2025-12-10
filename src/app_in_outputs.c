@@ -17,6 +17,7 @@
 
 #include "files\hardware_rev.h"
 // Test only:
+#include "files\eeprom.h"
 //#include "files\modbus\heatpump_parameters.h"
 
 APP_IN_OUTPUTS_DATA app_in_outputsData;
@@ -126,6 +127,21 @@ void APP_IN_OUTPUTS_Tasks ( void )
                 
                 SetOrClearAlarmLed();
                 
+                if (RevNum >= 3){
+                    // 
+                }
+                
+                if (GetDigitalInput2() == true) {
+                    if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_ENABLED) == false) {
+                        WriteSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_ENABLED, true);
+                    }
+                }
+                else{ 
+                    if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_ENABLED) == true) {
+                        WriteSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_ENABLED, false);
+                    }
+                }
+                
                 /*
                 Reserved1_Set();
                 delayMS(1);
@@ -158,18 +174,17 @@ void APP_IN_OUTPUTS_Tasks ( void )
                 while(1);
             }
             */
-            
-            if (GetDigitalInput2() == true) {
+            /*
+            if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_ENABLED) == true) {
                 LedStatus_Set();
             }
-            else{
+            else {
                 LedStatus_Clear();
             }
-            
+            */
             break;
         }
         /* TODO: implement your application state machine.*/
-
 
         /* The default state should never be executed. */
         default:

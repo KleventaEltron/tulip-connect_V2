@@ -31,6 +31,7 @@
 #include "files/i2c/mac.h"
 
 #include "files/circulation_pump.h"
+#include "files/emergency_mode.h"
 
 
 
@@ -744,7 +745,16 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
      * circulatiepomp tasks
      * 
      */
-    CIRCULATION_PUMP_Tasks();    
+    CIRCULATION_PUMP_Tasks();
+
+
+
+    /*
+     *
+     * Emergency mode
+     * 
+     */
+    EmergencyModeTasks();     
    
     
     

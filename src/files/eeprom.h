@@ -104,9 +104,9 @@
 #define SEEP_ADDR_RELAIS_OUTPUT_TWO                          101 // 1 byte V2-0-5
 #define SEEP_ADDR_RELAIS_OUTPUT_THREE                        102 // 1 byte V2-0-5
 
-#define SEEP_ADDR_EMERGENCY_MODE_ENABLED                                103 // 1 byte  V2-0-11
-#define SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH_IN_EMERGENCY_MODE              104 // 2 bytes V2-0-11
-#define SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP_IN_EMERGENCY_MODE    106 // 2 bytes V2-0-11
+#define SEEP_ADDR_EMERGENCY_MODE_ENABLED                                103 // 2 byte  V2-0-11
+#define SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH_IN_EMERGENCY_MODE              105 // 2 bytes V2-0-11
+#define SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP_IN_EMERGENCY_MODE    107 // 2 bytes V2-0-11
 
 #define SEEP_ADDR
 
