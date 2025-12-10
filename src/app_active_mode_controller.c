@@ -713,7 +713,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
     /*
      * 
      * If the 3-way valve is not properly set to the right mode we need to return
-     * until the switch has happend succesfully
+     * until the switch has happened successfully
      *
      */
     if(!validateThreeWayValveStateOkay(app_active_mode_controllerData.currentRunningMode)) {
