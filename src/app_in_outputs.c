@@ -141,13 +141,24 @@ void APP_IN_OUTPUTS_Tasks ( void )
                 }
                 
                 if (GetDigitalInput2() == true) {
-                    if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_ENABLED) == false) {
-                        WriteSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_ENABLED, true);
+                    if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED) == false) {
+                        WriteSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED, true);
                     }
                 }
                 else{ 
-                    if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_ENABLED) == true) {
-                        WriteSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_ENABLED, false);
+                    if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED) == true) {
+                        WriteSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED, false);
+                    }
+                }
+                
+                if (GetDigitalInput3() == true) {
+                    if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED) == false) {
+                        WriteSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED, true);
+                    }
+                }
+                else{ 
+                    if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED) == true) {
+                        WriteSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED, false);
                     }
                 }
                 
@@ -183,14 +194,14 @@ void APP_IN_OUTPUTS_Tasks ( void )
                 while(1);
             }
             */
-            
+            /*
             if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_ENABLED) == true) {
                 LedStatus_Set();
             }
             else {
                 LedStatus_Clear();
             }
-            
+            */
             break;
         }
         /* TODO: implement your application state machine.*/

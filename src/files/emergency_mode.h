@@ -10,6 +10,8 @@ extern "C" {
     
 //bool goToActiveSterilization();
 void EmergencyModeTasks();
+bool getHeatingElementBoolFromEmergencyMode();
+bool getHotWaterElementBoolFromEmergencyMode();
     
 #ifdef __cplusplus
 }

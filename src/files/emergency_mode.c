@@ -20,63 +20,113 @@ bool sterilizationHotwaterElementOn = false;
 STERILIZATION_MODE sterilisationMode = OFF;
 */
 
-bool HeatingElementOn = false;
-bool HotwaterElementOn = false;
+bool HeatingElementEmergencyControl = false;
+bool HotwaterElementEmergencyControl = false;
 
 bool getHeatingElementBoolFromEmergencyMode() {
-    return HeatingElementOn;
+    return HeatingElementEmergencyControl;
 }
 
 bool getHotWaterElementBoolFromEmergencyMode() {
-    return HotwaterElementOn;
+    return HotwaterElementEmergencyControl;
+}
+
+void HeatingEmergencyMode(RUNNING_MODES currentRunningMode, int16_t delta)
+{
+    int16_t  heatingSetpoint = getHeatingSetpoint();
+    int16_t heatingBufferTemperature  = GetNtcTemperature(NTC_HEATING_BUFFER);
+    
+    if (heatingBufferTemperature == TEMPERATURE_ALARM_VALUE) {
+        HeatingElementEmergencyControl = false;
+        return;
+    }
+    
+    if (heatingSetpoint == TEMPERATURE_ALARM_VALUE) {
+        HeatingElementEmergencyControl = false;
+        return;
+    }
+    
+    if (currentRunningMode != HEATING && currentRunningMode != HOT_WATER_HEATING) {
+        // Heating mode not active
+        HeatingElementEmergencyControl = false;
+        return;
+    }
+    
+    if (heatingBufferTemperature <= (heatingSetpoint - delta)) {
+        // Buffer temperature is lower than setpoint - delta
+        HeatingElementEmergencyControl = true;
+        return;
+    }
+
+    if (heatingBufferTemperature >= heatingSetpoint) {
+        // Buffer temperature reached setpoint
+        HeatingElementEmergencyControl = false;
+        return;
+    }
+}
+
+void HotwaterEmergencyMode(RUNNING_MODES currentRunningMode, int16_t delta)
+{
+    int16_t  hotwaterSetpoint = getHotwaterSetpoint();
+    int16_t hotwaterBoilerTemperature = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
+    
+    if (hotwaterBoilerTemperature == TEMPERATURE_ALARM_VALUE) {
+        HotwaterElementEmergencyControl = false;
+        return;
+    }
+    
+    if (hotwaterSetpoint == TEMPERATURE_ALARM_VALUE) {
+        HotwaterElementEmergencyControl = false;
+        return;
+    }
+    
+    if (currentRunningMode != HOT_WATER && currentRunningMode != HOT_WATER_HEATING && currentRunningMode != HOT_WATER_COOLING) {
+        // Heating mode not active
+        HotwaterElementEmergencyControl = false;
+        return;
+    }
+    
+    if (hotwaterBoilerTemperature <= (hotwaterSetpoint - delta)) {
+        // Hot water temperature is lower than setpoint - delta
+        HotwaterElementEmergencyControl = true;
+        return;
+    }
+
+    if (hotwaterBoilerTemperature >= hotwaterSetpoint) {
+        // Hot water temperature reached setpoint
+        HotwaterElementEmergencyControl = false;
+        return;
+    }
 }
 
 void EmergencyModeTasks()
 {      
-    int16_t  heatingSetpoint = getHeatingSetpoint();
-    int16_t  hotwaterSetpoint = getHotwaterSetpoint();
-    int16_t  delta = getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE);
+    bool heatingEmergencyModeEnabled = ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED);
+    bool hotwaterEmergencyModeEnabled = ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED);
+    
     RUNNING_MODES currentRunningMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
+    int16_t  delta = getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE);
     
-    int16_t heatingBufferTemperature  = GetNtcTemperature(NTC_HEATING_BUFFER);
-    int16_t hotwaterBoilerTemperature = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
-    
-    if (delta != TEMPERATURE_ALARM_VALUE){
+    if (delta == TEMPERATURE_ALARM_VALUE){
         // If delta is not set (for example no communication with heatpump) set to 5 degrees.
         delta = 50; // 5 degrees Celcius
     }
     
-    if (currentRunningMode == HEATING || currentRunningMode == HOT_WATER_HEATING){
-        // Heating mode is active 
-        if (heatingBufferTemperature <= (heatingSetpoint - delta)) {
-            // Buffer temperature is lower than setpoint - delta
-            HeatingElementOn = true;
-        }
-
-        if (heatingBufferTemperature >= heatingSetpoint) {
-            // Buffer temperature reached setpoint
-            HeatingElementOn = false;
-        }
+    if (heatingEmergencyModeEnabled == true) {
+        // Do heating emergency mode
+        HeatingEmergencyMode(currentRunningMode, delta);
     }
     else {
-        // No heating mode
-        HeatingElementOn = false;
+        // No heating emergency mode
+        HeatingElementEmergencyControl = false;
     }
     
-    if (currentRunningMode == HOT_WATER || currentRunningMode == HOT_WATER_HEATING || currentRunningMode == HOT_WATER_COOLING){
-        // Hot water mode is active
-        if (hotwaterBoilerTemperature <= (hotwaterSetpoint - delta)) {
-            // Hot water temperature is lower than setpoint - delta
-            HotwaterElementOn = true;
-        }
-
-        if (hotwaterBoilerTemperature >= hotwaterSetpoint) {
-            // Hot water temperature reached setpoint
-            HotwaterElementOn = false;
-        }
-    } 
+    if (hotwaterEmergencyModeEnabled == true) {
+        // Do hotwater emergency mode
+        HotwaterEmergencyMode(currentRunningMode, delta);
+    }
     else {
-        // No hot water mode
-        HotwaterElementOn = false;
+        // No hotwater emergency mode
+        HotwaterElementEmergencyControl = false;
     }
 }

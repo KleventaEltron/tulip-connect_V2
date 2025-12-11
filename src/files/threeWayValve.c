@@ -11,6 +11,7 @@
 #include "sterilization.h"
 #include "states.h"
 #include "eeprom.h"
+#include "alarms.h"
 
 bool neededValvePosition = VALVE_IS_ON_HEATING_CIRCUIT;
 
@@ -141,8 +142,8 @@ bool validateThreeWayValveStateOkay(RUNNING_MODES currentRunningMode) {
     }
     setWaitingThreeWayValveSwitch(UINT32_MAX);
     
-    if (ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_ENABLED) == true) {
-        // Emergency mode active, no need for switching valve
+    if (GetAlarmStatus(ALARM_HEATPUMP_COMMUNICATION) == true) {
+        // Heatpump communication alarm, no need for switching the 3-way valve
         return true;
     }
     
