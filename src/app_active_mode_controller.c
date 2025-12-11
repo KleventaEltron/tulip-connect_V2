@@ -67,26 +67,26 @@ bool factorySettingResetInProgress = false;
         SYS_CONSOLE_PRINT(" Counter:              %d\n", (int)getSecondCounterCirculationPumpTask());
         */
            
-        SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
-        SYS_CONSOLE_PRINT(" FW:                   %d-%d-%d\n", (int)((THIS_FIRMWARE_VERSION / 1000000)), (int)((THIS_FIRMWARE_VERSION / 1000) % 1000), (int)(THIS_FIRMWARE_VERSION % 1000));
-        SYS_CONSOLE_PRINT(" Return diff:          %i\n", getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE));
-        SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
-        SYS_CONSOLE_PRINT(" Heatpump ON:          %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Display pump on:      %s\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Pump on Dip1:         %s\n", (!getActiveModeControllerPumpOffDueToDipSwitch1() ? "True" : "False"));
-        SYS_CONSOLE_PRINT(" Sys stuck protection: %i\n", getSystemStuckProtectionCounter());
-        SYS_CONSOLE_PRINT(" Sys on time:          %i\n\n", getsystemOnCounter());
+//        SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
+//        SYS_CONSOLE_PRINT(" FW:                   %d-%d-%d\n", (int)((THIS_FIRMWARE_VERSION / 1000000)), (int)((THIS_FIRMWARE_VERSION / 1000) % 1000), (int)(THIS_FIRMWARE_VERSION % 1000));
+//        SYS_CONSOLE_PRINT(" Return diff:          %i\n", getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE));
+//        SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
+//        SYS_CONSOLE_PRINT(" Heatpump ON:          %s\n", (UserParameters[ADDRESS_ON_OFF - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] ? "True" : "False"));
+//        SYS_CONSOLE_PRINT(" Display pump on:      %s\n", (ReadSmartEeprom8(SEEP_ADDR_DISPLAY_PUMP_ON) ? "True" : "False"));
+//        SYS_CONSOLE_PRINT(" Pump on Dip1:         %s\n", (!getActiveModeControllerPumpOffDueToDipSwitch1() ? "True" : "False"));
+//        SYS_CONSOLE_PRINT(" Sys stuck protection: %i\n", getSystemStuckProtectionCounter());
+//        SYS_CONSOLE_PRINT(" Sys on time:          %i\n\n", getsystemOnCounter());
         //SYS_CONSOLE_PRINT(" Hot W/Cooling Curve:  %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_COOLING_CURVE_SETTINGS));
         //SYS_CONSOLE_PRINT(" Cooling Curve:        %i\n", getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
         //SYS_CONSOLE_PRINT(" Heating SETTY WETTY:        %i\n", (getHeatpumpHeatingSetpoint()*10));
-        SYS_CONSOLE_PRINT(" Heating Curve:        %i\n", getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
-        SYS_CONSOLE_PRINT(" Cooling Curve:        %i\n\n", getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
-        SYS_CONSOLE_PRINT(" Heating Curve seep:        %i\n", ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE));
-        SYS_CONSOLE_PRINT(" Cooling Curve seep:        %i\n\n", ReadSmartEeprom16(SEEP_ADDR_COOLING_CURVE));
-        SYS_CONSOLE_PRINT(" Heating seep temp:        %i\n", ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP));
-        SYS_CONSOLE_PRINT(" Cooling seep temp:        %i\n\n", ReadSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP));
-        SYS_CONSOLE_PRINT(" Return Compensation:        %i\n", (int16_t)getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE));
-        SYS_CONSOLE_PRINT(" Outlet Compensation:        %i\n\n", (int16_t)getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE));    
+//        SYS_CONSOLE_PRINT(" Heating Curve:        %i\n", getDataFromMemoryCallable(ADDRESS_HEATING_CURVE_SETTING));
+//        SYS_CONSOLE_PRINT(" Cooling Curve:        %i\n\n", getDataFromMemoryCallable(ADDRESS_COOLING_CURVE_SETTING));
+//        SYS_CONSOLE_PRINT(" Heating Curve seep:        %i\n", ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE));
+//        SYS_CONSOLE_PRINT(" Cooling Curve seep:        %i\n\n", ReadSmartEeprom16(SEEP_ADDR_COOLING_CURVE));
+//        SYS_CONSOLE_PRINT(" Heating seep temp:        %i\n", ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP));
+//        SYS_CONSOLE_PRINT(" Cooling seep temp:        %i\n\n", ReadSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP));
+//        SYS_CONSOLE_PRINT(" Return Compensation:        %i\n", (int16_t)getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE));
+//        SYS_CONSOLE_PRINT(" Outlet Compensation:        %i\n\n", (int16_t)getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE));    
         
         //SYS_CONSOLE_PRINT(" Hot W Curve:          %i\n", getDataFromMemoryCallable(ADDRESS_HOT_WATER_CURVE_SETTING));
         //SYS_CONSOLE_PRINT(" UnderF Curve:         %i\n", getDataFromMemoryCallable(ADDRESS_FLOOR_HEATING_CURVE_SETTING));
@@ -110,8 +110,11 @@ bool factorySettingResetInProgress = false;
         }
         
         SYS_CONSOLE_PRINT("\r\nHEATPUMP:\n");
-        //SYS_CONSOLE_PRINT(" FW:                  %x:%x:%x:%x:%x:%x:%x:%x\n", eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]);
+        SYS_CONSOLE_PRINT(" FW:                  %x:%x:%x:%x:%x:%x:%x:%x\n", eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]);
         SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
+        SYS_CONSOLE_PRINT(" SILENT MODE EEPROM:  %i\n", ReadSmartEeprom8(SEEP_ADDR_SILENT_MODE));
+        SYS_CONSOLE_PRINT(" SILENT BOOST EEPROM: %i\n", ReadSmartEeprom8(SEEP_ADDR_BOOST_MODE));
+        SYS_CONSOLE_PRINT(" FREQ MODE CONNECT:   %i\n", getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE));
         SYS_CONSOLE_PRINT(" Active mode:         %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
         SYS_CONSOLE_PRINT(" Setpoint Heating:    %i\n", getHeatpumpHeatingSetpoint());
         SYS_CONSOLE_PRINT(" Setpoint Cooling:    %i\n", getHeatpumpCoolingSetpoint());
@@ -351,18 +354,11 @@ bool factorySettingResetInProgress = false;
      
     /* No need to set */
     if (ReadSmartEeprom8(SEEP_ADDR_USE_SILENT_MODE_TIMERS) == false) {
-        if(ReadSmartEeprom8(SEEP_ADDR_SILENT_MODE) == true) {
-            return;
-        }
-        
-        if (getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE) != 2) {
-            return;
-        }
-        
-        ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 0);
         setCheckSilentModeOnTimerCounter(0);
         return;
     }
+
+    /* Timers enabled from here */
 
     uint16_t raw = UserParameters[ADDRESS_DISPLAY_TIME - START_ADDRESS_USER_PARAMETERS]
                                       [PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
@@ -371,29 +367,39 @@ bool factorySettingResetInProgress = false;
     uint8_t minutes = (uint8_t)(raw & 0xFF); // low byte
 
     uint16_t currentDisplayTimeAdjusted = (uint16_t)hours * 60u + (uint16_t)minutes;
-    
-    /* Active silent mode */
-    if (currentDisplayTimeAdjusted >= ReadSmartEeprom16(SEEP_ADDR_START_TIME_SILENT_MODE) && getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE) != 2) {
-        ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 2);
-        setCheckSilentModeOnTimerCounter(0);
-        return;
+
+    uint16_t start = ReadSmartEeprom16(SEEP_ADDR_START_TIME_SILENT_MODE);
+    uint16_t end   = ReadSmartEeprom16(SEEP_ADDR_END_TIME_SILENT_MODE);
+
+    bool inWindow = false;
+
+    if (start < end) {
+        /* Same-day window: [start, end) */
+        inWindow = (currentDisplayTimeAdjusted >= start) &&
+                   (currentDisplayTimeAdjusted <  end);
+    } else if (start > end) {
+        /* Overnight window: [start, 24:00) U [0, end) */
+        inWindow = (currentDisplayTimeAdjusted >= start) ||
+                   (currentDisplayTimeAdjusted <  end);
+    } else {
+        /* start == end: treat as "no timed silent mode" (never in window) */
+        inWindow = false;
     }
-    /* Active silent mode */
-    if (currentDisplayTimeAdjusted < ReadSmartEeprom16(SEEP_ADDR_END_TIME_SILENT_MODE) && getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE) != 2) {
-        ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 2);
-        setCheckSilentModeOnTimerCounter(0);
-        return;
+
+    uint8_t currentMode = getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE);
+
+    if (inWindow) {
+        /* Inside window: ensure silent mode = 2 */
+        if (currentMode != 2) {
+            ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 2);
+        }
+    } else {
+        /* Outside window: ensure silent mode is not 2 */
+        if (currentMode == 2) {
+            ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 0);
+        }
     }
-    
-    /* Disable silent mode */
-    if (currentDisplayTimeAdjusted < ReadSmartEeprom16(SEEP_ADDR_START_TIME_SILENT_MODE) 
-            && currentDisplayTimeAdjusted >= ReadSmartEeprom16(SEEP_ADDR_END_TIME_SILENT_MODE) 
-            && getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE) == 2) {
-        ChangeHeatpumpSetting(ADDRESS_FREQUENCY_CONVERSION_MODE, 0);
-        setCheckSilentModeOnTimerCounter(0);
-        return;
-    }    
-    
+
     setCheckSilentModeOnTimerCounter(0);
     return;
  }

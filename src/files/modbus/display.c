@@ -36,6 +36,10 @@ void ParseDisplayData(uint8_t * rxBuffer)
             Setting.settingStatus = SETTING_SEND_STATUS_SETTING_FILLED;
         }
         */
+        if (regAddress != ADDRESS_DISPLAY_TIME) {
+            setSettingChangedInDisplay(true);
+            SYS_CONSOLE_PRINT("************** %i, %i ****************\r\n", regAddress, data);  
+        }        
         
         switch (regAddress)
         {
@@ -140,12 +144,6 @@ void ParseDisplayData(uint8_t * rxBuffer)
             }
                 
             default: {
-                //SetDataInDisplayArray(regAddress, data);
-                if (regAddress != ADDRESS_DISPLAY_TIME) {
-                    setSettingChangedInDisplay(true);
-                    SYS_CONSOLE_PRINT("************** %i, %i ****************\r\n", regAddress, data);  
-                }
-                 
                 ChangeHeatpumpSetting(regAddress, data);
                 SetDataInArrays(regAddress, data);
                 break;
