@@ -33,7 +33,25 @@ bool getHotWaterElementBoolFromEmergencyMode() {
 
 void HeatingEmergencyMode(RUNNING_MODES currentRunningMode, int16_t delta)
 {
-    int16_t  heatingSetpoint = getHeatingSetpoint();
+    int16_t  heatingSetpoint;
+    
+    if (ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE) > 0 && ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE) != UINT16_MAX) {
+        // Heating curve is set
+        heatingSetpoint = getHeatpumpHeatingSetpoint();
+        
+        if (heatingSetpoint != UINT16_MAX) {
+            // Working setpoint in heatpump
+            heatingSetpoint *= 10; 
+        } 
+        else{
+            // No communication with heatpump, get setpoint if available in eeprom
+            heatingSetpoint = getHeatingSetpoint(); 
+        }
+         
+    } else {
+        heatingSetpoint = getHeatingSetpoint(); 
+    }
+    
     int16_t heatingBufferTemperature  = GetNtcTemperature(NTC_HEATING_BUFFER);
     
     if (heatingBufferTemperature == TEMPERATURE_ALARM_VALUE) {
@@ -105,7 +123,7 @@ void EmergencyModeTasks()
     bool hotwaterEmergencyModeEnabled = ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED);
     
     RUNNING_MODES currentRunningMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
-    int16_t  delta = getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE);
+    int16_t  delta = getAirConditionerReturnDifference();
     
     if (delta == TEMPERATURE_ALARM_VALUE){
         // If delta is not set (for example no communication with heatpump) set to 5 degrees.

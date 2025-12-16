@@ -261,6 +261,7 @@ void restoreEepromValuesToDefault(void)
 
     WriteSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED, false);
     WriteSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED, false);
+    WriteSmartEeprom16(SEEP_ADDR_STERILIZATION_ON_HOLD, false);
 }
 
 
@@ -356,6 +357,7 @@ void SmartEepromInit(void)
     if (thisEepromVersion < 2000012) {
         WriteSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED, false);
         WriteSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED, false);
+        WriteSmartEeprom16(SEEP_ADDR_STERILIZATION_ON_HOLD, false);
     }
     
 

@@ -132,22 +132,52 @@ bool factorySettingResetInProgress = false;
         SYS_CONSOLE_PRINT(" Defrosting active:   %x\n\n", getDefrostingActiveMask());
         */
         
+        int16_t  heatingSetpoint;
+    
+        if (ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE) > 0 && ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE) != UINT16_MAX) {
+            heatingSetpoint = getHeatpumpHeatingSetpoint() * 10; 
+        } else {
+            heatingSetpoint = getHeatingSetpoint(); 
+        }
+        
         SYS_CONSOLE_PRINT("\r\nINFO: %s\n\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
         
         SYS_CONSOLE_PRINT(" Emergency Mode Heating:     %d\n", ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED));
-        SYS_CONSOLE_PRINT(" Heating setpoint:           %d\n", (int16_t)ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT));
-        SYS_CONSOLE_PRINT(" Delta:                      %d\n", (int16_t)getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE));
+        SYS_CONSOLE_PRINT(" Heating setpoint:           %d\n", (int16_t)heatingSetpoint);
+        SYS_CONSOLE_PRINT(" Delta:                      %d\n", (int16_t)getAirConditionerReturnDifference());
         SYS_CONSOLE_PRINT(" Buffer:                     %d\n", GetNtcTemperature(NTC_HEATING_BUFFER));
         SYS_CONSOLE_PRINT(" Heating element:            %d\n\n", getHeatingElementBoolFromEmergencyMode());
         
         SYS_CONSOLE_PRINT(" Emergency Mode Hotwater:    %d\n", ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED));
-        SYS_CONSOLE_PRINT(" Hotwater setpoint:          %d\n", (int16_t)ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT));
-        SYS_CONSOLE_PRINT(" Delta:                      %d\n", (int16_t)getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE));
+        SYS_CONSOLE_PRINT(" Hotwater setpoint:          %d\n", (int16_t)getHotwaterSetpoint());
+        SYS_CONSOLE_PRINT(" Delta:                      %d\n", (int16_t)getAirConditionerReturnDifference());
         SYS_CONSOLE_PRINT(" Boiler:                     %d\n", GetNtcTemperature(NTC_HOT_WATER_BUFFER));
         SYS_CONSOLE_PRINT(" Hot water element:          %d\n\n", getHotWaterElementBoolFromEmergencyMode());
         
         
-        if (getSterilisationMode() != OFF) {
+        /*
+        SYS_CONSOLE_PRINT("\r\nSTERILIZATION:\n");
+        SYS_CONSOLE_PRINT(" Sterilisation active:       %s\n", getSterilizationState(getSterilisationMode()));
+        SYS_CONSOLE_PRINT(" Emergency Mode Hotwater:    %d\n", ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED));
+        SYS_CONSOLE_PRINT(" ON HOLD:                    %d\n\n", ReadSmartEeprom16(SEEP_ADDR_STERILIZATION_ON_HOLD));
+        
+        //SYS_CONSOLE_PRINT(" Function  :           %i\n", UnitSystemParameterL[ADDRESS_HIGH_TEMPERATURE_STERILIZATION_FUNCTION - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
+        //SYS_CONSOLE_PRINT(" Interval days  :      %i\n", UnitSystemParameterL[ADDRESS_STERILIZATION_INTERVAL_DAYS - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
+        //SYS_CONSOLE_PRINT(" Start time  :         %i\n\n", UnitSystemParameterL[ADDRESS_STERILIZATION_START_TIME - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
+        
+        SYS_CONSOLE_PRINT(" Current hours  :      %i\n", (uint8_t)(UserParameters[ADDRESS_DISPLAY_TIME - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] >> 8));
+        SYS_CONSOLE_PRINT(" Current minutes  :    %i\n", (uint8_t)UserParameters[ADDRESS_DISPLAY_TIME - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
+        SYS_CONSOLE_PRINT(" Day counter:          %i\n\n", ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION));
+        
+        SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterLegionella());
+        SYS_CONSOLE_PRINT(" Temp reached time:    %i\n", getSterilizationReachedTemperatureTimeStamp());
+        SYS_CONSOLE_PRINT(" Hotwater buffer:      %i\n", GetNtcTemperature(NTC_HOT_WATER_BUFFER));
+        SYS_CONSOLE_PRINT(" Ster. temp.:          %i\n", UnitSystemParameterL[ADDRESS_STERILIZATION_TEMPERATURE_SETTING - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP]);
+        SYS_CONSOLE_PRINT(" Ster. offset:         %i\n", getSterilizationTemperatureOffset());
+        SYS_CONSOLE_PRINT(" Ster. element:        %s\n\n", getSterilizationElementOnState() ? "True" : "False");
+        */
+        
+        if (getSterilisationMode() != OFF && getSterilisationMode() != ON_HOLD) {
             SYS_CONSOLE_PRINT("\r\nSTERILIZATION:\n");
             SYS_CONSOLE_PRINT(" Sterilisation active: %s\n", getSterilizationState(getSterilisationMode()));
             SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterLegionella());

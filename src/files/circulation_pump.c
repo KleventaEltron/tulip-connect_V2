@@ -124,6 +124,16 @@ void checkHighBufferTemperature(int16_t currentTemperature, int16_t coolingSetpo
 
 bool canPumpRunInThisHeatingState(HEATING_MODE_DATA heatingModeData, COOLING_MODE_DATA coolingModeData, HOT_WATER_HEATING_MODE_DATA hotwaterHeatingModeData, HOT_WATER_COOLING_MODE_DATA hotwaterCoolingModeData)
 {
+    if (ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED) == true) {
+        // Emergency mode heating is enabled
+        if (( hotwaterHeatingModeData.state == HOT_WATER_HEATING_STATE_WAIT_FOR_MINIMAL_TIME_IN_HOT_WATER) ||
+            ( hotwaterHeatingModeData.state == HOT_WATER_HEATING_STATE_RUNNING_IN_HOT_WATER) ||
+            ( hotwaterHeatingModeData.state == HOT_WATER_HEATING_STATE_RUNNING_WITH_ELEMENT_ON_IN_HOT_WATER)) {
+            // If in hot water state in heating/hotwater mode, pump can run
+            return true;
+        }
+    }
+    
     if ((heatingModeData.state == HEATING_IDLE) || 
             (heatingModeData.state == HEATING_RUNNING) || 
             (coolingModeData.state == COOLING_IDLE) || 

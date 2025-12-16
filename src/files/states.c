@@ -390,6 +390,18 @@ int16_t getHotwaterDelta()
     return delta;
 }
 
+int16_t getAirConditionerReturnDifference()
+{
+    int16_t delta = UnitSystemParameters[ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE - START_ADDRESS_UNIT_SYSTEM_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    
+    if (delta != TEMPERATURE_ALARM_VALUE){
+        // Is not alarm value, so do times 10
+        delta *= 10;
+    }
+    
+    return delta;
+}
+
 
 bool blockHotWaterBasedOnTimers(void) 
 {
