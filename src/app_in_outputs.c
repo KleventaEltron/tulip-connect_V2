@@ -127,81 +127,8 @@ void APP_IN_OUTPUTS_Tasks ( void )
                 
                 SetOrClearAlarmLed();
                 
-                // From hardware rev.3 the Connect has a power resistor to quickly discharge the supercapacitor for faster turning off
-                if (RevNum >= 3){
-                    // 
-                    if (getPowerFailStatus() == false) {
-                        // Is low, so no mains power
-                        EnableFastDischargePower(); // Enable the power resistor 
-                    }
-                    else {
-                        // Is high, has mains power
-                        DisableFastDischargePower(); // Enable the power resistor 
-                    }
-                }
-                
-                if (GetDigitalInput2() == true) {
-                    if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED) == false) {
-                        WriteSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED, true);
-                    }
-                }
-                else{ 
-                    if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED) == true) {
-                        WriteSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED, false);
-                    }
-                }
-                
-                if (GetDigitalInput3() == true) {
-                    if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED) == false) {
-                        WriteSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED, true);
-                    }
-                }
-                else{ 
-                    if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED) == true) {
-                        WriteSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED, false);
-                    }
-                }
-                
-                /*
-                Reserved1_Set();
-                delayMS(1);
-                
-                if (Reserved1_Get() == true)
-                {   
-                    Reserved1_Clear();
-                    delayMS(1);
-                    if(Reserved1_Get() == true)
-                    {   // External pullup
-                        RelayPotfree1_Toggle();
-                    }
-                    else
-                    {   // HIGH Z
-                        RelayPotfree2_Toggle();
-                    }
-                 * 
-                }
-                else
-                {   // External pulldown
-                    RelayPotfree3_Toggle();
-                }
-                */
-                
             }   // End timer 1 sec    
             
-            /*
-            if ((!NotInputBtn1_Get()) == true)
-            {
-                while(1);
-            }
-            */
-            /*
-            if (ReadSmartEeprom8(SEEP_ADDR_EMERGENCY_MODE_ENABLED) == true) {
-                LedStatus_Set();
-            }
-            else {
-                LedStatus_Clear();
-            }
-            */
             break;
         }
         /* TODO: implement your application state machine.*/
