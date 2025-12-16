@@ -43,7 +43,19 @@ void setSterilisationMode(STERILIZATION_MODE newMode) {
 
 
 void checkNeedForSterilization() {
+    
     if(sterilisationMode != ACTIVE && goToActiveSterilization()){
+        // Sterilization is off and must go to active
+        
+        if (ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED) == true) {
+            // Sterilization must go on, but emergency mode is enabled, so don't go on, but set ON HOLD.
+            if (ReadSmartEeprom16(SEEP_ADDR_STERILIZATION_ON_HOLD) == false) {
+                WriteSmartEeprom16(SEEP_ADDR_STERILIZATION_ON_HOLD, true);
+            }
+            setSterilisationMode(ON_HOLD);
+            return;
+        }
+        
         setSterilisationMode(ACTIVE);
         setActiveModeControllerHeatpumpRunningMode(SET_MODE_HEATING);
         setActiveModeControllerPumpOffDueToDipSwitch1(false);
@@ -77,6 +89,12 @@ bool goToActiveSterilization() {
     uint8_t currentDisplayTimeMinutes = (uint8_t)UserParameters[ADDRESS_DISPLAY_TIME - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
     uint16_t dayCounter = ReadSmartEeprom16(SEEP_ADDR_DAY_COUNTER_STERILIZATION);
     uint16_t maxTimeOutOfSterilizationMode = ReadSmartEeprom16(SEEP_ADDR_STERILIZATION_MAX_TIME_OUT_OF_STERILIZATION_MODE_WITH_ELEMENT_ON);    
+    
+    if (ReadSmartEeprom16(SEEP_ADDR_STERILIZATION_ON_HOLD) == true && ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED) == false) {
+        // Hot water emergency mode disabled but sterilization was on hold, do sterilization and set ON HOLD on false.
+        WriteSmartEeprom16(SEEP_ADDR_STERILIZATION_ON_HOLD, false);
+        return true;
+    }
 
     // Passive sterilization check, if this triggers we need to return to active sterilization    
     //if (secondCounterLegionella != UINT32_MAX && (secondCounterLegionella > maxTimeOutOfSterilizationMode) && (heatingElementStatus == true)) {   
@@ -110,7 +128,26 @@ bool goToActiveSterilization() {
 bool sterilisationIsActivelyRunning() {
     if (sterilisationMode == OFF) {
         return false;
-    } 
+    }
+    
+    if (sterilisationMode == ON_HOLD) {
+        // No sterilization in ON HOLD mode
+        return false;
+    }
+    
+    if (ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED) == true) {
+        // Sterilization is ON or in Passive, but emergency mode is enabled, so don't go on, but set ON HOLD.
+        if (ReadSmartEeprom16(SEEP_ADDR_STERILIZATION_ON_HOLD) == false) {
+            WriteSmartEeprom16(SEEP_ADDR_STERILIZATION_ON_HOLD, true);
+        }
+        sterilizationHotwaterElementOn = false;
+        sterilizationReachedTemperatureTimeStamp = UINT32_MAX;
+        sterilizationTemperatureOffset = TEMPERATURE_ALARM_VALUE;
+        
+        setSecondCounterLegionella(UINT32_MAX);
+        setSterilisationMode(ON_HOLD);
+        return false;
+    }
     
     // If we start a fresh sterilization cycle we have to set some parameters before proceeding.
     if (sterilisationMode == ACTIVE && getSecondCounterLegionella() == UINT32_MAX) {
@@ -201,6 +238,11 @@ const char * getSterilizationState(STERILIZATION_MODE state) {
         
         case(ACTIVE): {
             return "2, ACTIVE";
+            break;
+        }
+        
+        case(ON_HOLD): {
+            return "3, ON HOLD";
             break;
         }
         

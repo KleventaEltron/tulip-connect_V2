@@ -104,6 +104,10 @@
 #define SEEP_ADDR_RELAIS_OUTPUT_TWO                          101 // 1 byte V2-0-5
 #define SEEP_ADDR_RELAIS_OUTPUT_THREE                        102 // 1 byte V2-0-5
 
+#define SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED                        103 // 2 bytes V2-0-12
+#define SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED                       105 // 2 bytes V2-0-12
+#define SEEP_ADDR_STERILIZATION_ON_HOLD                                 107 // 2 bytes V2-0-12
+
 #define SEEP_ADDR
 
 //.....

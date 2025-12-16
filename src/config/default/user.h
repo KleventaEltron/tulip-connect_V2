@@ -98,7 +98,10 @@ extern "C" {
 #define getSupercapacitorPowerGoodIndicator()   PwrCapGood_Get()
 
         
-#define getInputSlideSwitch()                NotInputSw1_Get()        
+#define getInputSlideSwitch()                NotInputSw1_Get()  
+    
+#define EnableFastDischargePower()           Hwid1Wire_Set()
+#define DisableFastDischargePower()          Hwid1Wire_Clear()
         
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus

@@ -19,6 +19,7 @@ typedef enum{
     OFF=0,
     PASSIVE,
     ACTIVE,
+    ON_HOLD,
 } STERILIZATION_MODE;    
     
     
@@ -315,6 +316,7 @@ int16_t getHeatingSetpoint();
 int16_t getCoolingSetpoint();
 int16_t getHotwaterSetpoint();
 int16_t getHotwaterDelta();
+int16_t getAirConditionerReturnDifference();
 uint16_t getCascadeSlaveStatus();
 
 bool getCurrentDip1SwitchState();

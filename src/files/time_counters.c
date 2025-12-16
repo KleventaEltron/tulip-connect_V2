@@ -20,7 +20,7 @@ uint32_t SecondCounterLoggingSDCard = UINT32_MAX;
 uint32_t systemOnCounter = UINT32_MAX;
 uint32_t secondCounterLegionella = UINT32_MAX;
 uint32_t waitingThreeWayValveSwitch = UINT32_MAX;
-uint32_t systemStuckProtectionCounter = UINT32_MAX;
+//uint32_t systemStuckProtectionCounter = UINT32_MAX;
 uint32_t writeNewSetPointHeatpumpCounter = UINT32_MAX;
 uint32_t checkSilentModeOnTimerCounter = UINT32_MAX;
 uint32_t waitForSettingEchoProtection = UINT32_MAX;
@@ -146,11 +146,11 @@ void UpdateCounters ( void )
             if (waitingThreeWayValveSwitch >= 0 && waitingThreeWayValveSwitch < UINT32_MAX) {
                 waitingThreeWayValveSwitch++;
             }
-
+            /*
             if (systemStuckProtectionCounter >= 0 && systemStuckProtectionCounter < UINT32_MAX) {
                 systemStuckProtectionCounter++;
             }            
-            
+            */
             if (writeNewSetPointHeatpumpCounter >= 0 && writeNewSetPointHeatpumpCounter < UINT32_MAX) {
                 writeNewSetPointHeatpumpCounter++;
             }
@@ -231,7 +231,7 @@ uint32_t getWaitingThreeWayValveSwitch() {
 void setWaitingThreeWayValveSwitch(uint32_t value) {
     waitingThreeWayValveSwitch = value;
 }
-
+/*
 uint32_t getSystemStuckProtectionCounter() {
     return systemStuckProtectionCounter;
 }
@@ -239,7 +239,7 @@ uint32_t getSystemStuckProtectionCounter() {
 void setSystemStuckProtectionCounter(uint32_t value) {
     systemStuckProtectionCounter = value;
 }
-
+*/
 uint32_t getWriteNewSetPointHeatpumpCounter() {
     return writeNewSetPointHeatpumpCounter;
 }

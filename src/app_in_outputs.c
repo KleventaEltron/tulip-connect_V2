@@ -17,6 +17,7 @@
 
 #include "files\hardware_rev.h"
 // Test only:
+#include "files\eeprom.h"
 //#include "files\modbus\heatpump_parameters.h"
 
 APP_IN_OUTPUTS_DATA app_in_outputsData;
@@ -126,41 +127,11 @@ void APP_IN_OUTPUTS_Tasks ( void )
                 
                 SetOrClearAlarmLed();
                 
-                /*
-                Reserved1_Set();
-                delayMS(1);
-                
-                if (Reserved1_Get() == true)
-                {   
-                    Reserved1_Clear();
-                    delayMS(1);
-                    if(Reserved1_Get() == true)
-                    {   // External pullup
-                        RelayPotfree1_Toggle();
-                    }
-                    else
-                    {   // HIGH Z
-                        RelayPotfree2_Toggle();
-                    }
-                }
-                else
-                {   // External pulldown
-                    RelayPotfree3_Toggle();
-                }
-                */
-                
             }   // End timer 1 sec    
             
-            /*
-            if ((!NotInputBtn1_Get()) == true)
-            {
-                while(1);
-            }
-            */
             break;
         }
         /* TODO: implement your application state machine.*/
-
 
         /* The default state should never be executed. */
         default:
