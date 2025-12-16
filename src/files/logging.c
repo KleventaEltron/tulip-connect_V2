@@ -1345,10 +1345,10 @@ bool sendUpdatedSettingsList ( void ) {
     getSettingValuesByModusIndex(0x0800, 0x0831);    
     getSettingValuesByModusIndex(0x1000, 0x1024);      
     
-    if (ReadSmartEeprom16(ADDRESS_FREQUENCY_CONVERSION_MODE) == 2) {
+    if (getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE) == 2) {
         WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, true);
         WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE, false);
-    } else if (ReadSmartEeprom16(ADDRESS_FREQUENCY_CONVERSION_MODE) == 1) {
+    } else if (getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE) == 1) {
         WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, false);
         WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE, true);
     } else {
