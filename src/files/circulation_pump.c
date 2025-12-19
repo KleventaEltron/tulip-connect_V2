@@ -100,7 +100,7 @@ void checkLowBufferTemperature(int16_t currentTemperature, int16_t heatingSetpoi
         return;
     }
     
-    if (currentTemperature > (heatingSetpoint - pumpOffThreshold + pumpBackOnThreshold)){
+    if (currentTemperature > (heatingSetpoint - pumpBackOnThreshold)){
         // Temperature is higher again than setpoint - threshold + threshold_back_on
         circulation_pump_data.temperatureTooLowForPumpToBeOn = false;
         return;
@@ -115,7 +115,7 @@ void checkHighBufferTemperature(int16_t currentTemperature, int16_t coolingSetpo
         return;
     }
     
-    if (currentTemperature < (coolingSetpoint + pumpOffThreshold - pumpBackOnThreshold)){
+    if (currentTemperature < (coolingSetpoint + pumpBackOnThreshold)){
         // Temperature is higher again than setpoint - threshold + threshold_back_on
         circulation_pump_data.temperatureTooHighForPumpToBeOn = false;
         return;

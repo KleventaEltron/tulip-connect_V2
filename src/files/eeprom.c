@@ -226,12 +226,12 @@ void restoreEepromValuesToDefault(void)
     WriteSmartEeprom8 (SEEP_ADDR_CONNECT_HAS_EVER_CONTACTED_HEATPUMP, false);
     
     WriteSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW, 100);
-    WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP, 20);
+    WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP, 80);
     
     WriteSmartEeprom8 (SEEP_ADDR_DISPLAY_PUMP_ON, true);
     
     WriteSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH, 100);
-    WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP, 20);
+    WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP, 80);
     
     WriteSmartEeprom16(SEEP_ADDR_HEATING_CURVE, 0);
     WriteSmartEeprom16(SEEP_ADDR_COOLING_CURVE, 0);
@@ -274,14 +274,14 @@ void printCustomEepromParameters() {
 //         SYS_CONSOLE_PRINT("SEEP_ADDR_SILENT_MODE:                               %i\n", ReadSmartEeprom8(SEEP_ADDR_SILENT_MODE));
 //         SYS_CONSOLE_PRINT("SEEP_ADDR_START_TIME_SILENT_MODE:                    %i\n", ReadSmartEeprom16(SEEP_ADDR_START_TIME_SILENT_MODE));
 //         SYS_CONSOLE_PRINT("SEEP_ADDR_END_TIME_SILENT_MODE:                      %i\n", ReadSmartEeprom16(SEEP_ADDR_END_TIME_SILENT_MODE));
-                    SYS_CONSOLE_PRINT(" State:                %s\n\n", getHotwaterHeatingStateToString());
-         SYS_CONSOLE_PRINT("TIME DISPLAY:                                        %i\n", ((uint8_t)(UserParameters[ADDRESS_DISPLAY_TIME - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] >> 8) * 60));
+//                    SYS_CONSOLE_PRINT(" State:                %s\n\n", getHotwaterHeatingStateToString());
+//         SYS_CONSOLE_PRINT("TIME DISPLAY:                                        %i\n", ((uint8_t)(UserParameters[ADDRESS_DISPLAY_TIME - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] >> 8) * 60));
 //         SYS_CONSOLE_PRINT("SEEP_ADDR_END_TIME_SILENT_MODE:                      %i\n", ReadSmartEeprom16(SEEP_ADDR_END_TIME_SILENT_MODE));
         //SYS_CONSOLE_PRINT("SEEP_ADDR_BOOST_MODE:                                %i\n", ReadSmartEeprom8(SEEP_ADDR_BOOST_MODE));
 //         SYS_CONSOLE_PRINT("SEEP_ADDR_USE_SILENT_MODE_TIMERS:                    %i\n", ReadSmartEeprom8(SEEP_ADDR_USE_SILENT_MODE_TIMERS));
-        SYS_CONSOLE_PRINT("SEEP_ADDR_BLOCK_HOTWATER:                            %i\n", ReadSmartEeprom8(SEEP_ADDR_BLOCK_HOTWATER));
-        SYS_CONSOLE_PRINT("SEEP_ADDR_START_TIME_BLOCK_HOTWATER:                 %i\n", ReadSmartEeprom16(SEEP_ADDR_START_TIME_BLOCK_HOTWATER));
-        SYS_CONSOLE_PRINT("SEEP_ADDR_END_TIME_BLOCK_HOTWATER:                   %i\n", ReadSmartEeprom16(SEEP_ADDR_END_TIME_BLOCK_HOTWATER));
+//        SYS_CONSOLE_PRINT("SEEP_ADDR_BLOCK_HOTWATER:                            %i\n", ReadSmartEeprom8(SEEP_ADDR_BLOCK_HOTWATER));
+//        SYS_CONSOLE_PRINT("SEEP_ADDR_START_TIME_BLOCK_HOTWATER:                 %i\n", ReadSmartEeprom16(SEEP_ADDR_START_TIME_BLOCK_HOTWATER));
+//        SYS_CONSOLE_PRINT("SEEP_ADDR_END_TIME_BLOCK_HOTWATER:                   %i\n", ReadSmartEeprom16(SEEP_ADDR_END_TIME_BLOCK_HOTWATER));
 //        SYS_CONSOLE_PRINT("SEEP_ADDR_MINIMUM_TIME_IN_HOTWATER:                  %i\n", ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_MIN_TIME_IN_HOT_WATER_MODE));
 //        SYS_CONSOLE_PRINT("SEEP_ADDR_HOTWATER_ELEMENT_ON_AFTER_TIME:            %i\n", ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_RUNNING_TIME_BEFORE_TURNING_ON_HEATING_ELEMENT));
 //        SYS_CONSOLE_PRINT("SEEP_ADDR_HOTWATER_ELEMENT_MAX_ON_TIME:              %i\n", ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_MAX_TIME_HEATING_ELEMENT_ON_IN_HEATING_MODE_SEC));
@@ -291,8 +291,16 @@ void printCustomEepromParameters() {
 //        SYS_CONSOLE_PRINT("SEEP_ADDR_BOOST_MODE:                                %i\n", ReadSmartEeprom8(SEEP_ADDR_BOOST_MODE));
 //        SYS_CONSOLE_PRINT("SEEP_ADDR_USE_SILENT_MODE_TIMERS:                    %i\n", ReadSmartEeprom8(SEEP_ADDR_USE_SILENT_MODE_TIMERS));
 //        SYS_CONSOLE_PRINT("SEEP_ADDR_BLOCK_HOTWATER:                            %i\n\n", ReadSmartEeprom8(SEEP_ADDR_BLOCK_HOTWATER));
+SYS_CONSOLE_PRINT(" Pumpstate:            %s\n", getCirculationPumpStateToString());
+SYS_CONSOLE_PRINT("\nSEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED:          %i\n", ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED));
+SYS_CONSOLE_PRINT("SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED:         %i\n", ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED));
+SYS_CONSOLE_PRINT("SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW:                   %i\n", ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW));
+SYS_CONSOLE_PRINT("SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP:         %i\n", ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP));
+SYS_CONSOLE_PRINT("SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH:                  %i\n", ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH));
+SYS_CONSOLE_PRINT("SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP:        %i\n", ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP));
+    
+    
 }
-
 
 void SmartEepromInit(void)
 {    
@@ -358,6 +366,8 @@ void SmartEepromInit(void)
         WriteSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED, false);
         WriteSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED, false);
         WriteSmartEeprom16(SEEP_ADDR_STERILIZATION_ON_HOLD, false);
+        WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP, 80);
+        WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP, 80);
     }
     
 

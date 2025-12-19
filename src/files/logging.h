@@ -62,6 +62,12 @@ extern "C" {
 #define Systemgoodindicator             "TL40"
 #define SupercapacitorPowerGoodIndicator "TL41"
 #define Alarmbytes                      "TL42"
+#define emergencyModeHeating            "TL43"
+#define emergencyModeHotwater           "TL44"
+#define circPumpOffTempLow              "TL45"
+#define circPumpOnTempLow               "TL46"
+#define circPumpOffTempHigh             "TL47"
+#define circPumpOnTempHigh              "TL48"
     
 #define GMAC_NSR_MDIO_READY_Msk (1 << 0)    
 #define GMAC_NSR_RX_IDLE_Msk (1 << 1)    

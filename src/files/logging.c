@@ -391,6 +391,13 @@ void setLoggingDataPerDeviceType ( char* requestBuilder, char device[]) {
             
             setLogValue_NUMBER(requestBuilder, Alarmbytes, GetAlarm(0)); 
             
+            setLogValue_BOOLEAN(requestBuilder, emergencyModeHeating, ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED));
+            setLogValue_BOOLEAN(requestBuilder, emergencyModeHotwater, ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED));            
+            setLogValue_NUMBER(requestBuilder, circPumpOffTempLow, ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW)); 
+            setLogValue_NUMBER(requestBuilder, circPumpOnTempLow, ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP)); 
+            setLogValue_NUMBER(requestBuilder, circPumpOffTempHigh, ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH)); 
+            setLogValue_NUMBER(requestBuilder, circPumpOnTempHigh, ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP)); 
+            
             requestBuilder[strlen(requestBuilder)-1] = '\0';
             break;
         }
@@ -1137,7 +1144,30 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
             WriteSmartEeprom16(SEEP_ADDR_HEATING_TIME_CONSTANT_SEC, (value * 60));
             break;
         }
-        /* TOT EN MET HIER */
+        case ADDRESS_TULIP_CONNECT_EMERGENCY_FORCE_HEATING_ELEMENT: {
+            WriteSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED, value);
+            break;
+        }
+        case ADDRESS_TULIP_CONNECT_EMERGENCY_FORCE_HOTWATER_ELEMENT: {
+            WriteSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED, value);
+            break;
+        }
+        case ADDRESS_TULIP_CONNECT_CIRCULATION_TEMPERATURE_PUMP_OFF_DELTA_LOW: {
+            WriteSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW, value);
+            break;
+        }
+        case ADDRESS_TULIP_CONNECT_CIRCULATION_TEMPERATURE_PUMP_ON_DELTA_LOW: {
+            WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP, value);
+            break;
+        }
+        case ADDRESS_TULIP_CONNECT_CIRCULATION_TEMPERATURE_PUMP_OFF_DELTA_HIGH: {
+            WriteSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH, value);
+            break;
+        }
+        case ADDRESS_TULIP_CONNECT_CIRCULATION_TEMPERATURE_PUMP_ON_DELTA_HIGH: {
+            WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP, value);
+            break;
+        }               
         
         default: {
             ChangeHeatpumpSetting(address, value);

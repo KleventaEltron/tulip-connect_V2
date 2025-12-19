@@ -45,7 +45,7 @@ bool factorySettingResetInProgress = false;
 
  
  void printDebugInfo() {
-    //printCustomEepromParameters();
+    printCustomEepromParameters();
     if (DebugDipSwitch() == true) {
         /*
         SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
