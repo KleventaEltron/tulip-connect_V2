@@ -143,17 +143,24 @@ int16_t determineCorrectHeatingSetpoint() {
         return heatingSetpoint;
     }
     
-    if ((heatingSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) > 50) {
-        heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20;
-        return heating_mode_data.stepperSetpoint;
+    if ((heatingSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) <= 20 ) {
+        if (getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) >= (heating_mode_data.stepperSetpoint - 20)) {
+            heating_mode_data.stepperSetpoint += 20;
+        }
     }
+    
+//    if ((heatingSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) > 50) {
+//        heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20;
+//        return heating_mode_data.stepperSetpoint;
+//    }
 
     
-    if (getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) >= (heating_mode_data.stepperSetpoint - 20) && (heating_mode_data.stepperSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) <= 20) {
-        heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20;
-        return heating_mode_data.stepperSetpoint;
-        //heatingSetpoint += 20;
-    }
+//    if (getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) >= (heating_mode_data.stepperSetpoint - 20) && (heating_mode_data.stepperSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) <= 20) {
+//        //heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20;
+//        heating_mode_data.stepperSetpoint += 20;
+//        return heating_mode_data.stepperSetpoint;
+//        //heatingSetpoint += 20;
+//    }
     
     return heating_mode_data.stepperSetpoint;
 }
@@ -288,7 +295,8 @@ void HEATING_MODE_Tasks ( void )
                 // Compressor is running
                 setSecondCounterHeatingTask(0);
                 heating_mode_data.initialBufferTemp = heatingBufferTemperature;
-                heating_mode_data.stepperSetpoint = (getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20);
+                heating_mode_data.stepperSetpoint = getHeatingSetpoint();
+                //heating_mode_data.stepperSetpoint = (getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20);
                 
                 if(regulateOnTempSensorInBufferHeating) {
                     // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
