@@ -247,7 +247,14 @@ int16_t determineCorrectSetpoint() {
             hot_water_heating_mode_data.stepperSetpoint = heatingSetpoint;
             return heatingSetpoint;
         }
+        
+        if ((heatingSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) <= 20 ) {
+            if (getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) >= (hot_water_heating_mode_data.stepperSetpoint - 20)) {
+                hot_water_heating_mode_data.stepperSetpoint += 20;
+            }
+        }
 
+        /*
         if ((heatingSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) > 50) {
             hot_water_heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20;
             return hot_water_heating_mode_data.stepperSetpoint;
@@ -259,7 +266,7 @@ int16_t determineCorrectSetpoint() {
             return hot_water_heating_mode_data.stepperSetpoint;
             //heatingSetpoint += 20;
         }
-
+        */
         return hot_water_heating_mode_data.stepperSetpoint;
         
     }
@@ -413,6 +420,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP, UINT16_MAX);
             
             hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
+            hot_water_heating_mode_data.stepperSetpoint = TEMPERATURE_ALARM_VALUE;
             hot_water_heating_mode_data.state = HOT_WATER_HEATING_IDLE_HEATING;
             break;
         }
@@ -429,6 +437,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
                     setActiveModeControllerPumpOffDueToDipSwitch1(false);
                 }
+                
+                hot_water_heating_mode_data.stepperSetpoint = getHeatingSetpoint();
                 
                 hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING;
                 break;
