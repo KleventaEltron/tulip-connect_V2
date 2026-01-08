@@ -280,7 +280,6 @@ typedef enum{
 typedef struct{
     CIRCULATION_PUMP_STATES state;
     bool temperatureTooLowForPumpToBeOn;
-    bool temperatureTooHighForPumpToBeOn;
 } CIRCULATION_PUMP_DATA;
 
 void resetActiveModeStates();
