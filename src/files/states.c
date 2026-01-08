@@ -402,6 +402,17 @@ int16_t getAirConditionerReturnDifference()
     return delta;
 }
 
+int16_t getExternalAmbientTemperature(uint8_t whichHeatpump)
+{
+    int16_t temperature = RealTimeData1[ADDRESS_EXTERNAL_AMBIENT_TEMPERATURE_T1 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][whichHeatpump];
+    
+    if (temperature != TEMPERATURE_ALARM_VALUE){
+        // Is not alarm value, so do times 10
+        temperature *= 10;
+    }
+    
+    return temperature;
+}
 
 bool blockHotWaterBasedOnTimers(void) 
 {

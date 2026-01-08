@@ -262,6 +262,10 @@ void restoreEepromValuesToDefault(void)
     WriteSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED, false);
     WriteSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED, false);
     WriteSmartEeprom16(SEEP_ADDR_STERILIZATION_ON_HOLD, false);
+    
+    WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_OFF_TEMPERATURE, 300);
+    WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_ON_TEMPERATURE, 350);
+    WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_CONTROL_AT_AMBIENT_TEMPERATURE, 20);
 }
 
 
@@ -370,6 +374,11 @@ void SmartEepromInit(void)
         WriteSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP, 80);
     }
     
+    if (thisEepromVersion < 2000013) {
+        WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_OFF_TEMPERATURE, 300);
+        WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_ON_TEMPERATURE, 350);
+        WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_CONTROL_AT_AMBIENT_TEMPERATURE, 20);
+    }
 
     //if (thisEepromVersion < 1000013) // 1.0.13
     //{   // Current eeprom version is lower than 1.0.13

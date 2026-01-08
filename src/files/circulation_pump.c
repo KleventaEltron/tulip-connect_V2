@@ -19,6 +19,7 @@
 #include "files\eeprom.h"
 #include "ntc.h"
 #include "heating_mode.h"
+#include "files\modbus\heatpump_parameters.h"
 //#include "logging.h"
 
 //static char * StringPumpInit = "Init";
@@ -92,32 +93,30 @@ const char * getCirculationPumpStateToString()
     }
 }
 
-void checkLowBufferTemperature(int16_t currentTemperature, int16_t heatingSetpoint, int16_t pumpOffThreshold, int16_t pumpBackOnThreshold)
+void checkLowBufferTemperature(int16_t currentTemperature, int16_t pumpOffTemperature, int16_t pumpBackOnTemperature, int16_t ambientTemperature)
 {
-    if (currentTemperature < (heatingSetpoint - pumpOffThreshold)){
+    if (ambientTemperature >= ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_CONTROL_AT_AMBIENT_TEMPERATURE)) {
+        // Ambient temperature is equal or above the minimum for not watching the buffer temp for defrosting.
+        circulation_pump_data.temperatureTooLowForPumpToBeOn = false;
+        return;
+    }
+    
+    if (pumpOffTemperature >= pumpBackOnTemperature) {
+        // Protection: This should not be possible, set the pump on
+        circulation_pump_data.temperatureTooLowForPumpToBeOn = false;
+        return;
+    }
         // Temperature is lower than setpoint - threshold
+    
+    if (currentTemperature <= pumpOffTemperature){
+        // Temperature is lower Pump Off Temperature setting
         circulation_pump_data.temperatureTooLowForPumpToBeOn = true;
         return;
     }
     
-    if (currentTemperature > (heatingSetpoint - pumpBackOnThreshold)){
-        // Temperature is higher again than setpoint - threshold + threshold_back_on
+    if (currentTemperature >= pumpBackOnTemperature){
+        // Temperature is higher again than Pump Back On Temperature setting
         circulation_pump_data.temperatureTooLowForPumpToBeOn = false;
-        return;
-    }
-}
-
-void checkHighBufferTemperature(int16_t currentTemperature, int16_t coolingSetpoint, int16_t pumpOffThreshold, int16_t pumpBackOnThreshold)
-{
-    if (currentTemperature > (coolingSetpoint + pumpOffThreshold)){
-        // Temperature is lower than setpoint - threshold
-        circulation_pump_data.temperatureTooHighForPumpToBeOn = true;
-        return;
-    }
-    
-    if (currentTemperature < (coolingSetpoint + pumpBackOnThreshold)){
-        // Temperature is higher again than setpoint - threshold + threshold_back_on
-        circulation_pump_data.temperatureTooHighForPumpToBeOn = false;
         return;
     }
 }
@@ -167,23 +166,17 @@ bool circulationPumpConditions()
         return false;
     }
     
-     if ((circulation_pump_data.temperatureTooHighForPumpToBeOn == true) &&
-            ((getActiveStateValue() == COOLING) || (getActiveStateValue() == HOT_WATER_COOLING))){
-        // Temperature too high in cooling modes
-        return false;
-    }
-    
     if (getSterilisationMode() == ACTIVE){
         return false;
     }
     
-    uint16_t defrostingMask = getDefrostingActiveMask();
-    if (defrostingMask != 0){
-        // One or more heatpumps in defrosting
-        if (hasActiveNonDefrostingUnitDuringDefrost(defrostingMask, getActiveCompressorsMask()) == false){
-            return false;
-        }
-    }
+//    uint16_t defrostingMask = getDefrostingActiveMask();
+//    if (defrostingMask != 0){
+//        // One or more heatpumps in defrosting
+//        if (hasActiveNonDefrostingUnitDuringDefrost(defrostingMask, getActiveCompressorsMask()) == false){
+//            return false;
+//        }
+//    }
     
     if (canPumpRunInThisHeatingState(getHeatingModeData(), getCoolingModeData(), getHotWaterHeatingModeData(), getHotWaterCoolingModeData()) == false){
         // Pump can not run in this state
@@ -224,9 +217,7 @@ void CIRCULATION_PUMP_Tasks()
     }    
     
     
-    checkLowBufferTemperature(GetNtcTemperature(NTC_HEATING_BUFFER), heatingSetpoint, ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW), ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP));
-    
-    checkHighBufferTemperature(GetNtcTemperature(NTC_HEATING_BUFFER), coolingSetpoint, ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH), ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP));
+    checkLowBufferTemperature(GetNtcTemperature(NTC_HEATING_BUFFER), ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_OFF_TEMPERATURE), ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_ON_TEMPERATURE), getExternalAmbientTemperature(MASTER_HEATPUMP_IN_CASCADE));
     
     switch ( circulation_pump_data.state )
     {
