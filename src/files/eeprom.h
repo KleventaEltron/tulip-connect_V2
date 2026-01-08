@@ -110,6 +110,7 @@
 
 #define SEEP_ADDR_CIRCULATION_PUMP_OFF_TEMPERATURE                      109 // 2 bytes V2-0-13
 #define SEEP_ADDR_CIRCULATION_PUMP_ON_TEMPERATURE                       111 // 2 bytes V2-0-13
+#define SEEP_ADDR_CIRCULATION_PUMP_CONTROL_AT_AMBIENT_TEMPERATURE       113 // 2 bytes V2-0-13
 
 #define SEEP_ADDR
 

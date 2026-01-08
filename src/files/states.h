@@ -316,6 +316,7 @@ int16_t getCoolingSetpoint();
 int16_t getHotwaterSetpoint();
 int16_t getHotwaterDelta();
 int16_t getAirConditionerReturnDifference();
+int16_t getExternalAmbientTemperature(uint8_t whichHeatpump);
 uint16_t getCascadeSlaveStatus();
 
 bool getCurrentDip1SwitchState();

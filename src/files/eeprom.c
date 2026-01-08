@@ -265,6 +265,7 @@ void restoreEepromValuesToDefault(void)
     
     WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_OFF_TEMPERATURE, 300);
     WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_ON_TEMPERATURE, 350);
+    WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_CONTROL_AT_AMBIENT_TEMPERATURE, 20);
 }
 
 
@@ -376,6 +377,7 @@ void SmartEepromInit(void)
     if (thisEepromVersion < 2000013) {
         WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_OFF_TEMPERATURE, 300);
         WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_ON_TEMPERATURE, 350);
+        WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_CONTROL_AT_AMBIENT_TEMPERATURE, 20);
     }
 
     //if (thisEepromVersion < 1000013) // 1.0.13

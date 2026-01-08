@@ -19,6 +19,7 @@
 #include "files\eeprom.h"
 #include "ntc.h"
 #include "heating_mode.h"
+#include "files\modbus\heatpump_parameters.h"
 //#include "logging.h"
 
 //static char * StringPumpInit = "Init";
@@ -92,8 +93,14 @@ const char * getCirculationPumpStateToString()
     }
 }
 
-void checkLowBufferTemperature(int16_t currentTemperature, int16_t pumpOffTemperature, int16_t pumpBackOnTemperature)
+void checkLowBufferTemperature(int16_t currentTemperature, int16_t pumpOffTemperature, int16_t pumpBackOnTemperature, int16_t ambientTemperature)
 {
+    if (ambientTemperature >= ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_CONTROL_AT_AMBIENT_TEMPERATURE)) {
+        // Ambient temperature is equal or above the minimum for not watching the buffer temp for defrosting.
+        circulation_pump_data.temperatureTooLowForPumpToBeOn = false;
+        return;
+    }
+    
     if (pumpOffTemperature >= pumpBackOnTemperature) {
         // Protection: This should not be possible, set the pump on
         circulation_pump_data.temperatureTooLowForPumpToBeOn = false;
@@ -210,7 +217,7 @@ void CIRCULATION_PUMP_Tasks()
     }    
     
     
-    checkLowBufferTemperature(GetNtcTemperature(NTC_HEATING_BUFFER), ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_OFF_TEMPERATURE), ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_ON_TEMPERATURE));
+    checkLowBufferTemperature(GetNtcTemperature(NTC_HEATING_BUFFER), ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_OFF_TEMPERATURE), ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_ON_TEMPERATURE), getExternalAmbientTemperature(MASTER_HEATPUMP_IN_CASCADE));
     
     switch ( circulation_pump_data.state )
     {
