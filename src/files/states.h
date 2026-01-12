@@ -231,6 +231,7 @@ typedef struct{
     bool HeatingElementOn;
     bool HotwaterElementOn;
     bool heatingCurveSet;
+    bool temporaryBlockPumpWhenSwitchingToHeating;
 } HOT_WATER_HEATING_MODE_DATA;
 
 

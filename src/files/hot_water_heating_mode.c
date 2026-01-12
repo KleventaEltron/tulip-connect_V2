@@ -281,6 +281,26 @@ int16_t determineCorrectSetpoint() {
     return TEMPERATURE_ALARM_VALUE;
 }
 
+void BlockCirculationPumpIfBufferTempIsTooLow(int16_t bufferTemperature, int16_t heatingSetpoint, int16_t heatingDelta) 
+{
+    // Blokkeer als Buffer temp < setpoint - delta. Pas aanzetten nadat warmtepomp 2 minuten draait.
+    // Jelle vragen wat nou het juiste heating setpoint is
+    if (bufferTemperature == TEMPERATURE_ALARM_VALUE || heatingDelta == TEMPERATURE_ALARM_VALUE || heatingSetpoint == UINT16_MAX || heatingSetpoint == TEMPERATURE_ALARM_VALUE) {
+        // No valid temperatures
+        hot_water_heating_mode_data.temporaryBlockPumpWhenSwitchingToHeating = false;
+        return;
+    }
+    
+    if (bufferTemperature <= (heatingSetpoint - heatingDelta)) {
+        // Buffer temp is equal or lower than setpoint - delta, block the pump from running
+        hot_water_heating_mode_data.temporaryBlockPumpWhenSwitchingToHeating = true;
+    }
+    else {
+        // Buffer temp is within setpoint - delta, circulation pump can run
+        hot_water_heating_mode_data.temporaryBlockPumpWhenSwitchingToHeating = false;
+    }
+}
+
 void HOT_WATER_HEATING_MODE_Initialize ( void )
 {
     //TurnOffHeatingElementHeatingBuffer();
@@ -298,6 +318,8 @@ void HOT_WATER_HEATING_MODE_Initialize ( void )
     hot_water_heating_mode_data.hotwaterPassive = false;
     hot_water_heating_mode_data.setpointHotWaterOffset = TEMPERATURE_ALARM_VALUE;
     
+    hot_water_heating_mode_data.temporaryBlockPumpWhenSwitchingToHeating = false;
+    
     hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HEATING;
     return;
 }
@@ -307,6 +329,8 @@ void HOT_WATER_HEATING_MODE_Initialize ( void )
 void HOT_WATER_HEATING_MODE_Tasks ( void )
 {   
     int16_t heatingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
+    int16_t heatingSetpoint = getHeatpumpHeatingSetpoint() * 10;
+    int16_t heatingDelta = getAirConditionerReturnDifference();
     
     int16_t hotwaterBufferTemperature = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
     int16_t hotwaterSetpoint = getHotwaterSetpoint();
@@ -421,6 +445,9 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             
             hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
             hot_water_heating_mode_data.stepperSetpoint = TEMPERATURE_ALARM_VALUE;
+            
+            BlockCirculationPumpIfBufferTempIsTooLow(heatingBufferTemperature, heatingSetpoint, heatingDelta); 
+            
             hot_water_heating_mode_data.state = HOT_WATER_HEATING_IDLE_HEATING;
             break;
         }
