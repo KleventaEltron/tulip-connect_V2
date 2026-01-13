@@ -35,7 +35,7 @@ uint32_t SecondCounterHeatingTask = UINT32_MAX;
 uint32_t SecondCounterHotwaterTask = UINT32_MAX;
 uint32_t SecondCounterCirculationPumpTask = UINT32_MAX;
 uint32_t SecondCounterDelayAfterChangingSettings = UINT32_MAX;
-
+uint32_t SecondCounterBlockCirculationPumpAtHeatingStart = UINT32_MAX;
 
 void TC1_Callback_InterruptHandler(TC_TIMER_STATUS status, uintptr_t context)
 {
@@ -98,6 +98,15 @@ uint32_t getSecondCounterDelayAfterChangingSettings()
 void setSecondCounterDelayAfterChangingSettings(uint32_t count)
 {
     SecondCounterDelayAfterChangingSettings = count;
+}
+
+uint32_t getSecondCounterBlockCirculationPumpAtHeatingStart()
+{
+    return SecondCounterBlockCirculationPumpAtHeatingStart;
+}
+void setSecondCounterBlockCirculationPumpAtHeatingStart(uint32_t count)
+{
+    SecondCounterBlockCirculationPumpAtHeatingStart = count;
 }
     
 uint32_t getWaitForSettingEchoProtection()
@@ -181,6 +190,10 @@ void UpdateCounters ( void )
             
             if (checkHeatpumpStaticSettingsCounter >= 0 && checkHeatpumpStaticSettingsCounter < UINT32_MAX) {
                 checkHeatpumpStaticSettingsCounter++;
+            }
+                    
+            if (SecondCounterBlockCirculationPumpAtHeatingStart >= 0 && SecondCounterBlockCirculationPumpAtHeatingStart < UINT32_MAX) {
+                SecondCounterBlockCirculationPumpAtHeatingStart++;
             }
         }   
         if (SecondCounterDelayAfterChangingSettings >= 0 && SecondCounterDelayAfterChangingSettings < UINT32_MAX) {

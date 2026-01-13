@@ -183,6 +183,11 @@ bool circulationPumpConditions()
         return false;
     }
     
+    if (getHotWaterHeatingModeData().blockCirculationPumpAtHeatingStart == true || getHotWaterHeatingModeData().blockCirculationPumpLongerBecauseTempTooLow == true) {
+        // Block the circulation pump
+        return false;
+    }
+    
     // Else return true
     return true;
 }
