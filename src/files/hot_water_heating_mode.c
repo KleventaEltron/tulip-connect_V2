@@ -281,23 +281,31 @@ int16_t determineCorrectSetpoint() {
     return TEMPERATURE_ALARM_VALUE;
 }
 
-void BlockCirculationPumpIfBufferTempIsTooLow(int16_t bufferTemperature, int16_t heatingSetpoint, int16_t heatingDelta) 
+void BlockCirculationPumpIfBufferTempIsTooLow(int16_t bufferTemperature) 
 {
+    int16_t heatingSetpoint = getHeatpumpHeatingSetpoint() * 10;
+    int16_t heatingDelta = getAirConditionerReturnDifference();
+    
     // Blokkeer als Buffer temp < setpoint - delta. Pas aanzetten nadat warmtepomp 2 minuten draait.
     // Jelle vragen wat nou het juiste heating setpoint is
     if (bufferTemperature == TEMPERATURE_ALARM_VALUE || heatingDelta == TEMPERATURE_ALARM_VALUE || heatingSetpoint == UINT16_MAX || heatingSetpoint == TEMPERATURE_ALARM_VALUE) {
-        // No valid temperatures
-        hot_water_heating_mode_data.temporaryBlockPumpWhenSwitchingToHeating = false;
+        // No valid temperatures, no need for blocking
+        hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
+        setSecondCounterBlockCirculationPumpAtHeatingStart(UINT32_MAX);
         return;
     }
     
     if (bufferTemperature <= (heatingSetpoint - heatingDelta)) {
         // Buffer temp is equal or lower than setpoint - delta, block the pump from running
-        hot_water_heating_mode_data.temporaryBlockPumpWhenSwitchingToHeating = true;
+        hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = true;
+        setSecondCounterBlockCirculationPumpAtHeatingStart(0);
+        return;
     }
     else {
         // Buffer temp is within setpoint - delta, circulation pump can run
-        hot_water_heating_mode_data.temporaryBlockPumpWhenSwitchingToHeating = false;
+        hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
+        setSecondCounterBlockCirculationPumpAtHeatingStart(UINT32_MAX);
+        return;
     }
 }
 
@@ -318,7 +326,9 @@ void HOT_WATER_HEATING_MODE_Initialize ( void )
     hot_water_heating_mode_data.hotwaterPassive = false;
     hot_water_heating_mode_data.setpointHotWaterOffset = TEMPERATURE_ALARM_VALUE;
     
-    hot_water_heating_mode_data.temporaryBlockPumpWhenSwitchingToHeating = false;
+    hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = false;
+    hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
+    setSecondCounterBlockCirculationPumpAtHeatingStart(UINT32_MAX);
     
     hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HEATING;
     return;
@@ -329,8 +339,6 @@ void HOT_WATER_HEATING_MODE_Initialize ( void )
 void HOT_WATER_HEATING_MODE_Tasks ( void )
 {   
     int16_t heatingBufferTemperature = GetNtcTemperature(NTC_HEATING_BUFFER);
-    int16_t heatingSetpoint = getHeatpumpHeatingSetpoint() * 10;
-    int16_t heatingDelta = getAirConditionerReturnDifference();
     
     int16_t hotwaterBufferTemperature = GetNtcTemperature(NTC_HOT_WATER_BUFFER);
     int16_t hotwaterSetpoint = getHotwaterSetpoint();
@@ -446,7 +454,9 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
             hot_water_heating_mode_data.stepperSetpoint = TEMPERATURE_ALARM_VALUE;
             
-            BlockCirculationPumpIfBufferTempIsTooLow(heatingBufferTemperature, heatingSetpoint, heatingDelta); 
+            hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = true;
+            hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
+            setSecondCounterBlockCirculationPumpAtHeatingStart(0);
             
             hot_water_heating_mode_data.state = HOT_WATER_HEATING_IDLE_HEATING;
             break;
@@ -467,8 +477,34 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                 
                 hot_water_heating_mode_data.stepperSetpoint = getHeatingSetpoint();
                 
+                if (hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart == true) {
+                    // Within 30 seconds compressor goes running, check if circulation pump still needs to be blocked
+                    hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = false;
+                    BlockCirculationPumpIfBufferTempIsTooLow(heatingBufferTemperature);
+                }
+                
+                setSecondCounterBlockCirculationPumpAtHeatingStart(0); // Reset timer
                 hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING;
                 break;
+            }
+            
+            if (hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart == true) {
+                // Just coming back from hot water mode/ sterilization and circulation pump is blocked
+                if (getSecondCounterBlockCirculationPumpAtHeatingStart() >= ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_INIT_OFF_TIME_WHEN_SWITCHING_TO_HEATING)) {
+                    // 30 seconds past, check if circulation pump still needs to be blocked
+                    hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = false;
+                    BlockCirculationPumpIfBufferTempIsTooLow(heatingBufferTemperature);
+                }
+            }
+            
+            if (hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow == true) {
+                // Block the circulation pump temporary
+                if (getSecondCounterBlockCirculationPumpAtHeatingStart() >= ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_MAX_OFF_TIME_WHEN_SWITCHING_TO_HEATING)) {
+                    // Time passed X seconds, don't block the circulation pump anymore
+                    hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = false;
+                    hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
+                    setSecondCounterBlockCirculationPumpAtHeatingStart(UINT32_MAX);
+                }
             }
             
             break;
@@ -488,9 +524,23 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                     // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                     setActiveModeControllerPumpOffDueToDipSwitch1(true);
                 }
-
+                
+                hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = false;
+                hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
+                setSecondCounterBlockCirculationPumpAtHeatingStart(UINT32_MAX);
+                
                 hot_water_heating_mode_data.state = HOT_WATER_HEATING_IDLE_HEATING;
                 break;
+            }
+            
+            if (hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow == true) {
+                // Block the circulation pump temporary
+                if (getSecondCounterHeatingTask() >= ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_OFF_TIME_WHEN_HEATPUMP_RUNNING)) {
+                    //
+                    hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = false;
+                    hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
+                    setSecondCounterBlockCirculationPumpAtHeatingStart(UINT32_MAX);
+                }
             }
             
             if (heatingBufferTemperature >= hot_water_heating_mode_data.initialHeatingBufferTemp + ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME)){
@@ -506,6 +556,10 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                 hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
                 //TurnOnHeatingElementHeatingBuffer();
                 hot_water_heating_mode_data.HeatingElementOn = true;
+                
+                hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = false;
+                hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
+                setSecondCounterBlockCirculationPumpAtHeatingStart(UINT32_MAX);
                 
                 hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON;
                 break;
@@ -567,6 +621,9 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             
             setSecondCounterHeatingTask(UINT32_MAX);
             setSecondCounterHotwaterTask(0);
+            hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = false;
+            hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
+            setSecondCounterBlockCirculationPumpAtHeatingStart(UINT32_MAX);
             
             //TurnOffHeatingElementHeatingBuffer();
             //TurnOffHeatingElementHotWaterBuffer();
