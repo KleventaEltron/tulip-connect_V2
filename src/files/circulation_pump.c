@@ -188,6 +188,16 @@ bool circulationPumpConditions()
         return false;
     }
     
+    if (HybridActiveRelayGet() == true) {
+        // Block the circulation pump in hybrid mode
+        return false;
+    }
+    
+    if ((getStatusHeatingElementHeatingBuffer() == true) && (ReadSmartEeprom16(SEEP_ADDR_HYBRID_SYSTEM_ENABLED_ON_HEATING_ELEMENT_RELAIS) == true)) {
+        // Heating element heating buffer is active, and the settings that the hybrid is on this relais is true, so turn off the circulation pump, this is done on the hybrid side.
+        return false;
+    }
+    
     // Else return true
     return true;
 }
