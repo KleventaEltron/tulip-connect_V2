@@ -207,6 +207,16 @@ const char * getHeatingStateToString()
             break;
         }
         
+        case(HEATING_RUNNING_WITH_CIRCULATION_PUMP_OFF): {
+            return "3, Running with circulation pump off";
+            break;
+        }
+        
+        case(HEATING_RUNNING_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF): {
+            return "3, Running with element on and circulation pump off";
+            break;
+        }
+        
         default:{
             return "-1, Unkown";
             break;
@@ -265,6 +275,7 @@ void HEATING_MODE_Tasks ( void )
     
     switch ( heating_mode_data.state )
     {
+        // 0
         case HEATING_INITIALIZE:{
             
             //TurnOffHeatingElementHeatingBuffer();
@@ -290,6 +301,7 @@ void HEATING_MODE_Tasks ( void )
             break;
         }
         
+        // 1
         case HEATING_IDLE:{                
             if (getActiveCompressorsMask() != 0){
                 // Compressor is running
@@ -310,6 +322,7 @@ void HEATING_MODE_Tasks ( void )
             break;
         }
         
+        // 2
         case HEATING_RUNNING:{
             
             if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
@@ -326,6 +339,11 @@ void HEATING_MODE_Tasks ( void )
 
                 heating_mode_data.state = HEATING_IDLE;
                 break;
+            }
+            
+            if (heatingBufferTemperature < heating_mode_data.initialBufferTemp) {
+                // Adjust the reference temp to the lowest measured temperature 
+                heating_mode_data.initialBufferTemp = heatingBufferTemperature;
             }
             
             if (heatingBufferTemperature >= heating_mode_data.initialBufferTemp + ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME)){
@@ -349,6 +367,7 @@ void HEATING_MODE_Tasks ( void )
             break;
         }
         
+        // 3
         case HEATING_RUNNING_WITH_ELEMENT_ON:{
             
             if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
@@ -365,6 +384,11 @@ void HEATING_MODE_Tasks ( void )
                 
                 heating_mode_data.state = HEATING_IDLE;
                 break;
+            }
+            
+            if (heatingBufferTemperature < heating_mode_data.initialBufferTemp) {
+                // Adjust the reference temp to the lowest measured temperature 
+                heating_mode_data.initialBufferTemp = heatingBufferTemperature;
             }
             
             if (heatingBufferTemperature >= heating_mode_data.initialBufferTemp + ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME)){
@@ -388,8 +412,21 @@ void HEATING_MODE_Tasks ( void )
             break;
         }
         
+        // 4
+        case HEATING_RUNNING_WITH_CIRCULATION_PUMP_OFF:{
+            
+            
+            break;
+        }
         
+        // 5
+        case HEATING_RUNNING_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF:{
+            
+            
+            break;
+        }
         
+        // Others:
         default:{
             HEATING_MODE_Initialize();
             break;
