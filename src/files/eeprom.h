@@ -119,6 +119,10 @@
 #define SEEP_ADDR_HYBRID_SYSTEM_ENABLED                                     121 // 2 bytes V2-0-15
 #define SEEP_ADDR_HYBRID_SYSTEM_ENABLED_ON_HEATING_ELEMENT_RELAIS           123 // 2 bytes V2-0-15
 
+#define SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON                             125 // 2 bytes V2-0-15
+#define SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_CIRCULATION_PUMP_OFF                   127 // 2 bytes V2-0-15
+#define SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF    129 // 2 bytes V2-0-15
+
 #define SEEP_ADDR
 
 //.....

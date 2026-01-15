@@ -134,7 +134,8 @@ bool canPumpRunInThisHeatingState(HEATING_MODE_DATA heatingModeData, COOLING_MOD
     }
     
     if ((heatingModeData.state == HEATING_IDLE) || 
-            (heatingModeData.state == HEATING_RUNNING) || 
+            (heatingModeData.state == HEATING_RUNNING) ||
+            (heatingModeData.state == HEATING_RUNNING_WITH_ELEMENT_ON) ||
             (coolingModeData.state == COOLING_IDLE) || 
             (coolingModeData.state == COOLING_RUNNING) || 
             (hotwaterHeatingModeData.state == HOT_WATER_HEATING_IDLE_HEATING) || 
