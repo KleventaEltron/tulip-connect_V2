@@ -110,6 +110,9 @@ void resetActiveModeStates() {
     hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
     hot_water_heating_mode_data.hotwaterPassive = false;
     hot_water_heating_mode_data.setpointHotWaterOffset = TEMPERATURE_ALARM_VALUE;
+    
+    hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = false;
+    hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
             
     if(app_active_mode_controllerData.currentRunningMode == COOLING 
             || app_active_mode_controllerData.currentRunningMode == HOT_WATER_COOLING) {
