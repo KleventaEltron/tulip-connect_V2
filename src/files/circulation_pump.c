@@ -140,6 +140,7 @@ bool canPumpRunInThisHeatingState(HEATING_MODE_DATA heatingModeData, COOLING_MOD
             (coolingModeData.state == COOLING_RUNNING) || 
             (hotwaterHeatingModeData.state == HOT_WATER_HEATING_IDLE_HEATING) || 
             (hotwaterHeatingModeData.state == HOT_WATER_HEATING_RUNNING_ON_HEATING) ||
+            (hotwaterHeatingModeData.state == HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON) ||
             (hotwaterCoolingModeData.state == HOT_WATER_COOLING_IDLE_COOLING) || 
             (hotwaterCoolingModeData.state == HOT_WATER_COOLING_MODE_RUNNING_ON_COOLING)) {
         // Pump can run
