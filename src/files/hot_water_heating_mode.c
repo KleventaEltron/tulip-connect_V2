@@ -51,23 +51,33 @@ const char * getHotwaterHeatingStateToString()
             break;
         }
         
+        case(HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_CIRCULATION_PUMP_OFF): {
+            return "4, Running heating with circulation pump off";
+            break;
+        }
+        
+        case(HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF): {
+            return "5, Running heating with element on and circulation pump off";
+            break;
+        }
+        
         case(HOT_WATER_HEATING_INITIALIZE_HOT_WATER): {
-            return "4, Init hotwater";
+            return "6, Init hotwater";
             break;
         }
         
         case(HOT_WATER_HEATING_STATE_WAIT_FOR_MINIMAL_TIME_IN_HOT_WATER): {
-            return "5, Minimal time in hot water";
+            return "7, Minimal time in hot water";
             break;
         }
         
         case(HOT_WATER_HEATING_STATE_RUNNING_IN_HOT_WATER): {
-            return "6, Running hotwater";
+            return "8, Running hotwater";
             break;
         }
         
         case(HOT_WATER_HEATING_STATE_RUNNING_WITH_ELEMENT_ON_IN_HOT_WATER): {
-            return "7, Running hotwater with element on";
+            return "9, Running hotwater with element on";
             break;
         }
         
@@ -607,6 +617,21 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             
             break;
         }
+        
+        // 4
+        case HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_CIRCULATION_PUMP_OFF:{
+            
+            
+            break;
+        }
+        
+        // 5
+        case HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF:{
+            
+            
+            break;
+        }
+        
         /*        
          __    __    ______   .___________.   ____    __    ____  ___   .___________. _______ .______      
         |  |  |  |  /  __  \  |           |   \   \  /  \  /   / /   \  |           ||   ____||   _  \     
@@ -616,7 +641,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         |__|  |__|  \______/      |__|            \__/  \__/ /__/     \__\  |__|     |_______|| _| `._____|
         */                                                                                                  
         
-        // 4
+        // 6
         case HOT_WATER_HEATING_INITIALIZE_HOT_WATER:{
             
             setSecondCounterHeatingTask(UINT32_MAX);
@@ -659,7 +684,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             break;
         }
         
-        // 5
+        // 7
         case HOT_WATER_HEATING_STATE_WAIT_FOR_MINIMAL_TIME_IN_HOT_WATER:{
             
             adjustSetpointOffsetHotWater();
@@ -673,7 +698,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             break;
         }
         
-        // 6
+        // 8
         case HOT_WATER_HEATING_STATE_RUNNING_IN_HOT_WATER:{
             
             adjustSetpointOffsetHotWater();
@@ -702,7 +727,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             break;
         }
         
-        // 7
+        // 9
         case HOT_WATER_HEATING_STATE_RUNNING_WITH_ELEMENT_ON_IN_HOT_WATER:{
             
             adjustSetpointOffsetHotWater();
@@ -733,6 +758,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         }
         
         default:{
+            // Unknown state, back to initialize
+            HOT_WATER_HEATING_MODE_Initialize();
             break;
         }
     }
