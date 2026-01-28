@@ -45,7 +45,7 @@ bool factorySettingResetInProgress = false;
 
  
  void printDebugInfo() {
-    printCustomEepromParameters();
+    //printCustomEepromParameters();
     if (DebugDipSwitch() == true) {
         /*
         SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
@@ -206,7 +206,7 @@ bool factorySettingResetInProgress = false;
                 SYS_CONSOLE_PRINT(" Inlet temp. master:   %i\n", getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE));
                 SYS_CONSOLE_PRINT(" Ambient temp. master: %i\n", getExternalAmbientTemperature(MASTER_HEATPUMP_IN_CASCADE));
                 SYS_CONSOLE_PRINT(" Setpoint in HP:       %i\n", getHeatpumpHeatingSetpoint() * 10);
-                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
+                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, MASTER_HEATPUMP_IN_CASCADE));
                 SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getSecondCounterHeatingTask());
             }
             
@@ -248,7 +248,7 @@ bool factorySettingResetInProgress = false;
                 SYS_CONSOLE_PRINT(" Time counter:         %i\n", getSecondCounterHotwaterTask());
                 SYS_CONSOLE_PRINT(" Hotwater element:     %s\n", getStatusHeatingElementHotWaterBuffer() ? "True" : "False");
                 SYS_CONSOLE_PRINT(" Hot water passive:    %s\n\n", getHotWaterHeatingModeData().hotwaterPassive ? "True" : "False");
-                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
+                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, MASTER_HEATPUMP_IN_CASCADE));
             }
             
             if (heatpumpMode == HOT_WATER_COOLING) {
@@ -265,7 +265,7 @@ bool factorySettingResetInProgress = false;
                 SYS_CONSOLE_PRINT(" Hotwater element:     %s\n", getStatusHeatingElementHotWaterBuffer() ? "True" : "False");
                 SYS_CONSOLE_PRINT(" Hot water passive:    %s\n\n", getHotWaterCoolingModeData().hotwaterPassive ? "True" : "False");
                 SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
-                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE));
+                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, MASTER_HEATPUMP_IN_CASCADE));
             }
         }
         
@@ -308,12 +308,14 @@ bool factorySettingResetInProgress = false;
         return;
     }
     
-    if (app_active_mode_controllerData.setPointHeating != (getHeatpumpHeatingSetpoint() * 10)) {   
+    if (app_active_mode_controllerData.setPointHeating != (getHeatpumpHeatingSetpoint() * 10)) {
+            //&& (app_active_mode_controllerData.currentRunningMode == HEATING || app_active_mode_controllerData.currentRunningMode == HOT_WATER_HEATING)) {   
         // Setpoint in heatpump is not correct, send the correct one
         ChangeHeatpumpSetting(ADDRESS_HEATING_SET_TEMPERATURE, (app_active_mode_controllerData.setPointHeating / 10));
     }
     
-    if (app_active_mode_controllerData.setPointCooling != (getHeatpumpCoolingSetpoint() * 10)) {   
+    if (app_active_mode_controllerData.setPointCooling != (getHeatpumpCoolingSetpoint() * 10)
+            && (app_active_mode_controllerData.currentRunningMode == COOLING || app_active_mode_controllerData.currentRunningMode == HOT_WATER_COOLING)) {   
         // Setpoint in heatpump is not correct, send the correct one
         ChangeHeatpumpSetting(ADDRESS_COOLING_SET_TEMPERATURE, (app_active_mode_controllerData.setPointCooling / 10));
     }
@@ -424,6 +426,11 @@ bool factorySettingResetInProgress = false;
 
     uint16_t start = ReadSmartEeprom16(SEEP_ADDR_START_TIME_SILENT_MODE);
     uint16_t end   = ReadSmartEeprom16(SEEP_ADDR_END_TIME_SILENT_MODE);
+    
+    SYS_CONSOLE_PRINT(" CURRENT TIME:           %i\n", (int16_t)currentDisplayTimeAdjusted);
+    SYS_CONSOLE_PRINT(" START   TIME:           %i\n", (int16_t)start);
+    SYS_CONSOLE_PRINT(" END     TIME:           %i\n", (int16_t)end);
+    
 
     bool inWindow = false;
 
@@ -439,8 +446,8 @@ bool factorySettingResetInProgress = false;
         /* start == end: treat as "no timed silent mode" (never in window) */
         inWindow = false;
     }
-
-    uint8_t currentMode = getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE);
+    SYS_CONSOLE_PRINT(" INW     TIME:           %i\n", (int16_t)inWindow);
+    uint8_t currentMode = getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE, MASTER_HEATPUMP_IN_CASCADE);
 
     if (inWindow) {
         /* Inside window: ensure silent mode = 2 */
@@ -675,14 +682,16 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         
         restoreEepromValuesToDefault();
         
-        APP_HEATPUMP_COMM_Initialize();
-        APP_DISPLAY_COMM_Initialize();
+//        APP_HEATPUMP_COMM_Initialize();
+//        APP_DISPLAY_COMM_Initialize();
         APP_IN_OUTPUTS_Initialize();
         APP_I2C_TASKS_Initialize();
         APP_LOGGING_TASKS_Initialize();
-        APP_SD_CARD_TASKS_Initialize();
+//        APP_SD_CARD_TASKS_Initialize();
         APP_ACTIVE_MODE_CONTROLLER_Initialize();
 
+        setDoFirstTimeHeatpumpCommunicationSettings(true);
+        
         return;
     }
    

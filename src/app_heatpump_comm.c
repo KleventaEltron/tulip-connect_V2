@@ -53,7 +53,7 @@ static volatile uint32_t ResponseDelay = 0;
 static volatile uint32_t CommunicationWindowSecondCounter = 0;
 static volatile uint32_t CommunicationTimeOutCounter = 0;
 
-static volatile bool doFirstTimeHeatpumpCommunicationSettings = false;
+
 
 static uint8_t LastSentModbusAddress = UINT8_MAX;
 
@@ -178,11 +178,10 @@ void APP_HEATPUMP_COMM_Initialize ( void )
     
     if (ReadSmartEeprom8(SEEP_ADDR_CONNECT_HAS_EVER_CONTACTED_HEATPUMP) == false)
     {   // Connect has never communicated with an heatpump before
-        doFirstTimeHeatpumpCommunicationSettings = true;
+        setDoFirstTimeHeatpumpCommunicationSettings(true);
     }
     
     CheckHeatpumpStaticSettings();
-    FillBufferWithStartupSettings(doFirstTimeHeatpumpCommunicationSettings);
     
     app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_IDLE;
     app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_INIT;
@@ -235,6 +234,7 @@ void APP_HEATPUMP_COMM_Tasks ( void )
         
         // Every 30 seconds the static settings are checked
         CheckHeatpumpStaticSettings();
+        //FillBufferWithStartupSettings(doFirstTimeHeatpumpCommunicationSettings);
     }
     
     /* Check the application's current state. */
@@ -334,11 +334,14 @@ void APP_HEATPUMP_COMM_Tasks ( void )
                 CommunicationTimeOutCounter = 0;
                 
                 //if ((doFirstTimeHeatpumpCommunicationSettings == true) && (startupSettingsCounter == UINT8_MAX))
-                if ((doFirstTimeHeatpumpCommunicationSettings == true))
+                if ((getDoFirstTimeHeatpumpCommunicationSettings()))
                 {
-                    
-                    doFirstTimeHeatpumpCommunicationSettings = false;
-                    WriteSmartEeprom8(SEEP_ADDR_CONNECT_HAS_EVER_CONTACTED_HEATPUMP, true);
+                    uint16_t cascadeMask = getCascadeSlaveStatus();
+                    if (cascadeMask != UINT16_MAX) {
+                        FillBufferWithStartupSettings(getDoFirstTimeHeatpumpCommunicationSettings());
+                        setDoFirstTimeHeatpumpCommunicationSettings(false);
+                        WriteSmartEeprom8(SEEP_ADDR_CONNECT_HAS_EVER_CONTACTED_HEATPUMP, true);
+                    }
                 }
                 //while(!releaseLoggingLock()){}
 

@@ -381,75 +381,75 @@ void writeCsvLogToFile(DEVICE_TYPE dvt) {
         }
 
         case HEATPUMP:{
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_RUNNING_STATUS_1));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_RUNNING_STATUS_2));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_FAULT_STATE_1));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_FAULT_STATE_2));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_FAULT_STATE_3));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SYSTEM_1_FAULT_STATE_1));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SYSTEM_1_FAULT_STATE_2));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_1));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_2));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_3));
-
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_1));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_2));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_3));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_4));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_1));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_2));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_3));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_4));
-            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_CURRENT_UNIT_TOOLING_NO));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_1_TARGET_FREQUENCY));
-
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_OPERATING_FREQUENCY));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_FAN_OPERATING_FREQUENCY_ROTATIONAL_SPEED));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_ELECTRONIC_EXPANSION_VALVE_STEPS_COUNT));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_NUMBER_OF_EVI_VALVE_STEPS));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_AC_INPUT_VOLTAGE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_AC_INPUT_CURRENT));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_PHASE_CURRENT));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_IPM_TEMPERATURE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_HIGH_PRESSURE_SATURATION_TEMPERATURE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_LOW_PRESSURE_SATURATION_TEMPERATURE));
-
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_EXTERNAL_AMBIENT_TEMPERATURE_T1));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_EXTERNAL_COIL_TUBE_FIN_T2));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_INTERNAL_COIL_TUBE_PLATE_REPLACEMENT_T3));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_RETURN_AIR_TEMPERATURE_T4));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_EXHAUST_TEMPERATURE_T5));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_T6));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_OUTLET_TEMPERATURE_T7));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_ECONOMIZER_INLET_TUBE_T8));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_ECONOMIZER_OUTLET_TUBE_T9));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_TANK_TEMPERATURE));
-
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_FLUORINE_OUTLET_TEMPERATURE_OF_PLATE_HEAT_EXCHANGER));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_DRIVE_MANUFACTURER));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_PUMP_SPEED_PWM));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_FLOW));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_USER_RETURN_WATER_TEMPERATURE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_DEVICE_INPUT_VOLTAGE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_DEVICE_INPUT_CURRENT));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_DEVICE_INPUT_POWER_KW));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_TOTAL_UNIT_ELECTRICITY_CONSUMPTION_KWH));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_AUXILIARY_HEATING_SOURCE_HOT_WATER_TEMPERATURE_VALUE));
-
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_AUXILIARY_HEATING_SOURCE_HEATING_TEMPERATURE_VALUE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_BUFFER_TANK_FOR_HEATING_TEMPERATURE_VALUE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_MAIN_OUTLET_WATER_TEMPERATURE_VALUE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_INLET_TEMPERATURE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_OUTLET_TEMPERATURE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_EXTERNAL_ENVIRONMENT_TEMPERATURE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_TANK_TEMPERATURE_2));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_SET_THE_UPPER_LIMIT_OF_FLOOR_HEATING_HEATING_HEATING_TEMPERATURE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_SET_THE_LOWER_LIMIT_OF_FLOOR_HEATING_HEATING_HEATING_TEMPERATURE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_SET_THE_UPPER_LIMIT_OF_HOT_WATER_TEMPERATURE));
-
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_SET_THE_LOWER_LIMIT_OF_HOT_WATER_TEMPERATURE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_SET_THE_UPPER_LIMIT_OF_REFRIGERATING_TEMPERATURE));
-            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_SET_THE_LOWER_LIMIT_OF_REFRIGERATING_TEMPERATURE));     
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_RUNNING_STATUS_1));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_RUNNING_STATUS_2));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_FAULT_STATE_1));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_FAULT_STATE_2));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_FAULT_STATE_3));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SYSTEM_1_FAULT_STATE_1));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SYSTEM_1_FAULT_STATE_2));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_1));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_2));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_3));
+//
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_1));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_2));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_3));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_4));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_1));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_2));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_3));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_4));
+//            write_String_To_File_Value(fileHandle, getDataFromMemoryCallable(ADDRESS_CURRENT_UNIT_TOOLING_NO));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_1_TARGET_FREQUENCY));
+//
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_OPERATING_FREQUENCY));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_FAN_OPERATING_FREQUENCY_ROTATIONAL_SPEED));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_ELECTRONIC_EXPANSION_VALVE_STEPS_COUNT));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_NUMBER_OF_EVI_VALVE_STEPS));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_AC_INPUT_VOLTAGE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_AC_INPUT_CURRENT));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_PHASE_CURRENT));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_IPM_TEMPERATURE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_HIGH_PRESSURE_SATURATION_TEMPERATURE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_LOW_PRESSURE_SATURATION_TEMPERATURE));
+//
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_EXTERNAL_AMBIENT_TEMPERATURE_T1));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_EXTERNAL_COIL_TUBE_FIN_T2));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_INTERNAL_COIL_TUBE_PLATE_REPLACEMENT_T3));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_RETURN_AIR_TEMPERATURE_T4));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_EXHAUST_TEMPERATURE_T5));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_T6));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_OUTLET_TEMPERATURE_T7));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_ECONOMIZER_INLET_TUBE_T8));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_ECONOMIZER_OUTLET_TUBE_T9));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_TANK_TEMPERATURE));
+//
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_FLUORINE_OUTLET_TEMPERATURE_OF_PLATE_HEAT_EXCHANGER));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_DRIVE_MANUFACTURER));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_PUMP_SPEED_PWM));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_FLOW));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_USER_RETURN_WATER_TEMPERATURE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_DEVICE_INPUT_VOLTAGE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_DEVICE_INPUT_CURRENT));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_DEVICE_INPUT_POWER_KW));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_TOTAL_UNIT_ELECTRICITY_CONSUMPTION_KWH));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_AUXILIARY_HEATING_SOURCE_HOT_WATER_TEMPERATURE_VALUE));
+//
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_AUXILIARY_HEATING_SOURCE_HEATING_TEMPERATURE_VALUE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_BUFFER_TANK_FOR_HEATING_TEMPERATURE_VALUE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_MAIN_OUTLET_WATER_TEMPERATURE_VALUE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_INLET_TEMPERATURE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_OUTLET_TEMPERATURE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_EXTERNAL_ENVIRONMENT_TEMPERATURE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_TANK_TEMPERATURE_2));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_SET_THE_UPPER_LIMIT_OF_FLOOR_HEATING_HEATING_HEATING_TEMPERATURE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_SET_THE_LOWER_LIMIT_OF_FLOOR_HEATING_HEATING_HEATING_TEMPERATURE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_SET_THE_UPPER_LIMIT_OF_HOT_WATER_TEMPERATURE));
+//
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_SET_THE_LOWER_LIMIT_OF_HOT_WATER_TEMPERATURE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_SET_THE_UPPER_LIMIT_OF_REFRIGERATING_TEMPERATURE));
+//            write_String_To_File_Value(fileHandle, (int16_t)getDataFromMemoryCallable(ADDRESS_SET_THE_LOWER_LIMIT_OF_REFRIGERATING_TEMPERATURE));     
               
             write_String_To_File(fileHandle, "\n");            
             break;

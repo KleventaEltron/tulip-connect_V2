@@ -131,15 +131,15 @@ void ParseDisplayData(uint8_t * rxBuffer)
                 SetDataInArrays(regAddress, data);
                 break;
             }    
-            
            
             // RESET NAAR FABRIEKS PARAMETERS
             case ADDRESS_CREW_CONTROL:{
-                
                 if (data & (1 << 13)) {
                     SYS_CONSOLE_PRINT("Resetting\r\n");                
-                    setResetFactorySettings();        
+                    setResetFactorySettings();       
                 }
+                SetDataInArrays(regAddress, data);
+                ChangeHeatpumpSetting(regAddress, data);
                 break;
             }
                 
@@ -280,8 +280,8 @@ static uint16_t getDataFromMemory(uint16_t address, uint8_t whichHeatpump)
 }
 
 
-uint16_t getDataFromMemoryCallable(uint16_t address){
-    return getDataFromMemory(address, MASTER_HEATPUMP_IN_CASCADE);
+uint16_t getDataFromMemoryCallable(uint16_t address, uint16_t heatpumpId){
+    return getDataFromMemory(address, heatpumpId);
 }
 
 
