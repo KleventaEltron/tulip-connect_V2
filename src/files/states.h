@@ -325,6 +325,8 @@ int16_t getAirConditionerReturnDifference();
 int16_t getExternalAmbientTemperature(uint8_t whichHeatpump);
 uint16_t getCascadeSlaveStatus();
 
+bool checkIfBufferIsWithinSetpointMinusDelta(int16_t heatingBufferTemperature);
+
 bool getCurrentDip1SwitchState();
 bool getPreviousDip1SwitchState();
 void setCurrentDip1SwitchState();

@@ -553,6 +553,11 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                 }
             }
             
+            if (heatingBufferTemperature < hot_water_heating_mode_data.initialHeatingBufferTemp) {
+                // Adjust the reference temp to the lowest measured temperature 
+                hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+            }
+            
             if (heatingBufferTemperature >= hot_water_heating_mode_data.initialHeatingBufferTemp + ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME)){
                 // Temperature rised a set temperature in a set time
                 setSecondCounterHeatingTask(0);
@@ -560,12 +565,20 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                 break;
             }
             
-            if ((getSecondCounterHeatingTask() >= ReadSmartEeprom16(SEEP_ADDR_HEATING_TIME_CONSTANT_SEC)) && (getSecondCounterHeatingTask() != UINT32_MAX)){
+            if (getSecondCounterHeatingTask() >= ReadSmartEeprom16(SEEP_ADDR_HEATING_TIME_CONSTANT_SEC)){
                 // Temperature not rised a set temperature in a set time
                 setSecondCounterHeatingTask(0);
-                hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
-                //TurnOnHeatingElementHeatingBuffer();
+                //heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 hot_water_heating_mode_data.HeatingElementOn = true;
+                
+                if (checkIfBufferIsWithinSetpointMinusDelta(heatingBufferTemperature) == true) {
+                    // Buffer temp is within setpoint - delta, must rise 1 degree within the given time next phase
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                }
+                else {
+                    // Buffer temp is not within setpoint - delta must rise untill the setpoint - delta next phase
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
+                }
                 
                 hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = false;
                 hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
@@ -597,22 +610,54 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                 break;
             }
             
-            if (heatingBufferTemperature >= hot_water_heating_mode_data.initialHeatingBufferTemp + ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME)){
-                // Temperature rised a set temperature in a set time
+            if (getSecondCounterHeatingTask() >= ReadSmartEeprom16(SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON)){
+                // Temperature not rised a set temperature in a set time
                 setSecondCounterHeatingTask(0);
-                hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                hot_water_heating_mode_data.HeatingElementOn = false;
+                
+                if (checkIfBufferIsWithinSetpointMinusDelta(heatingBufferTemperature) == true) {
+                    // Buffer temp is within setpoint - delta, must rise 1 degree within the given time next phase
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                }
+                else {
+                    // Buffer temp is not within setpoint - delta must rise untill the setpoint - delta next phase
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
+                }
+                
+                hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_CIRCULATION_PUMP_OFF;
                 break;
             }
             
-            if ((getSecondCounterHeatingTask() >= ReadSmartEeprom16(SEEP_ADDR_HEATING_TIME_CONSTANT_SEC)) && (getSecondCounterHeatingTask() != UINT32_MAX)){
-                // Temperature not rised a set temperature in a set time
-                setSecondCounterHeatingTask(0);
-                hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
-                //TurnOffHeatingElementHeatingBuffer();
-                hot_water_heating_mode_data.HeatingElementOn = false;
+            if (hot_water_heating_mode_data.initialHeatingBufferTemp != TEMPERATURE_ALARM_VALUE) {
+                // Has a valid value, so must rise 1 degree now
+                if (heatingBufferTemperature < hot_water_heating_mode_data.initialHeatingBufferTemp) {
+                    // Adjust the reference temp to the lowest measured temperature 
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                }
                 
-                hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING;
-                break;
+                if (heatingBufferTemperature >= hot_water_heating_mode_data.initialHeatingBufferTemp + ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME)){
+                    // Temperature rised a set temperature in a set time
+                    setSecondCounterHeatingTask(0);
+                    hot_water_heating_mode_data.HeatingElementOn = false;
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                    //heating_mode_data.stepperSetpoint = getHeatingSetpoint();
+
+                    hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING;
+                    break;
+                }
+            }
+            else {
+                // Has not a valid value, must rise untill the setpoint-delta
+                if (checkIfBufferIsWithinSetpointMinusDelta(heatingBufferTemperature) == true) {
+                    // Buffer temp is within setpoint - delta, go back to running
+                    setSecondCounterHeatingTask(0);
+                    hot_water_heating_mode_data.HeatingElementOn = false;
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                    //heating_mode_data.stepperSetpoint = getHeatingSetpoint();
+
+                    hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING;
+                    break;
+                }
             }
             
             break;
@@ -621,6 +666,70 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         // 4
         case HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_CIRCULATION_PUMP_OFF:{
             
+            if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
+                // Compressor is not running and is also not in defrosting
+                hot_water_heating_mode_data.HeatingElementOn = false;
+                hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
+                setSecondCounterHeatingTask(UINT32_MAX);
+
+                if(regulateOnTempSensorInBufferHotWaterHeating && !checkIfDefrostingActive()) {
+                    //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                    setActiveModeControllerPumpOffDueToDipSwitch1(true);
+                }
+                
+                hot_water_heating_mode_data.state = HOT_WATER_HEATING_IDLE_HEATING;
+                break;
+            }
+            
+            if (getSecondCounterHeatingTask() >= ReadSmartEeprom16(SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_CIRCULATION_PUMP_OFF)){
+                // Temperature not rised a set temperature in a set time
+                setSecondCounterHeatingTask(0);
+                hot_water_heating_mode_data.HeatingElementOn = true;
+                
+                if (checkIfBufferIsWithinSetpointMinusDelta(heatingBufferTemperature) == true) {
+                    // Buffer temp is within setpoint - delta, must rise 1 degree within the given time next phase
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                }
+                else {
+                    // Buffer temp is not within setpoint - delta must rise untill the setpoint - delta next phase
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
+                }
+                
+                hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF;
+                break;
+            }
+            
+            if (hot_water_heating_mode_data.initialHeatingBufferTemp != TEMPERATURE_ALARM_VALUE) {
+                // Has a valid value, so must rise 1 degree now
+                if (heatingBufferTemperature < hot_water_heating_mode_data.initialHeatingBufferTemp) {
+                    // Adjust the reference temp to the lowest measured temperature 
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                }
+                
+                if (heatingBufferTemperature >= hot_water_heating_mode_data.initialHeatingBufferTemp + ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME)){
+                    // Temperature rised a set temperature in a set time
+                    setSecondCounterHeatingTask(0);
+                    hot_water_heating_mode_data.HeatingElementOn = false;
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                    //heating_mode_data.stepperSetpoint = getHeatingSetpoint();
+
+                    hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING;
+                    break;
+                }
+            }
+            else {
+                // Has not a valid value, must rise untill the setpoint-delta
+                if (checkIfBufferIsWithinSetpointMinusDelta(heatingBufferTemperature) == true) {
+                    // Buffer temp is within setpoint - delta, go back to running
+                    setSecondCounterHeatingTask(0);
+                    hot_water_heating_mode_data.HeatingElementOn = false;
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                    //heating_mode_data.stepperSetpoint = getHeatingSetpoint();
+
+                    hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING;
+                    break;
+                }
+            }
             
             break;
         }
@@ -628,6 +737,62 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         // 5
         case HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF:{
             
+            if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
+                // Compressor is not running and is also not in defrosting
+                hot_water_heating_mode_data.HeatingElementOn = false;
+                hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
+                setSecondCounterHeatingTask(UINT32_MAX);
+
+                if(regulateOnTempSensorInBufferHotWaterHeating && !checkIfDefrostingActive()) {
+                    //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                    setActiveModeControllerPumpOffDueToDipSwitch1(true);
+                }
+                
+                hot_water_heating_mode_data.state = HOT_WATER_HEATING_IDLE_HEATING;
+                break;
+            }
+            
+            if (getSecondCounterHeatingTask() >= ReadSmartEeprom16(SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF)){
+                // Temperature not rised a set temperature in a set time
+                setSecondCounterHeatingTask(0);
+                hot_water_heating_mode_data.HeatingElementOn = false;
+                hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                
+                hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING;
+                break;
+            }
+            
+            if (hot_water_heating_mode_data.initialHeatingBufferTemp != TEMPERATURE_ALARM_VALUE) {
+                // Has a valid value, so must rise 1 degree now
+                if (heatingBufferTemperature < hot_water_heating_mode_data.initialHeatingBufferTemp) {
+                    // Adjust the reference temp to the lowest measured temperature 
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                }
+                
+                if (heatingBufferTemperature >= hot_water_heating_mode_data.initialHeatingBufferTemp + ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME)){
+                    // Temperature rised a set temperature in a set time
+                    setSecondCounterHeatingTask(0);
+                    hot_water_heating_mode_data.HeatingElementOn = false;
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                    //heating_mode_data.stepperSetpoint = getHeatingSetpoint();
+
+                    hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING;
+                    break;
+                }
+            }
+            else {
+                // Has not a valid value, must rise untill the setpoint-delta
+                if (checkIfBufferIsWithinSetpointMinusDelta(heatingBufferTemperature) == true) {
+                    // Buffer temp is within setpoint - delta, go back to running
+                    setSecondCounterHeatingTask(0);
+                    hot_water_heating_mode_data.HeatingElementOn = false;
+                    hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                    //heating_mode_data.stepperSetpoint = getHeatingSetpoint();
+
+                    hot_water_heating_mode_data.state = HOT_WATER_HEATING_RUNNING_ON_HEATING;
+                    break;
+                }
+            }
             
             break;
         }

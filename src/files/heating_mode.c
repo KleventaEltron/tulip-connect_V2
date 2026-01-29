@@ -30,41 +30,6 @@ bool getHeatingElementBoolFromHeatingMode() {
 bool changeSetting = false;
 bool changeCompensationsHeating = false;
 
-int16_t getCorrectHeatingSetpoint(bool heatingCurveSet)
-{
-    int16_t heatingSetpoint; 
-    
-    if (heatingCurveSet == true) {
-        // Heating curve is set, get setpoint out of the heatpump
-        heatingSetpoint = getHeatpumpHeatingSetpoint()*10;
-    } else {
-        // No curve is set, get setpoint from Connect
-        heatingSetpoint = getHeatingSetpoint();
-    } 
-    
-    return heatingSetpoint;
-}
-
-bool checkIfBufferIsWithinSetpointMinusDelta(int16_t heatingBufferTemperature)
-{
-    int16_t setpoint = getCorrectHeatingSetpoint(heating_mode_data.heatingCurveSet);
-    int16_t delta = getAirConditionerReturnDifference();
-    
-    if (heatingBufferTemperature == TEMPERATURE_ALARM_VALUE || delta == TEMPERATURE_ALARM_VALUE || setpoint == UINT16_MAX || setpoint == TEMPERATURE_ALARM_VALUE) {
-        // No valid temperatures, return false
-        return false;
-    } 
-    
-    if (heatingBufferTemperature >= (setpoint - delta)) {
-        // Heating buffer temp is within setpoint minus delta
-        return true;
-    }
-    else {
-        // Heating buffer temp is not within setpoint minus delta
-        return false;
-    }
-}
-
 void setTemperatureOperatingCycleHeating() {
     if ((getsystemOnCounter() % 10) == 0) {
         changeSetting = true;
