@@ -12,6 +12,7 @@
 #include "time_counters.h"
 #include "../config/default/user.h"
 #include "ntc.h"
+#include "modbus/display.h"
 
 
 
@@ -53,7 +54,7 @@ bool getActiveModeControllerPumpOffDueToDipSwitch1() {
 
 
 bool checkIfDefrostingActive(void) {
-    uint16_t runningStatusOne = getDataFromMemoryCallable(ADDRESS_RUNNING_STATUS_1);
+    uint16_t runningStatusOne = getDataFromMemoryCallable(ADDRESS_RUNNING_STATUS_1, MASTER_HEATPUMP_IN_CASCADE);
     return (runningStatusOne & (1u << 1)) != 0;
 }
 

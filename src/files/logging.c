@@ -48,7 +48,7 @@ extern const TCPIP_STACK_MODULE_CONFIG TCPIP_STACK_MODULE_CONFIG_TBL [];
 extern const size_t TCPIP_STACK_MODULE_CONFIG_TBL_SIZE;
 //extern APP_HEATING_AND_HOT_WATER_DATA app_Data;
 
-NET_PRES_SKT_HANDLE_T   socket;
+NET_PRES_SKT_HANDLE_T   log_socket;
 IP_MULTI_ADDRESS        address;
 
 DEVICE_TYPE DEVICE_TYPE_REQUESTED = -1; 
@@ -554,7 +554,7 @@ bool setLoggingDataPerDeviceType(char* requestBuilder, size_t requestBuilderSize
         }
     }
     strcat(requestBuilder, "}}");
-    return;
+    return true;
 }
 
 
@@ -666,7 +666,7 @@ static bool socketWriteAll(const uint8_t* data, size_t len)
     while (len > 0)
     {
         // how much can we write right now?
-        uint16_t canWrite = NET_PRES_SocketWriteIsReady(socket, (uint16_t)len, 0);
+        uint16_t canWrite = NET_PRES_SocketWriteIsReady(log_socket, (uint16_t)len, 0);
 
         if (canWrite == 0)
         {
@@ -682,7 +682,7 @@ static bool socketWriteAll(const uint8_t* data, size_t len)
             continue;
         }
 
-        int w = NET_PRES_SocketWrite(socket, data, canWrite);
+        int w = NET_PRES_SocketWrite(log_socket, data, canWrite);
         if (w < 0) return false;
 
         data += (size_t)w;
@@ -1006,7 +1006,7 @@ bool readNetworkBufferBodySslResponse ( void ) {
     //char networkBuffer[2048];
     int bytesRead;
     
-    bytesRead = NET_PRES_SocketRead(socket, (uint8_t*)readBuffer, READ_BUFFER_SIZE);
+    bytesRead = NET_PRES_SocketRead(log_socket, (uint8_t*)readBuffer, READ_BUFFER_SIZE);
        
     if (bytesRead > 0) {
         SYS_CONSOLE_PRINT("Received %d bytes from the server\r\n", bytesRead);
@@ -1025,7 +1025,7 @@ bool readNetworkBufferBodySslResponse ( void ) {
     //}    
     
     //return true;
-    if (!NET_PRES_SocketIsConnected(socket)) {
+    if (!NET_PRES_SocketIsConnected(log_socket)) {
         return true;
     }
     
@@ -1052,10 +1052,10 @@ bool startSocketConnection ( void ) {
     //    address.v4Add.v[0], address.v4Add.v[1], address.v4Add.v[2], address.v4Add.v[3], PORT);
                 
     NET_PRES_SKT_ERROR_T *error = NULL;
-    socket = NET_PRES_SocketOpen(0, NET_PRES_SKT_UNENCRYPTED_STREAM_CLIENT, IP_ADDRESS_TYPE_IPV4, PORT, (NET_PRES_ADDRESS *)&address, error);                    
-    NET_PRES_SocketWasReset(socket);
+    log_socket = NET_PRES_SocketOpen(0, NET_PRES_SKT_UNENCRYPTED_STREAM_CLIENT, IP_ADDRESS_TYPE_IPV4, PORT, (NET_PRES_ADDRESS *)&address, error);                    
+    NET_PRES_SocketWasReset(log_socket);
             
-    if (socket == INVALID_SOCKET) {
+    if (log_socket == INVALID_SOCKET) {
         SYS_CONSOLE_MESSAGE("Could not create socket - aborting\r\n");
         return false;
     }
@@ -1069,12 +1069,12 @@ bool startSocketConnection ( void ) {
  * In case of failing the process is aborted.
  */
 SSL_NEGOTIATION_STATES waitForConnection ( void ) {
-    if (!NET_PRES_SocketIsConnected(socket)) {
+    if (!NET_PRES_SocketIsConnected(log_socket)) {
         return SOCKET_NOT_CONNECTED;
     }
             
     SYS_CONSOLE_MESSAGE("Connection Opened: Starting SSL Negotiation\r\n");
-    if (!NET_PRES_SocketEncryptSocket(socket)) {
+    if (!NET_PRES_SocketEncryptSocket(log_socket)) {
         SYS_CONSOLE_MESSAGE("SSL Create Connection Failed - Aborting the process!\r\n");
         return SSL_CREATE_CONNECTION_FAILED;
     } else {
@@ -1105,11 +1105,11 @@ bool waitOnDNS ( void ) {
  * If it fails we abort the process. 
  */
 SSL_NEGOTIATION_STATES waitForSslConnection ( void ) {
-    if (NET_PRES_SocketIsNegotiatingEncryption(socket)) {
+    if (NET_PRES_SocketIsNegotiatingEncryption(log_socket)) {
         return SSL_BUSY_NEGOTIATING;
     }
             
-    if (!NET_PRES_SocketIsSecure(socket)) {
+    if (!NET_PRES_SocketIsSecure(log_socket)) {
         SYS_CONSOLE_MESSAGE("SSL Connection Negotiation Failed - Aborting\r\n");
         return SSL_SOCKET_NOT_SECURE;
     }
@@ -1124,8 +1124,8 @@ SSL_NEGOTIATION_STATES waitForSslConnection ( void ) {
  * Wait for the socket to be available for requests.
  */
 SSL_SOCKET_STATES socketReady( void ) {
-    if (NET_PRES_SocketReadIsReady(socket) == 0) {
-        if (NET_PRES_SocketWasReset(socket) || NET_PRES_SocketWasDisconnected(socket)) {
+    if (NET_PRES_SocketReadIsReady(log_socket) == 0) {
+        if (NET_PRES_SocketWasReset(log_socket) || NET_PRES_SocketWasDisconnected(log_socket)) {
             return SSL_SOCKET_WAS_DISCONNECTED;
         }
         return SSL_SOCKET_NOT_READY;
@@ -1139,7 +1139,7 @@ SSL_SOCKET_STATES socketReady( void ) {
  * Close an open socket
  */
 void closeSocket ( void ) {
-    NET_PRES_SocketClose(socket);
+    NET_PRES_SocketClose(log_socket);
 }
 
 
@@ -1163,7 +1163,7 @@ bool getUpdateSettingsFromServer ( void ) {
                     "Content-Length: 0\r\n\r\n",
                     HARDWARE_ID, HOST, TOKEN);     
  
-    uint16_t bytesSend = NET_PRES_SocketWrite(socket, (uint8_t*) networkBuffer, strlen(networkBuffer));
+    uint16_t bytesSend = NET_PRES_SocketWrite(log_socket, (uint8_t*) networkBuffer, strlen(networkBuffer));
     
     if (bytesSend <= 0) {
         SYS_CONSOLE_PRINT("***** COULD NOT COMPLETE REQUEST, CHECK IF NETWORK TX BUFFER SIZE IS BIG ENOUGH TO SEND THE REQUEST! SIZE NOW >> %d *****\r\n", strlen(networkBuffer));  
@@ -1327,12 +1327,12 @@ static bool http_response_complete(const char* buf, size_t len)
 bool readServerResponseDone(void)
 {
     // if disconnected/reset, stop
-    if (NET_PRES_SocketWasReset(socket) || NET_PRES_SocketWasDisconnected(socket))
+    if (NET_PRES_SocketWasReset(log_socket) || NET_PRES_SocketWasDisconnected(log_socket))
     {
         return true;
     }
 
-    int ready = NET_PRES_SocketReadIsReady(socket);
+    int ready = NET_PRES_SocketReadIsReady(log_socket);
     if (ready <= 0)
     {
         // not done, just no data yet
@@ -1351,7 +1351,7 @@ bool readServerResponseDone(void)
     if (toRead > (size_t)ready) toRead = (size_t)ready;
     if (toRead > room) toRead = room;
 
-    bytesRead = NET_PRES_SocketRead(socket, (uint8_t*)readBuffer + buffer_len, toRead);
+    bytesRead = NET_PRES_SocketRead(log_socket, (uint8_t*)readBuffer + buffer_len, toRead);
     if (bytesRead > 0)
     {
         buffer_len += (size_t)bytesRead;
@@ -1626,9 +1626,9 @@ void send_http_chunk(const char *data, size_t len) {
     char header[16];
     int n = sprintf(header, "%X\r\n", (unsigned int)len);
 
-    NET_PRES_SocketWrite(socket, header, n);
-    NET_PRES_SocketWrite(socket, data, len);
-    NET_PRES_SocketWrite(socket, "\r\n", 2);
+    NET_PRES_SocketWrite(log_socket, header, n);
+    NET_PRES_SocketWrite(log_socket, data, len);
+    NET_PRES_SocketWrite(log_socket, "\r\n", 2);
 }
 
 
@@ -1736,7 +1736,7 @@ bool sendUpdatedSettingsList ( void ) {
                     "Transfer-Encoding: chunked\r\n\r\n",
                     HARDWARE_ID, HOST, TOKEN);
     
-    uint16_t bytesSend = NET_PRES_SocketWrite(socket, (uint8_t*) networkBuffer, strlen(networkBuffer));
+    uint16_t bytesSend = NET_PRES_SocketWrite(log_socket, (uint8_t*) networkBuffer, strlen(networkBuffer));
     
     getSettingValuesByModusIndex(0x0100, 0x022C);  
     getSettingValuesByModusIndex(0x0300, 0x0319);
@@ -1810,7 +1810,7 @@ bool sendUpdatedSettingsList ( void ) {
     
     
     // Laatste write zodat de server weet dat ontvangen klaar is
-    NET_PRES_SocketWrite(socket, "0\r\n\r\n", 5);    
+    NET_PRES_SocketWrite(log_socket, "0\r\n\r\n", 5);    
     
     if (bytesSend <= 0) {
         SYS_CONSOLE_PRINT("***** COULD NOT COMPLETE REQUEST, CHECK IF NETWORK TX BUFFER SIZE IS BIG ENOUGH TO SEND THE REQUEST! SIZE NOW >> %d *****\r\n", strlen(networkBuffer));  
@@ -1823,7 +1823,7 @@ bool sendUpdatedSettingsList ( void ) {
 
 
 bool readServerResponseUpdatedSettingsDone() {
-    bytesRead = NET_PRES_SocketRead(socket, (uint8_t*)readBuffer + buffer_len, READ_CHUNK_SIZE);
+    bytesRead = NET_PRES_SocketRead(log_socket, (uint8_t*)readBuffer + buffer_len, READ_CHUNK_SIZE);
     SYS_CONSOLE_PRINT("bytes read %i\n", bytesRead);
     
     for(int i = 0; i < buffer_len; i++) {

@@ -150,6 +150,26 @@ extern "C" {
 // Section: Driver Configuration
 // *****************************************************************************
 // *****************************************************************************
+/*** WiFi WINC Driver Configuration ***/
+#define WDRV_WINC_EIC_SOURCE
+#define WDRV_WINC_NETWORK_MODE_SOCKET
+#define WDRV_WINC_DEVICE_WINC1500
+#define WDRV_WINC_DEVICE_SPLIT_INIT
+#define WDRV_WINC_DEVICE_ENTERPRISE_CONNECT
+#define WDRV_WINC_DEVICE_EXT_CONNECT_PARAMS
+#define WDRV_WINC_DEVICE_BSS_ROAMING
+#define WDRV_WINC_DEVICE_FLEXIBLE_FLASH_MAP
+#define WDRV_WINC_DEVICE_DYNAMIC_BYPASS_MODE
+#define WDRV_WINC_DEVICE_WPA_SOFT_AP
+#define WDRV_WINC_DEVICE_CONF_NTP_SERVER
+#define WDRV_WINC_DEVICE_HOST_FILE_DOWNLOAD
+#define WDRV_WINC_DEVICE_SOFT_AP_EXT
+#define WDRV_WINC_DEVICE_MULTI_GAIN_TABLE
+#define WDRV_WINC_DEVICE_URL_TYPE           unsigned char
+#define WDRV_WINC_DEVICE_OTA_STATUS_EXTENDED
+#define WDRV_WINC_DEVICE_SCAN_SSID_LIST
+#define WDRV_WINC_DEVICE_USE_SYS_DEBUG
+
 /* SDMMC Driver Global Configuration Options */
 #define DRV_SDMMC_INSTANCES_NUMBER                       (1U)
 
@@ -209,6 +229,12 @@ extern "C" {
 #define TCPIP_STACK_USE_ICMP_SERVER
 #define TCPIP_ICMP_ECHO_ALLOW_BROADCASTS    false
 
+/*** ICMPv4 Client Configuration ***/
+#define TCPIP_STACK_USE_ICMP_CLIENT
+#define TCPIP_ICMP_ECHO_REQUEST_TIMEOUT        500
+#define TCPIP_ICMP_TASK_TICK_RATE              33
+#define TCPIP_STACK_MAX_CLIENT_ECHO_REQUESTS   4
+#define TCPIP_ICMP_COMMAND_ENABLE              false
 
 /******************************************************************************/
 /*wolfSSL TLS Layer Configuration*/

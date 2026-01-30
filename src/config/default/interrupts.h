@@ -16,7 +16,7 @@
 
 // DOM-IGNORE-BEGIN
 /*******************************************************************************
-* Copyright (C) 2018 Microchip Technology Inc. and its subsidiaries.
+* Copyright (C) 2025 Microchip Technology Inc. and its subsidiaries.
 *
 * Subject to your compliance with these terms, you may use Microchip software
 * and any derivatives exclusively with Microchip products. It is your
@@ -56,7 +56,6 @@
 // Section: Handler Routines
 // *****************************************************************************
 // *****************************************************************************
-
 void Reset_Handler (void);
 void NonMaskableInt_Handler (void);
 void HardFault_Handler (void);
@@ -66,12 +65,14 @@ void UsageFault_Handler (void);
 void DebugMonitor_Handler (void);
 void SysTick_Handler (void);
 void WDT_InterruptHandler (void);
+void EIC_EXTINT_8_InterruptHandler (void);
 void DMAC_0_InterruptHandler (void);
 void DMAC_1_InterruptHandler (void);
 void DMAC_2_InterruptHandler (void);
 void DMAC_3_InterruptHandler (void);
 void DMAC_OTHER_InterruptHandler (void);
 void SERCOM1_USART_InterruptHandler (void);
+void SERCOM2_SPI_InterruptHandler (void);
 void SERCOM3_I2C_InterruptHandler (void);
 void SERCOM5_USART_InterruptHandler (void);
 void SERCOM7_USART_InterruptHandler (void);

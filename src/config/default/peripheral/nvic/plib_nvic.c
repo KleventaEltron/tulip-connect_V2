@@ -61,6 +61,8 @@ void NVIC_Initialize( void )
      * from within the "Interrupt Manager" of MHC. */
     NVIC_SetPriority(WDT_IRQn, 7);
     NVIC_EnableIRQ(WDT_IRQn);
+    NVIC_SetPriority(EIC_EXTINT_8_IRQn, 7);
+    NVIC_EnableIRQ(EIC_EXTINT_8_IRQn);
     NVIC_SetPriority(DMAC_0_IRQn, 7);
     NVIC_EnableIRQ(DMAC_0_IRQn);
     NVIC_SetPriority(DMAC_1_IRQn, 7);
@@ -79,6 +81,14 @@ void NVIC_Initialize( void )
     NVIC_EnableIRQ(SERCOM1_2_IRQn);
     NVIC_SetPriority(SERCOM1_OTHER_IRQn, 7);
     NVIC_EnableIRQ(SERCOM1_OTHER_IRQn);
+    NVIC_SetPriority(SERCOM2_0_IRQn, 7);
+    NVIC_EnableIRQ(SERCOM2_0_IRQn);
+    NVIC_SetPriority(SERCOM2_1_IRQn, 7);
+    NVIC_EnableIRQ(SERCOM2_1_IRQn);
+    NVIC_SetPriority(SERCOM2_2_IRQn, 7);
+    NVIC_EnableIRQ(SERCOM2_2_IRQn);
+    NVIC_SetPriority(SERCOM2_OTHER_IRQn, 7);
+    NVIC_EnableIRQ(SERCOM2_OTHER_IRQn);
     NVIC_SetPriority(SERCOM3_0_IRQn, 7);
     NVIC_EnableIRQ(SERCOM3_0_IRQn);
     NVIC_SetPriority(SERCOM3_1_IRQn, 7);
@@ -155,4 +165,27 @@ void NVIC_INT_Restore( bool state )
         __disable_irq();
         __DMB();
     }
+}
+
+bool NVIC_INT_SourceDisable( IRQn_Type source )
+{
+    bool processorStatus;
+    bool intSrcStatus;
+
+    processorStatus = NVIC_INT_Disable();
+    intSrcStatus = (NVIC_GetEnableIRQ(source) != 0U);
+    NVIC_DisableIRQ( source );
+    NVIC_INT_Restore( processorStatus );
+
+    /* return the source status */
+    return intSrcStatus;
+}
+
+void NVIC_INT_SourceRestore( IRQn_Type source, bool status )
+{
+    if( status ) {
+       NVIC_EnableIRQ( source );
+    }
+
+    return;
 }

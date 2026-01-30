@@ -14,7 +14,7 @@
 
 //DOM-IGNORE-BEGIN
 /*******************************************************************************
-* Copyright (C) 2018 Microchip Technology Inc. and its subsidiaries.
+* Copyright (C) 2025 Microchip Technology Inc. and its subsidiaries.
 *
 * Subject to your compliance with these terms, you may use Microchip software
 * and any derivatives exclusively with Microchip products. It is your
@@ -67,10 +67,12 @@
 #include "system/sys_random_h2_adapter.h"
 #include "peripheral/sercom/i2c_master/plib_sercom3_i2c_master.h"
 #include "driver/gmac/drv_gmac.h"
+#include "peripheral/sercom/spi_master/plib_sercom2_spi_master.h"
 #include "peripheral/sercom/usart/plib_sercom1_usart.h"
 #include "peripheral/evsys/plib_evsys.h"
-#include "driver/sdmmc/drv_sdmmc.h"
+#include "driver/winc/include/wdrv_winc_api.h"
 #include "system/command/sys_command.h"
+#include "driver/sdmmc/drv_sdmmc.h"
 #include "peripheral/sercom/usart/plib_sercom7_usart.h"
 #include "peripheral/port/plib_port.h"
 #include "peripheral/clock/plib_clock.h"
@@ -80,6 +82,7 @@
 #include "peripheral/wdt/plib_wdt.h"
 #include "peripheral/cmcc/plib_cmcc.h"
 #include "peripheral/sercom/usart/plib_sercom5_usart.h"
+#include "peripheral/eic/plib_eic.h"
 #include "driver/miim/drv_miim.h"
 #include "wolfssl/wolfcrypt/port/pic32/crypt_wolfcryptcb.h"
 #include "net_pres/pres/net_pres.h"
@@ -113,13 +116,13 @@ extern "C" {
 // DOM-IGNORE-END
 
 /* Device Information */
-#define DEVICE_NAME			 "ATSAME54P20A"
-#define DEVICE_ARCH			 "CORTEX-M4"
-#define DEVICE_FAMILY		 "SAME"
-#define DEVICE_SERIES		 "SAME54"
+#define DEVICE_NAME          "ATSAME54P20A"
+#define DEVICE_ARCH          "CORTEX-M4"
+#define DEVICE_FAMILY        "SAME"
+#define DEVICE_SERIES        "SAME54"
 
 /* CPU clock frequency */
-#define CPU_CLOCK_FREQUENCY 120000000
+#define CPU_CLOCK_FREQUENCY 120000000U
 
 // *****************************************************************************
 // *****************************************************************************
@@ -236,6 +239,9 @@ typedef struct
 
 
     SYS_MODULE_OBJ  tcpip;
+    SYS_MODULE_OBJ  drvWifiWinc;
+    SYS_MODULE_OBJ sysCommand;
+
    SYS_MODULE_OBJ  drvMiim_0;
 
     SYS_MODULE_OBJ  sysDebug;

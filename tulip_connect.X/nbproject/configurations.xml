@@ -46,6 +46,66 @@
               <itemPath>../src/config/default/driver/sdmmc/drv_sdmmc.h</itemPath>
               <itemPath>../src/config/default/driver/sdmmc/src/drv_sdmmc_local.h</itemPath>
             </logicalFolder>
+            <logicalFolder name="winc" displayName="winc" projectFiles="true">
+              <logicalFolder name="include" displayName="include" projectFiles="true">
+                <logicalFolder name="dev" displayName="dev" projectFiles="true">
+                  <itemPath>../src/config/default/driver/winc/include/dev/wdrv_winc_spi.h</itemPath>
+                  <itemPath>../src/config/default/driver/winc/include/dev/wdrv_winc_gpio.h</itemPath>
+                </logicalFolder>
+                <logicalFolder name="drv" displayName="drv" projectFiles="true">
+                  <logicalFolder name="bsp" displayName="bsp" projectFiles="true">
+                    <itemPath>../src/config/default/driver/winc/include/drv/bsp/nm_bsp.h</itemPath>
+                  </logicalFolder>
+                  <logicalFolder name="common" displayName="common" projectFiles="true">
+                    <itemPath>../src/config/default/driver/winc/include/drv/common/nm_debug.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/common/nm_common.h</itemPath>
+                  </logicalFolder>
+                  <logicalFolder name="driver" displayName="driver" projectFiles="true">
+                    <itemPath>../src/config/default/driver/winc/include/drv/driver/ecc_types.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/driver/m2m_ota.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/driver/nmbus.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/driver/m2m_periph.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/driver/m2m_types.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/driver/nmasic.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/driver/m2m_ssl.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/driver/m2m_hif.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/driver/nmspi.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/driver/nmdrv.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/driver/m2m_wifi.h</itemPath>
+                  </logicalFolder>
+                  <logicalFolder name="socket" displayName="socket" projectFiles="true">
+                    <itemPath>../src/config/default/driver/winc/include/drv/socket/socket.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/socket/m2m_socket_host_if.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/socket/netinet_in.h</itemPath>
+                  </logicalFolder>
+                  <logicalFolder name="spi_flash" displayName="spi_flash" projectFiles="true">
+                    <itemPath>../src/config/default/driver/winc/include/drv/spi_flash/spi_flash.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/spi_flash/flexible_flash.h</itemPath>
+                    <itemPath>../src/config/default/driver/winc/include/drv/spi_flash/spi_flash_map.h</itemPath>
+                  </logicalFolder>
+                </logicalFolder>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_bssctx.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_systime.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_debug.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_common.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_authctx.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_socket.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_custie.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_wps.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_assoc.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_nvm.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_sta.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_softap.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_powersave.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_api.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_bssfind.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_ssl.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_host_file.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_httpprovctx.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_client_api.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc.h</itemPath>
+              </logicalFolder>
+            </logicalFolder>
             <itemPath>../src/config/default/driver/driver.h</itemPath>
             <itemPath>../src/config/default/driver/driver_common.h</itemPath>
           </logicalFolder>
@@ -212,6 +272,9 @@
             <logicalFolder name="dmac" displayName="dmac" projectFiles="true">
               <itemPath>../src/config/default/peripheral/dmac/plib_dmac.h</itemPath>
             </logicalFolder>
+            <logicalFolder name="eic" displayName="eic" projectFiles="true">
+              <itemPath>../src/config/default/peripheral/eic/plib_eic.h</itemPath>
+            </logicalFolder>
             <logicalFolder name="evsys" displayName="evsys" projectFiles="true">
               <itemPath>../src/config/default/peripheral/evsys/plib_evsys.h</itemPath>
             </logicalFolder>
@@ -232,6 +295,10 @@
               <logicalFolder name="i2c_master" displayName="i2c_master" projectFiles="true">
                 <itemPath>../src/config/default/peripheral/sercom/i2c_master/plib_sercom_i2c_master_common.h</itemPath>
                 <itemPath>../src/config/default/peripheral/sercom/i2c_master/plib_sercom3_i2c_master.h</itemPath>
+              </logicalFolder>
+              <logicalFolder name="spi_master" displayName="spi_master" projectFiles="true">
+                <itemPath>../src/config/default/peripheral/sercom/spi_master/plib_sercom_spi_master_common.h</itemPath>
+                <itemPath>../src/config/default/peripheral/sercom/spi_master/plib_sercom2_spi_master.h</itemPath>
               </logicalFolder>
               <logicalFolder name="usart" displayName="usart" projectFiles="true">
                 <itemPath>../src/config/default/peripheral/sercom/usart/plib_sercom_usart_common.h</itemPath>
@@ -725,6 +792,61 @@
               <itemPath>../src/config/default/driver/sdmmc/src/drv_sdmmc.c</itemPath>
               <itemPath>../src/config/default/driver/sdmmc/src/drv_sdmmc_file_system.c</itemPath>
             </logicalFolder>
+            <logicalFolder name="winc" displayName="winc" projectFiles="true">
+              <logicalFolder name="dev" displayName="dev" projectFiles="true">
+                <logicalFolder name="gpio" displayName="gpio" projectFiles="true">
+                  <itemPath>../src/config/default/driver/winc/dev/gpio/wdrv_winc_gpio.c</itemPath>
+                  <itemPath>../src/config/default/driver/winc/dev/gpio/wdrv_winc_eint.c</itemPath>
+                </logicalFolder>
+                <logicalFolder name="spi" displayName="spi" projectFiles="true">
+                  <itemPath>../src/config/default/driver/winc/dev/spi/wdrv_winc_spi.c</itemPath>
+                </logicalFolder>
+              </logicalFolder>
+              <logicalFolder name="drv" displayName="drv" projectFiles="true">
+                <logicalFolder name="common" displayName="common" projectFiles="true">
+                  <itemPath>../src/config/default/driver/winc/drv/common/nm_common.c</itemPath>
+                </logicalFolder>
+                <logicalFolder name="driver" displayName="driver" projectFiles="true">
+                  <itemPath>../src/config/default/driver/winc/drv/driver/nmdrv.c</itemPath>
+                  <itemPath>../src/config/default/driver/winc/drv/driver/m2m_periph.c</itemPath>
+                  <itemPath>../src/config/default/driver/winc/drv/driver/m2m_ssl.c</itemPath>
+                  <itemPath>../src/config/default/driver/winc/drv/driver/nmbus.c</itemPath>
+                  <itemPath>../src/config/default/driver/winc/drv/driver/m2m_wifi.c</itemPath>
+                  <itemPath>../src/config/default/driver/winc/drv/driver/nmasic.c</itemPath>
+                  <itemPath>../src/config/default/driver/winc/drv/driver/m2m_ota.c</itemPath>
+                  <itemPath>../src/config/default/driver/winc/drv/driver/nmspi.c</itemPath>
+                  <itemPath>../src/config/default/driver/winc/drv/driver/m2m_hif.c</itemPath>
+                </logicalFolder>
+                <logicalFolder name="socket" displayName="socket" projectFiles="true">
+                  <itemPath>../src/config/default/driver/winc/drv/socket/inet_addr.c</itemPath>
+                  <itemPath>../src/config/default/driver/winc/drv/socket/inet_ntop.c</itemPath>
+                  <itemPath>../src/config/default/driver/winc/drv/socket/socket.c</itemPath>
+                </logicalFolder>
+                <logicalFolder name="spi_flash" displayName="spi_flash" projectFiles="true">
+                  <itemPath>../src/config/default/driver/winc/drv/spi_flash/flexible_flash.c</itemPath>
+                  <itemPath>../src/config/default/driver/winc/drv/spi_flash/spi_flash.c</itemPath>
+                </logicalFolder>
+              </logicalFolder>
+              <logicalFolder name="osal" displayName="osal" projectFiles="true">
+                <itemPath>../src/config/default/driver/winc/osal/wdrv_winc_osal.c</itemPath>
+              </logicalFolder>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_authctx.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_systime.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_socket.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_ssl.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_softap.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_custie.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_sta.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_powersave.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_bssctx.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_bssfind.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_assoc.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_host_file.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_nvm.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_httpprovctx.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_wps.c</itemPath>
+            </logicalFolder>
           </logicalFolder>
           <logicalFolder name="library" displayName="library" projectFiles="true">
             <logicalFolder name="tcpip" displayName="tcpip" projectFiles="true">
@@ -774,6 +896,9 @@
             <logicalFolder name="dmac" displayName="dmac" projectFiles="true">
               <itemPath>../src/config/default/peripheral/dmac/plib_dmac.c</itemPath>
             </logicalFolder>
+            <logicalFolder name="eic" displayName="eic" projectFiles="true">
+              <itemPath>../src/config/default/peripheral/eic/plib_eic.c</itemPath>
+            </logicalFolder>
             <logicalFolder name="evsys" displayName="evsys" projectFiles="true">
               <itemPath>../src/config/default/peripheral/evsys/plib_evsys.c</itemPath>
             </logicalFolder>
@@ -792,6 +917,9 @@
             <logicalFolder name="sercom" displayName="sercom" projectFiles="true">
               <logicalFolder name="i2c_master" displayName="i2c_master" projectFiles="true">
                 <itemPath>../src/config/default/peripheral/sercom/i2c_master/plib_sercom3_i2c_master.c</itemPath>
+              </logicalFolder>
+              <logicalFolder name="spi_master" displayName="spi_master" projectFiles="true">
+                <itemPath>../src/config/default/peripheral/sercom/spi_master/plib_sercom2_spi_master.c</itemPath>
               </logicalFolder>
               <logicalFolder name="usart" displayName="usart" projectFiles="true">
                 <itemPath>../src/config/default/peripheral/sercom/usart/plib_sercom1_usart.c</itemPath>
@@ -1061,8 +1189,8 @@
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="CMSIS" vendor="ARM" version="5.4.0"/>
         <pack name="SAME54_DFP" vendor="Microchip" version="3.9.244"/>
+        <pack name="CMSIS" vendor="ARM" version="5.4.0"/>
       </packs>
       <ScriptingSettings>
       </ScriptingSettings>
@@ -1126,8 +1254,6 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-fffff"/>
         <property key="poweroptions.powerenable" value="false"/>
-        <property key="programmerToGoFilePath"
-                  value="//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/tulip_connect.X/debug/default/tulip_connect_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"
@@ -1167,7 +1293,7 @@
         <property key="exclude-floating-point" value="false"/>
         <property key="expand-pragma-config" value="false"/>
         <property key="extra-include-directories"
-                  value="../src;../src/config/default;../src/config/default/library;../src/config/default/library/tcpip/src;../src/config/default/library/tcpip/src/common;../src/config/default/system/fs/fat_fs/file_system;../src/config/default/system/fs/fat_fs/hardware_access;../src/packs/ATSAME54P20A_DFP;../src/packs/CMSIS/;../src/packs/CMSIS/CMSIS/Core/Include;../src/third_party/wolfssl;../src/third_party/wolfssl/wolfssl;../src/third_party/zlib"/>
+                  value="../src;../src/config/default;../src/config/default/driver/winc/include/;../src/config/default/driver/winc/include/dev;../src/config/default/driver/winc/include/drv/bsp;../src/config/default/driver/winc/include/drv/bsp/include;../src/config/default/driver/winc/include/drv/common;../src/config/default/driver/winc/include/drv/driver;../src/config/default/driver/winc/include/drv/socket;../src/config/default/driver/winc/include/drv/spi_flash;../src/config/default/library;../src/config/default/library/tcpip/src;../src/config/default/library/tcpip/src/common;../src/config/default/system/fs/fat_fs/file_system;../src/config/default/system/fs/fat_fs/hardware_access;../src/packs/ATSAME54P20A_DFP;../src/packs/CMSIS/;../src/packs/CMSIS/CMSIS/Core/Include;../src/third_party/wolfssl;../src/third_party/wolfssl/wolfssl;../src/third_party/zlib"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="generate-micro-compressed-code" value="false"/>
         <property key="isolate-each-function" value="false"/>
@@ -1295,7 +1421,7 @@
         <property key="generate-micro-compressed-code" value="false"/>
         <property key="isolate-each-function" value="true"/>
         <property key="make-warnings-into-errors" value="false"/>
-        <property key="optimization-level" value="-Os"/>
+        <property key="optimization-level" value="-O2"/>
         <property key="place-data-into-section" value="false"/>
         <property key="post-instruction-scheduling" value="default"/>
         <property key="pre-instruction-scheduling" value="default"/>
