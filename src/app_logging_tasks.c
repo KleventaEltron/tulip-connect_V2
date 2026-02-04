@@ -81,6 +81,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
                 app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_LOGGING_UNLOCK;
                 onlyDoSettings = true;
             }            
+            
             /* Wait for next logging timer trigger */
             if (LoggingTimerExpired()) {
                 onlyDoSettings = false;
@@ -269,7 +270,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
                 app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
                 break;
             }
-            
+            resetRxBuffer();
             app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_RECEIVE_SOCKET_READY;
             break;
         }
@@ -332,7 +333,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
                 app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
                 break;
             }
-            
+            resetRxBuffer();
             app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_RECEIVE_SOCKET_READY_UPDATE_SETTINGS;   
             break;
         }

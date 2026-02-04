@@ -288,6 +288,8 @@ typedef struct{
     bool temperatureTooLowForPumpToBeOn;
 } CIRCULATION_PUMP_DATA;
 
+bool getDoFirstTimeHeatpumpCommunicationSettings(void);
+void setDoFirstTimeHeatpumpCommunicationSettings(bool value);
 void resetActiveModeStates();
 uint16_t getActiveStateFromActiveMode(RUNNING_MODES state);
 const char * getActiveModeToString(RUNNING_MODES state);

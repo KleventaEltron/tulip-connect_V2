@@ -152,6 +152,7 @@ void setSettingChangedInDisplay(bool value);
 bool getSettingChangedInDisplay();
 void setNewLogRequired(bool value);
 bool getNewLogRequired();
+void resetRxBuffer(void);
 
 //extern char NTP_TIME_BUFFER[40];
 

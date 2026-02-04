@@ -13,6 +13,8 @@
 #include "../config/default/user.h"
 #include "ntc.h"
 
+
+
 APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
 APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
 
@@ -26,6 +28,16 @@ HOT_WATER_HEATING_MODE_DATA hot_water_heating_mode_data;
 HOT_WATER_FLOOR_HEATING_MODE_DATA hot_water_floor_heating_mode_data;
 
 CIRCULATION_PUMP_DATA circulation_pump_data;
+static volatile bool doFirstTimeHeatpumpCommunicationSettings = false;
+
+bool getDoFirstTimeHeatpumpCommunicationSettings() {
+    return doFirstTimeHeatpumpCommunicationSettings;
+}
+
+void setDoFirstTimeHeatpumpCommunicationSettings(bool value) {
+    doFirstTimeHeatpumpCommunicationSettings = value;
+}
+
 
 void setActiveModeControllerPumpOffDueToDipSwitch1(bool target) {
     SYS_CONSOLE_PRINT("*** NEW HEATPUMP ON TARGET: %s ***\n", (target ? "True" : "False"));

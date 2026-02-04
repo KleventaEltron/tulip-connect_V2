@@ -7,6 +7,8 @@
 #include "modbus.h"
 #include "../time_counters.h"
 
+#define CASCADE_BIT_IS_SET(mask, bit)   (((mask) & (1u << (bit))) != 0u)
+
 // Known parameters
 uint16_t RealTimeData1          [REGISTERS_AMOUNT_REAL_TIME_DATA_1]         [PARAMETERS_ARRAY_LENGTH] [MAX_AMOUNT_HEATPUMPS_IN_CASCADE]; 
 uint16_t RealTimeData2          [REGISTERS_AMOUNT_REAL_TIME_DATA_2]         [PARAMETERS_ARRAY_LENGTH]; 
@@ -165,9 +167,27 @@ bool alreadyBusyWithSendingSetting(void)
 
 void ChangeHeatpumpSetting(uint16_t reg, uint16_t data)
 {
+    // SETTING FOR MASTER
     MANUAL_SETTING newSetting = {SETTING_SEND_STATUS_SETTING_FILLED, THIS_DEVICE_ADDRESS, MB_FC_WRITE_REG, reg, data};
+    addSetting(newSetting);     
     
-    addSetting(newSetting); 
+    uint16_t cascadeMask = getCascadeSlaveStatus();
+    for (uint8_t bit = 1; bit <= 16; bit++)
+    {
+        if (!CASCADE_BIT_IS_SET(cascadeMask, bit)) {
+            continue;
+        }
+            
+        
+        if (cascadeMask == UINT16_MAX) {
+            break;
+        }
+        
+        MANUAL_SETTING newSetting = {SETTING_SEND_STATUS_SETTING_FILLED, (bit + 1), MB_FC_WRITE_REG, reg, data};
+        addSetting(newSetting);   
+        
+        SYS_CONSOLE_PRINT("Trying to add setting for mask = (0x%04X), S, %i, D %i\r\n", cascadeMask, reg, data);            
+    }
             
     /*
     if (alreadyBusyWithSendingSetting() == false)
