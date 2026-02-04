@@ -116,6 +116,13 @@
 #define SEEP_ADDR_CIRCULATION_PUMP_INIT_OFF_TIME_WHEN_SWITCHING_TO_HEATING  117 // 2 bytes V2-0-15
 #define SEEP_ADDR_CIRCULATION_PUMP_OFF_TIME_WHEN_HEATPUMP_RUNNING           119 // 2 bytes V2-0-15
 
+#define SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY                       121 // 2 bytes V2-0-15
+#define SEEP_ADDR_POWER_CONTROL_TIME_CONSTANT_SEC                           123 // 2 bytes V2-0-15
+#define SEEP_ADDR_BIG_INCREASE_STEP_HZ                                      125 // 2 bytes V2-0-15
+#define SEEP_ADDR_SMALL_INCREASE_STEP_HZ                                    127 // 2 bytes V2-0-15
+#define SEEP_ADDR_BIG_DECREASE_STEP_HZ                                      129 // 2 bytes V2-0-15
+#define SEEP_ADDR_SMALL_DECREASE_STEP_HZ                                    131 // 2 bytes V2-0-15
+
 #define SEEP_ADDR
 
 //.....
