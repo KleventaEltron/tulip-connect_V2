@@ -149,12 +149,14 @@ bool factorySettingResetInProgress = false;
         SYS_CONSOLE_PRINT(" Heating setpoint:           %d\n", (int16_t)heatingSetpoint);
         SYS_CONSOLE_PRINT(" Delta:                      %d\n", (int16_t)getAirConditionerReturnDifference());
         SYS_CONSOLE_PRINT(" Buffer:                     %d\n", GetNtcTemperature(NTC_HEATING_BUFFER));
+        SYS_CONSOLE_PRINT(" Buffer ADC:                 %d\n", GetAdcValue(NTC_HEATING_BUFFER));
         SYS_CONSOLE_PRINT(" Heating element:            %d\n\n", getHeatingElementBoolFromEmergencyMode());
         
         SYS_CONSOLE_PRINT(" Emergency Mode Hotwater:    %d\n", ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED));
         SYS_CONSOLE_PRINT(" Hotwater setpoint:          %d\n", (int16_t)getHotwaterSetpoint());
         SYS_CONSOLE_PRINT(" Delta:                      %d\n", (int16_t)getAirConditionerReturnDifference());
         SYS_CONSOLE_PRINT(" Boiler:                     %d\n", GetNtcTemperature(NTC_HOT_WATER_BUFFER));
+        SYS_CONSOLE_PRINT(" Boiler ADC:                 %d\n", GetAdcValue(NTC_HOT_WATER_BUFFER));
         SYS_CONSOLE_PRINT(" Hot water element:          %d\n\n", getHotWaterElementBoolFromEmergencyMode());
         
         

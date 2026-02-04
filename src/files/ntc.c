@@ -92,6 +92,7 @@ int16_t GetNtcTemperature(uint8_t whichSensor)
     return TempNtc[whichSensor];
 }
 
-
-             
-             
+uint16_t GetAdcValue(uint8_t whichSensor)
+{
+    return adc_res[whichSensor];
+}

@@ -20,5 +20,6 @@ void adc_sram_dma_callback(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle);
 int16_t Temp_ntc_10k (int16_t AdcWaarde, int8_t offset);
 void AdcVerwerk(void);
 int16_t GetNtcTemperature(uint8_t whichSensor);
+uint16_t GetAdcValue(uint8_t whichSensor);
 
 #endif 
