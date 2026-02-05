@@ -36,6 +36,7 @@ uint32_t SecondCounterHotwaterTask = UINT32_MAX;
 uint32_t SecondCounterCirculationPumpTask = UINT32_MAX;
 uint32_t SecondCounterDelayAfterChangingSettings = UINT32_MAX;
 uint32_t SecondCounterBlockCirculationPumpAtHeatingStart = UINT32_MAX;
+uint32_t SecondCounterHeatpumpPowerRegulation = UINT32_MAX;
 
 void TC1_Callback_InterruptHandler(TC_TIMER_STATUS status, uintptr_t context)
 {
@@ -59,6 +60,7 @@ void InitTimerCounters ( void )
     SecondCounterLoggingSDCard = 150;
     //SecondCounterFtp = 0;
     //SecondCounterResetSoftware = 0;
+    SecondCounterHeatpumpPowerRegulation = 0;
     
     TC1_TimerCallbackRegister(TC1_Callback_InterruptHandler, (uintptr_t)NULL);
     TC1_TimerStart();
@@ -107,6 +109,15 @@ uint32_t getSecondCounterBlockCirculationPumpAtHeatingStart()
 void setSecondCounterBlockCirculationPumpAtHeatingStart(uint32_t count)
 {
     SecondCounterBlockCirculationPumpAtHeatingStart = count;
+}
+
+uint32_t getSecondCounterHeatpumpPowerRegulation()
+{
+    return SecondCounterHeatpumpPowerRegulation;
+}
+void setSecondCounterHeatpumpPowerRegulation(uint32_t count)
+{
+    SecondCounterHeatpumpPowerRegulation = count;
 }
     
 uint32_t getWaitForSettingEchoProtection()
@@ -194,6 +205,10 @@ void UpdateCounters ( void )
                     
             if (SecondCounterBlockCirculationPumpAtHeatingStart >= 0 && SecondCounterBlockCirculationPumpAtHeatingStart < UINT32_MAX) {
                 SecondCounterBlockCirculationPumpAtHeatingStart++;
+            }
+            
+            if (SecondCounterHeatpumpPowerRegulation >= 0 && SecondCounterHeatpumpPowerRegulation < UINT32_MAX) {
+                SecondCounterHeatpumpPowerRegulation++;
             }
         }   
         if (SecondCounterDelayAfterChangingSettings >= 0 && SecondCounterDelayAfterChangingSettings < UINT32_MAX) {
