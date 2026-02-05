@@ -165,7 +165,124 @@ int16_t determineCorrectHeatingSetpoint() {
     return heating_mode_data.stepperSetpoint;
 }
 
+// vind segment-index i zodat adc tussen adc[i] en adc[i+1] valt
+//static int find_ntc_segment(int16_t adc)
+//{
+//    const int N_REAL = 29; // 0..28 geldig (29 punten => 28 segmenten)
+//    if (adc >= ntc_10k_tabel[0][0]) return 0;
+//    if (adc <= ntc_10k_tabel[0][N_REAL - 1]) return N_REAL - 2;
+//
+//    for (int i = 0; i < N_REAL - 1; i++)
+//    {
+//        int16_t a0 = ntc_10k_tabel[0][i];
+//        int16_t a1 = ntc_10k_tabel[0][i + 1];
+//        if (adc <= a0 && adc >= a1) return i;
+//    }
+//    return N_REAL - 2;
+//}
 
+// target_rise_temp100: °C×100 per 3 min (0,03°C => 3)
+//static int16_t target_dADC_from_verschil(int16_t adc_now, int16_t target_rise_temp100)
+//{
+//    int seg = ntc_find_segment_from_adc(adc_now);
+//
+//    uint8_t dA_5C = ntc_verschil[seg];
+//    if (dA_5C == 255) dA_5C = 1; // safety
+//
+//    // target_dADC = target_temp100 * dA_5C / 500  (want 5°C = 500 in temp100)
+//    int32_t num = (int32_t)target_rise_temp100 * (int32_t)dA_5C;
+//
+//    // afronden naar dichtstbijzijnde
+//    int32_t t = (num + 250) / 500;
+//
+//    if (t < 1) t = 1;
+//    if (t > 2000) t = 2000;
+//    return (int16_t)t;
+//}
+
+int16_t ntc_get_target_dadc(uint16_t adc, uint16_t target_temp100)
+{
+    uint8_t counts_5C = ntc_get_counts_per_5C_from_adc(adc);
+
+    // 5°C = 500 in temp100
+    int32_t num = (int32_t)target_temp100 * counts_5C;
+
+    int32_t result = (num + 250) / 500;   // afronden
+
+    if (result < 1){
+        //
+        result = 1;
+    }
+    
+    if (result > 2000) {
+        // 
+        result = 2000;
+    }
+
+    return (int16_t)result;
+}
+
+void powerControlHeatpump(void)
+{
+    uint16_t currentAdcValue  = GetAdcValue(NTC_HEATING_BUFFER);
+    uint16_t previousAdcValue = heating_mode_data.previousAdcValue; 
+    heating_mode_data.previousAdcValue = currentAdcValue;
+    
+    // als 3 minuten (INGESTELDE TIJD) niet verstreken, hier returnend, en kijken wat hierboven staat wat dan hieronder moet
+    
+    // Bij aanvang is er natuurlijk geen previous ADC value, dit moet worden dedetecteerd en opgevangen zoals ongeveer hieronder?
+    
+//    if (heating_mode_data.previousValid == false) {
+//        // No target known
+//        heating_mode_data.previousValid = true;
+//        heating_mode_data.previousAdc = currentAdcValueBufferTemp;
+//        //return heating_mode_data.targetFrequency;
+//        return;
+//    }
+    
+    //int16_t adc_now  = adc_buffer;
+   
+    // opwarmen => ADC daalt => dADC positief
+    int16_t deltaAdc = (int16_t)(previousAdcValue - currentAdcValue);
+
+    int16_t deltaAdcTarget = ntc_get_target_dadc(currentAdcValue, ReadSmartEeprom16(SEEP_ADDR_TARGET_RISE_TEMP_100));
+
+    // ratio promille: 1000 * meas / target
+    int32_t ratioPermille = (int32_t)1000 * (int32_t)deltaAdc / (int32_t)deltaAdcTarget;
+
+    uint16_t minimumTargetFreq = ReadSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY);
+    uint16_t maximumTargetFreq = ReadSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY);
+    
+    if (ratioPermille < 700) {
+        // Ratio is lower than big permille
+        heating_mode_data.targetFrequency += ReadSmartEeprom16(SEEP_ADDR_BIG_INCREASE_STEP_HZ);
+    } else if (ratioPermille < 850) {
+        // Ratio is lower than small permille
+        heating_mode_data.targetFrequency += ReadSmartEeprom16(SEEP_ADDR_SMALL_INCREASE_STEP_HZ);
+    } else if (ratioPermille <= 1150) {
+        // Do nothing
+        
+    } else if (ratioPermille <= 1300) {
+        // Ratio is lower than 
+        heating_mode_data.targetFrequency -= ReadSmartEeprom16(SEEP_ADDR_BIG_DECREASE_STEP_HZ);
+    } else {
+        // else
+        heating_mode_data.targetFrequency -= ReadSmartEeprom16(SEEP_ADDR_SMALL_DECREASE_STEP_HZ);
+    }
+    
+    if (heating_mode_data.targetFrequency < minimumTargetFreq) {
+        // Minimum clamp
+        heating_mode_data.targetFrequency = minimumTargetFreq;
+    }
+    
+    if (heating_mode_data.targetFrequency > maximumTargetFreq) {
+        // Maximum clamp
+        heating_mode_data.targetFrequency = maximumTargetFreq;
+    }
+    
+    //return heating_mode_data.targetFrequency;
+    return;
+}
 
 void HEATING_MODE_Initialize ( void )
 {
@@ -176,6 +293,10 @@ void HEATING_MODE_Initialize ( void )
     heating_mode_data.stepperSetpoint = TEMPERATURE_ALARM_VALUE;
     
     heating_mode_data.heatingCurveSet = false;
+    
+    heating_mode_data.targetFrequency = UINT8_MAX;
+    heating_mode_data.previousAdcValue = UINT16_MAX;
+    //heating_mode_data.previousValid = false;
     
     heating_mode_data.state = HEATING_INITIALIZE;
     return;
@@ -262,6 +383,8 @@ void HEATING_MODE_Tasks ( void )
     setActiveModeControllerHeatpumpSetpointHeating(determineCorrectHeatingSetpoint());
     
     setActiveModeControllerHeatpumpRunningMode(SET_MODE_HEATING);
+    
+    powerControlHeatpump();
     
     switch ( heating_mode_data.state )
     {

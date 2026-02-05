@@ -3,6 +3,8 @@
 
 #define ADC_VREF                (3.3f)
 
+#define NTC_TABLE_SIZE 30 
+
 // NTC temperature inputs
 #define NTC_HEATING_BUFFER      0
 #define NTC_HOT_WATER_BUFFER    1 
@@ -21,5 +23,6 @@ int16_t Temp_ntc_10k (int16_t AdcWaarde, int8_t offset);
 void AdcVerwerk(void);
 int16_t GetNtcTemperature(uint8_t whichSensor);
 uint16_t GetAdcValue(uint8_t whichSensor);
+uint8_t ntc_get_counts_per_5C_from_adc(uint16_t adcValue);
 
 #endif 

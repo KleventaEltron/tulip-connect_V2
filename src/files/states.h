@@ -84,6 +84,10 @@ typedef struct{
     bool HeatingElementOn;
     int16_t stepperSetpoint;
     bool heatingCurveSet;
+    
+    uint8_t targetFrequency;
+    uint16_t previousAdcValue;
+    //bool previousValid;
 } HEATING_MODE_DATA;
 
 
