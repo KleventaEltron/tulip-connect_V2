@@ -200,17 +200,19 @@ int16_t determineCorrectHeatingSetpoint() {
 //    return (int16_t)t;
 //}
 
-int16_t ntc_get_target_dadc(uint16_t adc, uint16_t target_temp100)
+int16_t ntc_get_target_dadc(uint16_t adc, uint16_t target_temp1000)
 {
     uint8_t counts_5C = ntc_get_counts_per_5C_from_adc(adc);
+    heating_mode_data.visualCounts5C = counts_5C; // FOR VISUAL 
 
     // 5°C = 500 in temp100
-    int32_t num = (int32_t)target_temp100 * counts_5C;
+    int32_t num = (int32_t)target_temp1000 * (int32_t)counts_5C;
 
     int32_t result = (num + 250) / 500;   // afronden
-
+    //int32_t result = num;
+    
     if (result < 1){
-        //
+        // cannot be lower than 1
         result = 1;
     }
     
@@ -224,32 +226,40 @@ int16_t ntc_get_target_dadc(uint16_t adc, uint16_t target_temp100)
 
 void powerControlHeatpump(void)
 {
+    if (getSecondCounterHeatpumpPowerRegulation() == UINT32_MAX) {
+        // Timer has no valid value, so start timer and set target frequency to 30 Hz (setting)
+        setSecondCounterHeatpumpPowerRegulation(0);
+        heating_mode_data.targetFrequency = ReadSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY);
+    }
+
+    if (getSecondCounterHeatpumpPowerRegulation() < ReadSmartEeprom16(SEEP_ADDR_POWER_CONTROL_TIME_CONSTANT_SEC)) {
+        // Time not passed
+        return;
+    }
+    setSecondCounterHeatpumpPowerRegulation(0);
+    
     uint16_t currentAdcValue  = GetAdcValue(NTC_HEATING_BUFFER);
+    
+    if (heating_mode_data.previousAdcValue == UINT16_MAX) {
+        // has not a valid value yet, first time
+        heating_mode_data.previousAdcValue = currentAdcValue;
+        return;
+    }
+    
     uint16_t previousAdcValue = heating_mode_data.previousAdcValue; 
     heating_mode_data.previousAdcValue = currentAdcValue;
-    
-    // als 3 minuten (INGESTELDE TIJD) niet verstreken, hier returnend, en kijken wat hierboven staat wat dan hieronder moet
-    
-    // Bij aanvang is er natuurlijk geen previous ADC value, dit moet worden dedetecteerd en opgevangen zoals ongeveer hieronder?
-    
-//    if (heating_mode_data.previousValid == false) {
-//        // No target known
-//        heating_mode_data.previousValid = true;
-//        heating_mode_data.previousAdc = currentAdcValueBufferTemp;
-//        //return heating_mode_data.targetFrequency;
-//        return;
-//    }
-    
-    //int16_t adc_now  = adc_buffer;
    
     // opwarmen => ADC daalt => dADC positief
     int16_t deltaAdc = (int16_t)(previousAdcValue - currentAdcValue);
-
-    int16_t deltaAdcTarget = ntc_get_target_dadc(currentAdcValue, ReadSmartEeprom16(SEEP_ADDR_TARGET_RISE_TEMP_100));
+    heating_mode_data.visualDelta = deltaAdc; // FOR VISUAL 
+            
+    int16_t deltaAdcTarget = ntc_get_target_dadc(currentAdcValue, ReadSmartEeprom16(SEEP_ADDR_TARGET_RISE_TEMP_1000));
+    heating_mode_data.visualDeltaAdcTarget = deltaAdcTarget; // FOR VISUAL 
 
     // ratio promille: 1000 * meas / target
-    int32_t ratioPermille = (int32_t)1000 * (int32_t)deltaAdc / (int32_t)deltaAdcTarget;
-
+    int32_t ratioPermille = (int32_t)10000 * (int32_t)deltaAdc / (int32_t)deltaAdcTarget;
+    heating_mode_data.visualRatioPermille = ratioPermille; // FOR VISUAL
+    
     uint16_t minimumTargetFreq = ReadSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY);
     uint16_t maximumTargetFreq = ReadSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY);
     
@@ -284,6 +294,18 @@ void powerControlHeatpump(void)
     return;
 }
 
+void resetPowerControlVariables() 
+{
+    heating_mode_data.targetFrequency = UINT8_MAX;
+    heating_mode_data.previousAdcValue = UINT16_MAX;
+    setSecondCounterHeatpumpPowerRegulation(UINT32_MAX);
+    
+    heating_mode_data.visualDelta = INT16_MAX;
+    heating_mode_data.visualDeltaAdcTarget = INT16_MAX;
+    heating_mode_data.visualRatioPermille = INT32_MAX;
+    heating_mode_data.visualCounts5C = UINT8_MAX;
+}
+
 void HEATING_MODE_Initialize ( void )
 {
     setSecondCounterHeatingTask(UINT32_MAX);
@@ -294,9 +316,7 @@ void HEATING_MODE_Initialize ( void )
     
     heating_mode_data.heatingCurveSet = false;
     
-    heating_mode_data.targetFrequency = UINT8_MAX;
-    heating_mode_data.previousAdcValue = UINT16_MAX;
-    //heating_mode_data.previousValid = false;
+    resetPowerControlVariables();
     
     heating_mode_data.state = HEATING_INITIALIZE;
     return;
@@ -384,8 +404,6 @@ void HEATING_MODE_Tasks ( void )
     
     setActiveModeControllerHeatpumpRunningMode(SET_MODE_HEATING);
     
-    powerControlHeatpump();
-    
     switch ( heating_mode_data.state )
     {
         case HEATING_INITIALIZE:{
@@ -395,6 +413,7 @@ void HEATING_MODE_Tasks ( void )
             heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE; 
             heating_mode_data.stepperSetpoint = TEMPERATURE_ALARM_VALUE;
             setSecondCounterHeatingTask(UINT32_MAX);
+            resetPowerControlVariables();
             
             if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
                 // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
@@ -417,6 +436,7 @@ void HEATING_MODE_Tasks ( void )
             if (getActiveCompressorsMask() != 0){
                 // Compressor is running
                 setSecondCounterHeatingTask(0);
+                resetPowerControlVariables();
                 heating_mode_data.initialBufferTemp = heatingBufferTemperature;
                 heating_mode_data.stepperSetpoint = getHeatingSetpoint();
                 //heating_mode_data.stepperSetpoint = (getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20);
@@ -441,12 +461,13 @@ void HEATING_MODE_Tasks ( void )
                 heating_mode_data.HeatingElementOn = false;
                 heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
+                resetPowerControlVariables();
                 
                 if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                     setActiveModeControllerPumpOffDueToDipSwitch1(true);
                 }
-
+                
                 heating_mode_data.state = HEATING_IDLE;
                 break;
             }
@@ -469,6 +490,8 @@ void HEATING_MODE_Tasks ( void )
                 break;
             }
             
+            powerControlHeatpump();
+            
             break;
         }
         
@@ -480,6 +503,7 @@ void HEATING_MODE_Tasks ( void )
                 heating_mode_data.HeatingElementOn = false;
                 heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
+                resetPowerControlVariables();
 
                 if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);

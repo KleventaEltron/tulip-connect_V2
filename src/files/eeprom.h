@@ -119,7 +119,7 @@
 #define SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY                       121 // 2 bytes V2-0-15
 #define SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY                       123 // 2 bytes V2-0-15
 #define SEEP_ADDR_POWER_CONTROL_TIME_CONSTANT_SEC                           125 // 2 bytes V2-0-15
-#define SEEP_ADDR_TARGET_RISE_TEMP_100                                      127 // 2 bytes V2-0-15
+#define SEEP_ADDR_TARGET_RISE_TEMP_1000                                     127 // 2 bytes V2-0-15
 #define SEEP_ADDR_BIG_INCREASE_STEP_HZ                                      129 // 2 bytes V2-0-15
 #define SEEP_ADDR_SMALL_INCREASE_STEP_HZ                                    131 // 2 bytes V2-0-15
 #define SEEP_ADDR_BIG_DECREASE_STEP_HZ                                      133 // 2 bytes V2-0-15

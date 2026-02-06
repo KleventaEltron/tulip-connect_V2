@@ -56,6 +56,8 @@ uint32_t getWaitingTurningHeatpumpOn();
 void setWaitingTurningHeatpumpOn(uint32_t value);
 uint32_t getCheckHeatpumpStaticSettingsCounter();
 void setCheckHeatpumpStaticSettingsCounter(uint32_t value);
+uint32_t getWriteHeatpumpTargetFrequencyCounter();
+void setWriteHeatpumpTargetFrequencyCounter(uint32_t value);
 
 bool LedsTimerExpired ( void );
 bool HeatingHotWaterTimerExpired ( void );

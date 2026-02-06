@@ -87,6 +87,11 @@ typedef struct{
     
     uint8_t targetFrequency;
     uint16_t previousAdcValue;
+    
+    int16_t visualDelta;
+    int16_t visualDeltaAdcTarget;
+    int32_t visualRatioPermille;
+    uint8_t visualCounts5C;
     //bool previousValid;
 } HEATING_MODE_DATA;
 
@@ -326,6 +331,7 @@ int16_t getHotwaterDelta();
 int16_t getAirConditionerReturnDifference();
 int16_t getExternalAmbientTemperature(uint8_t whichHeatpump);
 uint16_t getCascadeSlaveStatus();
+int16_t getHeatpumpTargetFrequency();
 
 bool getCurrentDip1SwitchState();
 bool getPreviousDip1SwitchState();

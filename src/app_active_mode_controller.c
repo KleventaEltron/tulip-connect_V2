@@ -212,10 +212,17 @@ bool factorySettingResetInProgress = false;
 //                SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getSecondCounterHeatingTask());
                 SYS_CONSOLE_PRINT("\r\nHEATING:\n");
                 SYS_CONSOLE_PRINT(" State:                %s\n", getHeatingStateToString());
-                SYS_CONSOLE_PRINT(" Buffer:               %i\n", GetNtcTemperature(NTC_HEATING_BUFFER));
+                SYS_CONSOLE_PRINT(" Compressor:           %i\n\n", getHeatpumpCompressorFrequency(0));
+                //SYS_CONSOLE_PRINT(" Buffer:               %i\n", GetNtcTemperature(NTC_HEATING_BUFFER));
                 SYS_CONSOLE_PRINT(" Current  adc value:   %i\n", GetAdcValue(NTC_HEATING_BUFFER));
                 SYS_CONSOLE_PRINT(" Previous adc value:   %i\n", getHeatingModeData().previousAdcValue);
-                SYS_CONSOLE_PRINT(" Target frequency:     %i\n\n", getHeatingModeData().targetFrequency);
+                SYS_CONSOLE_PRINT(" Delta adc:            %i\n", getHeatingModeData().visualDelta);
+                SYS_CONSOLE_PRINT(" Delta adc target:     %i\n", getHeatingModeData().visualDeltaAdcTarget);
+                SYS_CONSOLE_PRINT(" Ratio permille:       %i\n", getHeatingModeData().visualRatioPermille);
+                SYS_CONSOLE_PRINT(" Counts 5C:            %i\n\n", getHeatingModeData().visualCounts5C);
+                SYS_CONSOLE_PRINT(" Counter:              %i\n", getSecondCounterHeatpumpPowerRegulation());
+                SYS_CONSOLE_PRINT(" Target frequency:     %i\n", getHeatingModeData().targetFrequency);
+                SYS_CONSOLE_PRINT(" P54:                  %i\n\n", getHeatpumpTargetFrequency());
             }
             
             if (heatpumpMode == COOLING) {
@@ -344,6 +351,19 @@ bool factorySettingResetInProgress = false;
     }
     
     setWriteHeatpumpRunningModeCounter(0); 
+ }
+ 
+ void checkHeatpumpTargetFrequency() {
+    if (getWriteHeatpumpTargetFrequencyCounter() < 10) {
+        return;
+    }
+    
+    if (getHeatingModeData().targetFrequency != getHeatpumpTargetFrequency() && getHeatingModeData().targetFrequency != UINT8_MAX) {   
+        // Target frequency is not correct
+        ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_CONSTANT_B, getHeatingModeData().targetFrequency);
+    }
+    
+    setWriteHeatpumpTargetFrequencyCounter(0); 
  }
  
  void checkHeatpumpForcedOff() {
@@ -657,6 +677,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     setWriteNewSetPointHeatpumpCounter(0); 
     setWriteHeatpumpRunningModeCounter(0); 
     setCheckSilentModeOnTimerCounter(0);
+    setWriteHeatpumpTargetFrequencyCounter(0);
     
     // Initialize every active mode
     HEATING_MODE_Initialize();
@@ -754,7 +775,9 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         // Every 10 seconds the setpoint in the heatpump is checked
         checkHeatpumpHeatingSetpoint();
         // Every 10 seconds the running mode of the heatpump is checked
-        checkHeatpumpRunningMode();     
+        checkHeatpumpRunningMode();
+        // Every 10 seconds the P54 of the heatpump is checked
+        checkHeatpumpTargetFrequency();
     }
     
     

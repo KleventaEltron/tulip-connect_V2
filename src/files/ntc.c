@@ -110,7 +110,7 @@ uint8_t ntc_find_segment_from_adc(uint16_t adcValue)
         return NTC_TABLE_SIZE - 3;
     }
 
-    for (int i = 0; i < (NTC_TABLE_SIZE - 2); i++)
+    for (uint8_t i = 0; i < (NTC_TABLE_SIZE - 2); i++)
     {
         uint16_t highCompareValue = ntc_10k_tabel[0][i];
         uint16_t  lowCompareValue = ntc_10k_tabel[0][i+1];
