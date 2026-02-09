@@ -208,12 +208,12 @@ const char * getHeatingStateToString()
         }
         
         case(HEATING_RUNNING_WITH_CIRCULATION_PUMP_OFF): {
-            return "3, Running with circulation pump off";
+            return "4, Running with circulation pump off";
             break;
         }
         
         case(HEATING_RUNNING_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF): {
-            return "3, Running with element on and circulation pump off";
+            return "5, Running with element on and circulation pump off";
             break;
         }
         
