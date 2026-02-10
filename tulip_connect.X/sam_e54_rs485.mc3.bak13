@@ -607,10 +607,10 @@
   &lt;HarmonyCore dnOrder=&quot;0&quot; id=&quot;APP7_C&quot;&gt;
     &lt;Attributes dnOrder=&quot;0&quot;&gt;
       &lt;Boolean dnOrder=&quot;0&quot; id=&quot;enabled&quot;&gt;
-        &lt;Value dnOrder=&quot;0&quot;&gt;true&lt;/Value&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;false&lt;/Value&gt;
       &lt;/Boolean&gt;
       &lt;String dnOrder=&quot;1&quot; id=&quot;name&quot;&gt;
-        &lt;Value dnOrder=&quot;0&quot;&gt;app_wifi_access_point_controller.c&lt;/Value&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;app_active_mode_controller.c&lt;/Value&gt;
       &lt;/String&gt;
     &lt;/Attributes&gt;
   &lt;/HarmonyCore&gt;
@@ -623,10 +623,10 @@
   &lt;HarmonyCore dnOrder=&quot;0&quot; id=&quot;APP7_H&quot;&gt;
     &lt;Attributes dnOrder=&quot;0&quot;&gt;
       &lt;Boolean dnOrder=&quot;0&quot; id=&quot;enabled&quot;&gt;
-        &lt;Value dnOrder=&quot;0&quot;&gt;true&lt;/Value&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;false&lt;/Value&gt;
       &lt;/Boolean&gt;
       &lt;String dnOrder=&quot;1&quot; id=&quot;name&quot;&gt;
-        &lt;Value dnOrder=&quot;0&quot;&gt;app_wifi_access_point_controller.h&lt;/Value&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;app_active_mode_controller.h&lt;/Value&gt;
       &lt;/String&gt;
     &lt;/Attributes&gt;
   &lt;/HarmonyCore&gt;
@@ -2870,7 +2870,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;HarmonyCore&gt;
   &lt;HarmonyCore dnOrder=&quot;0&quot; id=&quot;GEN_APP_TASK_COUNT&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;8&quot;/&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;7&quot;/&gt;
     &lt;/Values&gt;
   &lt;/HarmonyCore&gt;
 &lt;/HarmonyCore&gt;
@@ -3038,7 +3038,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;HarmonyCore&gt;
   &lt;HarmonyCore dnOrder=&quot;0&quot; id=&quot;GEN_APP_TASK_ENABLE_7&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;true&quot;/&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;false&quot;/&gt;
     &lt;/Values&gt;
   &lt;/HarmonyCore&gt;
 &lt;/HarmonyCore&gt;
@@ -3234,7 +3234,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;HarmonyCore&gt;
   &lt;HarmonyCore dnOrder=&quot;0&quot; id=&quot;GEN_APP_TASK_NAME_7&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;app_wifi_access_point_controller&quot;/&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;&quot;/&gt;
     &lt;/Values&gt;
   &lt;/HarmonyCore&gt;
 &lt;/HarmonyCore&gt;
@@ -4563,7 +4563,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="!@#harmonyUserData"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;UserData&gt;
   &lt;UserData dnOrder=&quot;0&quot;&gt;
-    &lt;GraphSettings canvasHeight=&quot;628&quot; canvasWidth=&quot;1181&quot; dnOrder=&quot;0&quot;/&gt;
+    &lt;GraphSettings canvasHeight=&quot;628&quot; canvasWidth=&quot;1058&quot; dnOrder=&quot;0&quot;/&gt;
     &lt;PowerProfiles dnOrder=&quot;1&quot;&gt;
       &lt;Profile dnOrder=&quot;0&quot; id=&quot;profile0&quot; name=&quot;Main&quot;/&gt;
     &lt;/PowerProfiles&gt;
@@ -4653,11 +4653,11 @@
         &lt;ElementPosition dnOrder=&quot;5&quot; id=&quot;HarmonyCore&quot; x=&quot;250&quot; y=&quot;32&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;6&quot; id=&quot;TCP/IP STACK&quot; x=&quot;752&quot; y=&quot;293&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;7&quot; id=&quot;cmsis&quot; x=&quot;7&quot; y=&quot;153&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;8&quot; id=&quot;core&quot; x=&quot;7&quot; y=&quot;98&quot;/&gt;
+        &lt;ElementPosition dnOrder=&quot;8&quot; id=&quot;core&quot; x=&quot;8&quot; y=&quot;95&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;9&quot; id=&quot;dfp&quot; x=&quot;7&quot; y=&quot;127&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;10&quot; id=&quot;drvWifiWinc&quot; x=&quot;1021&quot; y=&quot;496&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;11&quot; id=&quot;drv_sdmmc&quot; x=&quot;467&quot; y=&quot;448&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;12&quot; id=&quot;eic&quot; x=&quot;603&quot; y=&quot;50&quot;/&gt;
+        &lt;ElementPosition dnOrder=&quot;12&quot; id=&quot;eic&quot; x=&quot;921&quot; y=&quot;20&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;13&quot; id=&quot;evsys&quot; x=&quot;5&quot; y=&quot;183&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;14&quot; id=&quot;lib_crypto&quot; x=&quot;472&quot; y=&quot;343&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;15&quot; id=&quot;lib_wolfcrypt&quot; x=&quot;289&quot; y=&quot;233&quot;/&gt;
@@ -5794,9 +5794,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="EIC_EXTINT_11_INTERRUPT_ENABLE"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;EIC_EXTINT_11_INTERRUPT_ENABLE&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;eic&quot; value=&quot;true&quot;/&gt;
-    &lt;/Values&gt;
+    &lt;Values dnOrder=&quot;0&quot;/&gt;
   &lt;/core&gt;
 &lt;/core&gt;
 </value>
@@ -5806,7 +5804,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;EIC_EXTINT_11_INTERRUPT_ENABLE_UPDATE&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;core&quot; value=&quot;false&quot;/&gt;
+      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;core&quot; value=&quot;true&quot;/&gt;
     &lt;/Values&gt;
   &lt;/core&gt;
 &lt;/core&gt;
@@ -5816,9 +5814,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="EIC_EXTINT_11_INTERRUPT_HANDLER"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;EIC_EXTINT_11_INTERRUPT_HANDLER&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;eic&quot; value=&quot;EIC_EXTINT_11_InterruptHandler&quot;/&gt;
-    &lt;/Values&gt;
+    &lt;Values dnOrder=&quot;0&quot;/&gt;
   &lt;/core&gt;
 &lt;/core&gt;
 </value>
@@ -5827,9 +5823,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="EIC_EXTINT_11_INTERRUPT_HANDLER_LOCK"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;EIC_EXTINT_11_INTERRUPT_HANDLER_LOCK&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;eic&quot; value=&quot;true&quot;/&gt;
-    &lt;/Values&gt;
+    &lt;Values dnOrder=&quot;0&quot;/&gt;
   &lt;/core&gt;
 &lt;/core&gt;
 </value>
@@ -7526,7 +7520,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;NVIC_23_0_ENABLE&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;core&quot; value=&quot;true&quot;/&gt;
+      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;core&quot; value=&quot;false&quot;/&gt;
     &lt;/Values&gt;
   &lt;/core&gt;
 &lt;/core&gt;
@@ -7537,7 +7531,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;NVIC_23_0_HANDLER&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;core&quot; value=&quot;EIC_EXTINT_11_InterruptHandler&quot;/&gt;
+      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;core&quot; value=&quot;EIC_EXTINT_11_Handler&quot;/&gt;
     &lt;/Values&gt;
   &lt;/core&gt;
 &lt;/core&gt;
@@ -7548,7 +7542,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;NVIC_23_0_HANDLER_LOCK&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;core&quot; value=&quot;true&quot;/&gt;
+      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;core&quot; value=&quot;false&quot;/&gt;
     &lt;/Values&gt;
   &lt;/core&gt;
 &lt;/core&gt;
@@ -21576,15 +21570,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="drvWifiWinc" name="DRV_WIFI_WINC_EIC_SRC_8"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;drvWifiWinc&gt;
   &lt;drvWifiWinc dnOrder=&quot;0&quot; id=&quot;DRV_WIFI_WINC_EIC_SRC_8&quot;&gt;
-    &lt;Attributes dnOrder=&quot;0&quot;&gt;
-      &lt;Boolean dnOrder=&quot;0&quot; id=&quot;visible&quot;&gt;
-        &lt;Value dnOrder=&quot;0&quot;&gt;true&lt;/Value&gt;
-      &lt;/Boolean&gt;
-    &lt;/Attributes&gt;
-    &lt;Values dnOrder=&quot;1&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;drvWifiWinc&quot; value=&quot;false&quot;/&gt;
-      &lt;User dnOrder=&quot;1&quot; value=&quot;true&quot;/&gt;
-    &lt;/Values&gt;
+    &lt;Values dnOrder=&quot;0&quot;/&gt;
   &lt;/drvWifiWinc&gt;
 &lt;/drvWifiWinc&gt;
 </value>
@@ -21604,9 +21590,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="drvWifiWinc" name="DRV_WIFI_WINC_EIC_SRC_SELECT"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;drvWifiWinc&gt;
   &lt;drvWifiWinc dnOrder=&quot;0&quot; id=&quot;DRV_WIFI_WINC_EIC_SRC_SELECT&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;drvWifiWinc&quot; value=&quot;8&quot;/&gt;
-    &lt;/Values&gt;
+    &lt;Values dnOrder=&quot;0&quot;/&gt;
   &lt;/drvWifiWinc&gt;
 &lt;/drvWifiWinc&gt;
 </value>
@@ -22290,9 +22274,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="eic" name="EIC_CHAN_11"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;eic&gt;
   &lt;eic dnOrder=&quot;0&quot; id=&quot;EIC_CHAN_11&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;true&quot;/&gt;
-    &lt;/Values&gt;
+    &lt;Values dnOrder=&quot;0&quot;/&gt;
   &lt;/eic&gt;
 &lt;/eic&gt;
 </value>
@@ -22454,14 +22436,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="eic" name="EIC_CONFIG_FILTEN_11"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;eic&gt;
   &lt;eic dnOrder=&quot;0&quot; id=&quot;EIC_CONFIG_FILTEN_11&quot;&gt;
-    &lt;Attributes dnOrder=&quot;0&quot;&gt;
-      &lt;Boolean dnOrder=&quot;0&quot; id=&quot;visible&quot;&gt;
-        &lt;Value dnOrder=&quot;0&quot;&gt;true&lt;/Value&gt;
-      &lt;/Boolean&gt;
-    &lt;/Attributes&gt;
-    &lt;Values dnOrder=&quot;1&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;true&quot;/&gt;
-    &lt;/Values&gt;
+    &lt;Values dnOrder=&quot;0&quot;/&gt;
   &lt;/eic&gt;
 &lt;/eic&gt;
 </value>
@@ -22607,9 +22582,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="eic" name="EIC_CONFIG_SENSE_11"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;eic&gt;
   &lt;eic dnOrder=&quot;0&quot; id=&quot;EIC_CONFIG_SENSE_11&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;3&quot;/&gt;
-    &lt;/Values&gt;
+    &lt;Values dnOrder=&quot;0&quot;/&gt;
   &lt;/eic&gt;
 &lt;/eic&gt;
 </value>
@@ -22729,7 +22702,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;eic&gt;
   &lt;eic dnOrder=&quot;0&quot; id=&quot;EIC_DEBOUNCEN&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;eic&quot; value=&quot;2048&quot;/&gt;
+      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;eic&quot; value=&quot;0&quot;/&gt;
     &lt;/Values&gt;
   &lt;/eic&gt;
 &lt;/eic&gt;
@@ -22773,14 +22746,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="eic" name="EIC_DEBOUNCEN_11"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;eic&gt;
   &lt;eic dnOrder=&quot;0&quot; id=&quot;EIC_DEBOUNCEN_11&quot;&gt;
-    &lt;Attributes dnOrder=&quot;0&quot;&gt;
-      &lt;Boolean dnOrder=&quot;0&quot; id=&quot;visible&quot;&gt;
-        &lt;Value dnOrder=&quot;0&quot;&gt;true&lt;/Value&gt;
-      &lt;/Boolean&gt;
-    &lt;/Attributes&gt;
-    &lt;Values dnOrder=&quot;1&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;true&quot;/&gt;
-    &lt;/Values&gt;
+    &lt;Values dnOrder=&quot;0&quot;/&gt;
   &lt;/eic&gt;
 &lt;/eic&gt;
 </value>
@@ -23100,7 +23066,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;eic&gt;
   &lt;eic dnOrder=&quot;0&quot; id=&quot;EIC_INT&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;eic&quot; value=&quot;2304&quot;/&gt;
+      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;eic&quot; value=&quot;256&quot;/&gt;
     &lt;/Values&gt;
   &lt;/eic&gt;
 &lt;/eic&gt;
@@ -23139,9 +23105,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="eic" name="EIC_INT_11"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;eic&gt;
   &lt;eic dnOrder=&quot;0&quot; id=&quot;EIC_INT_11&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;true&quot;/&gt;
-    &lt;/Values&gt;
+    &lt;Values dnOrder=&quot;0&quot;/&gt;
   &lt;/eic&gt;
 &lt;/eic&gt;
 </value>
@@ -24084,9 +24048,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="evsys" name="GENERATOR_EIC_EXTINT_11_ACTIVE"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;evsys&gt;
   &lt;evsys dnOrder=&quot;0&quot; id=&quot;GENERATOR_EIC_EXTINT_11_ACTIVE&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;eic&quot; value=&quot;false&quot;/&gt;
-    &lt;/Values&gt;
+    &lt;Values dnOrder=&quot;0&quot;/&gt;
   &lt;/evsys&gt;
 &lt;/evsys&gt;
 </value>
@@ -39696,14 +39658,6 @@
          <hash>d8bc9234ceaddac1a1c42b2b28fe8afa6f17818ff95359b59158d465c2a4f5f3</hash>
       </entry>
       <entry>
-         <file>..\src\app_wifi_access_point_controller.c</file>
-         <hash>2dfb8e7df841caf37a27e36ba54c0c140e0b55139fc2614ddea258b99a979d2f</hash>
-      </entry>
-      <entry>
-         <file>..\src\app_wifi_access_point_controller.h</file>
-         <hash>a380d14c35937f55b0d1428649bc73ea1512e138e361bc7b4a5b7b6435d9c208</hash>
-      </entry>
-      <entry>
          <file>..\src\config\default\ATSAME54P20A.ld</file>
          <hash>ba1b5ba1b9c97c94416b0198dc30e928c5a66c926c3ad7695f9bbe3b798adaba</hash>
       </entry>
@@ -39713,7 +39667,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\configuration.h</file>
-         <hash>fa11651e2b989b0bace3a9eb396cc6410a5bb1503dd9cb0824cea5444b87947c</hash>
+         <hash>ed1da233c36ed8a1bda9645b1474029dda0694dd4639240e5012618923bae233</hash>
       </entry>
       <entry>
          <file>..\src\config\default\crypto\crypto.h</file>
@@ -39725,7 +39679,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\definitions.h</file>
-         <hash>62967f37fcaa2735209d18d22854c740281ab4ddfbaa96822e94b21065a4f276</hash>
+         <hash>75403cec218673d8f457f150c3206db49d371147cef93c5070e14db60f72cf2f</hash>
       </entry>
       <entry>
          <file>..\src\config\default\device.h</file>
@@ -39857,63 +39811,63 @@
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\common\nm_common.c</file>
-         <hash>cbd1ba21b916f76883e44be7d0195f01f50879792f713eb01bfd0e6cb3c9d767</hash>
+         <hash>2daaf64817a7733267c308b4c6bcf7982b0463c0144ff15a787b383a985e26fb</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\driver\m2m_hif.c</file>
-         <hash>7ff76b07af6f82ea655c59ecbc4df027f912082c8d877a25faa6549fd75e1999</hash>
+         <hash>0a1c0a6e2b21a6f859c229b947fa834a1973c0d40d1eca5a8f311ed78e1c2199</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\driver\m2m_ota.c</file>
-         <hash>d54852479cb44af465f7e2d95fc8b4d9eb336a05aa16302b416be20bb19fe3c4</hash>
+         <hash>a25c728a6199a955ad30d647c930413f9ecba6b68b76f140c1dce25b5bd178c3</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\driver\m2m_periph.c</file>
-         <hash>adc1a3abffcea10446449ff65f8b8c4bbc2439a5c0983f73360c3b75bf927f92</hash>
+         <hash>3a66c394ab09b4dfebf66ef1f843241a2b22b983e26dc647a0241e52aef119cc</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\driver\m2m_ssl.c</file>
-         <hash>df6d1ee084a53fc59f602642f6ab92d0f4c0f43966534120101eaee498a22b05</hash>
+         <hash>0b45dd0901f2d1ac99d7d3a09fff885e93fdf2e9b29fe2d26e717c8b7bb966c5</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\driver\m2m_wifi.c</file>
-         <hash>6fd3cd7a3fe49d78983e8ad05ed33d1b2b452b0ae8abdb9cfc5c4fc58aa51e1b</hash>
+         <hash>4280ec63395508d55c5c91fecc7eedd2f4d9613d789536c7f61e53ec4d8793e8</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\driver\nmasic.c</file>
-         <hash>027e3fc567d39a338810397b23bf79c3817b95770272df8991ac2f07c46339ab</hash>
+         <hash>e43c5e8b5b5b97cf8de88c95370e40330e30fcd3560491b94b44b1948b807063</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\driver\nmbus.c</file>
-         <hash>c6a7a2803db902462aa2017cc98bbb3fa6c55662f0fa909c60229a5b6e6ada60</hash>
+         <hash>d4496dd84899d7faac1930d03ecad8d4a144eefac950f06b5a03ca946c4a7d6a</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\driver\nmdrv.c</file>
-         <hash>e7ca0613dd85b53836c5a67802b7bc1323bd26c6e89ebbb9e2f9461548052355</hash>
+         <hash>80ff11490bc52f8835ff5a702ca6cc72cccf90baa3f284eabc18971fce3cf442</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\driver\nmspi.c</file>
-         <hash>196fa561babc338b8dd6a21bea6fd143f75f11af5452d794016e2dded0b019ee</hash>
+         <hash>345d3827cac630a826340da79ba93892260c48be51660bf8ca07ef28e181008b</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\socket\inet_addr.c</file>
-         <hash>b8064cc1ebd4bf08bd6831be3848f6d454525ca4bf0c6a0d0c7c7d4dca8528ad</hash>
+         <hash>209021acba3e624d93d61a965cf29501666096426be5180d379d041d21422989</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\socket\inet_ntop.c</file>
-         <hash>2164bb6a8b3dc7fce5633625ed0d7d1fa8cc90c01d4f52aacd8b287739d6e2ed</hash>
+         <hash>a7dce391923bcfc6f2233ad9b4ce42a44d5c6df0036c3f026cb0db73ea48acd8</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\socket\socket.c</file>
-         <hash>0f575df493cafcbb5e3df2d578c97f1f0851801cbea7e928bc687ef6a0e8a867</hash>
+         <hash>5866a2980d57d8f71cdc21ff22af374aca3169efafec16830da78c921d77f44a</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\spi_flash\flexible_flash.c</file>
-         <hash>dd801d93ed0ba781b291e9b7165b9c8e3adcbf6c873a5ccc568a57728758f301</hash>
+         <hash>a4b2b2555dd05377590a1487b86a4c5957917698647dcfebd46691e5fdefcf7f</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\drv\spi_flash\spi_flash.c</file>
-         <hash>51da7765962161956e1106a7b507a780b33ce7eeb751b617970d8d56bc209716</hash>
+         <hash>bca178a950af41f44c557bffd19f5766a17ec9cca85de8471f3e3b2ca3d2002d</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\dev\wdrv_winc_gpio.h</file>
@@ -39925,83 +39879,83 @@
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\bsp\nm_bsp.h</file>
-         <hash>7bbc8f42ec9a6c0a78106b0d4947e7d88044674e05c60078737ace79b4cbe186</hash>
+         <hash>829ff13eadeaf24617628fc323f015716847cc78d1ad15c6aa2e560afa74bcc1</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\common\nm_common.h</file>
-         <hash>33c596c0d5d59a90e289fd030ff64bdcd0dad156ba51748b522564590081c5a6</hash>
+         <hash>39c4e479d3db7ce7e411e0c91f2b3c3b673ab79338427bace045b450559a9eb7</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\common\nm_debug.h</file>
-         <hash>c133b4c308e78714facf89abed6a16f6a4dbc8666d91dd4b7d842c389a6c00e3</hash>
+         <hash>bc8277edc9b9ec645376c469deec6192796ea4161f30a28efb4d3f53dcb6c576</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\driver\ecc_types.h</file>
-         <hash>baf8a6c126e119110a449d485ff251c648997a8b95e03637087bda34a9754a26</hash>
+         <hash>850551d63bb9c706dceebe15cdfb9a02f930f1751f3b4b92036913be415d7431</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\driver\m2m_hif.h</file>
-         <hash>6f5a792879bd4e2bdfd26227dcebd2b9537fadcbf4d3a34d6f839039a0300f5b</hash>
+         <hash>6ea5099161599ffb564009a0a4521fe48c3c7a3ac3cf203abbe726720caf4189</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\driver\m2m_ota.h</file>
-         <hash>b25fd9364e1f4f5b99559d99ab0cff029166b2cda10f480b364b424a9a85150e</hash>
+         <hash>774e304ae01a0c84170b7ef79aed252277f07112f75e4b5222d18008af1b5904</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\driver\m2m_periph.h</file>
-         <hash>f666ca3b4c90aa5e644d9c79ba299d01e5053f751f34af05a65c79170d98a159</hash>
+         <hash>6afc6b662861be2c74d5275822a5262899ee46635b66e5e7ced20cd94dbe4c83</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\driver\m2m_ssl.h</file>
-         <hash>d660d6fe949a66d3485a1949df4f90c0df99f9b271cbfd54222c70a65de9d6d6</hash>
+         <hash>57f5021a8c53d537ec47c281f307f2ddbc279f4ef95162b8d6c0695a4c3980a6</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\driver\m2m_types.h</file>
-         <hash>f424204d33c2eeb79c97c4bd83f6e907bf30cc03b3eafb9a6eb882bf2526a875</hash>
+         <hash>0f6018bd0701dd6a61f20c00d825189cff1be54afe8b2e68277c2ddb41054c9f</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\driver\m2m_wifi.h</file>
-         <hash>749709b73eb8a5cb35274ed45b818d28ba9031890d30087c1e5245d96515472c</hash>
+         <hash>f8371242f4abb375194d412cddcb10572019d1cb019e46eb7f6478ec8e664218</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\driver\nmasic.h</file>
-         <hash>47c44cedfd2e3dc6c1c0b46f9eff3cada8b89aaa6bc99ab73145c5e72c3b525c</hash>
+         <hash>21fd1e1f1ab6aa9c8bce6b2dfec0ae3670f53e0284ad7f28f31eed669ab4dcf6</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\driver\nmbus.h</file>
-         <hash>f34443c291c694ae29a76d8b7232d5f21066931cbad37f91d8cbc13fa6538845</hash>
+         <hash>31d22227e2cd2d299bcade26ef384380fddd833acce0e313253b7592a0a3f8dc</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\driver\nmdrv.h</file>
-         <hash>4a6676c313ca982e077fb40b92d243acd995c997fa22a7c5ec826432b36be76d</hash>
+         <hash>5d2ed4d99b832aad94250b89b74b9d9970455bb1a177a73a822a1a59425f7657</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\driver\nmspi.h</file>
-         <hash>dea48e2af5fa27418821dac73dfe017d1b367949afa6f6a7626e4115641be247</hash>
+         <hash>c67f32e460fe6e11358a1ce77c018d126c1844c425cd1f05befda03c434486e4</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\socket\m2m_socket_host_if.h</file>
-         <hash>e4362c2131e4bcb39685654df2db026b2850caa88824f5d38556fa5b6e8e84ab</hash>
+         <hash>c52f89a34bb63b1f3b8ddd49f9e863d9088044976d5a5c9af1e0d5cbaf527848</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\socket\netinet_in.h</file>
-         <hash>d9c8ce7f00c9bccd4e10f3d74e0b3a5f0ac05825c28ad8971e6f8ae3a4f7465a</hash>
+         <hash>39012a2cf3ccfbd8177e40075fde22961e19763cd902ff9b3110960d755b253c</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\socket\socket.h</file>
-         <hash>1ddb4f781c60035759c6c8a1848219942ae97eb629fc401f1582c1f6dcb251bb</hash>
+         <hash>978bbf0a3935a2fae5d54d66462adf9a20e48411a606ac6ec2e53190a78cc211</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\spi_flash\flexible_flash.h</file>
-         <hash>6f402c24eb772d49f69f3e7917fb31d258c225f8ed9e3d104cfa61779ef11bf8</hash>
+         <hash>8859bb940f651d3a6c109a8582f24a5b4fe9871091880f0ae12d6c5c60fa27a1</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\spi_flash\spi_flash.h</file>
-         <hash>15a59bbcc507ce974e5b4f9c408d8d3f76df56c178a18db1778510036bf565e2</hash>
+         <hash>f647e66517e9999c075f37409f8dab3e2af8ecc0bced1dfd8f8e6909fdf11987</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\drv\spi_flash\spi_flash_map.h</file>
-         <hash>a8c1cc6002ee7fc99f5b64414cc963ab7e5e148fa46adfae3b2ce83a9bb5716d</hash>
+         <hash>26ac9cd4b5384b298f9d43c347cc5565835fe248c71577983abf95c3ee70ab85</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\wdrv_winc.h</file>
@@ -40042,10 +39996,6 @@
       <entry>
          <file>..\src\config\default\driver\winc\include\wdrv_winc_debug.h</file>
          <hash>031db583131cf94a17f527ae5b6e75b6d03b18841ec608c454d13f3af034e984</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\driver\winc\include\wdrv_winc_enterprise.h</file>
-         <hash>23898258338b516b7686033ef510efb0a514ebde4138af6bbd3170aac6bad0bb</hash>
       </entry>
       <entry>
          <file>..\src\config\default\driver\winc\include\wdrv_winc_host_file.h</file>
@@ -40116,10 +40066,6 @@
          <hash>8f226aad7d644d4da546ae5253696338b7fb87c612e7ece487131ba53a55bf11</hash>
       </entry>
       <entry>
-         <file>..\src\config\default\driver\winc\wdrv_winc_enterprise.c</file>
-         <hash>da94f67eb9a5bdcb2731e6b27005c96a04328e1de186835363cc490dd277390e</hash>
-      </entry>
-      <entry>
          <file>..\src\config\default\driver\winc\wdrv_winc_host_file.c</file>
          <hash>6ede545d45a26970500f9056b023e54a37f1fb3d3b11bad056a019e8aa798e85</hash>
       </entry>
@@ -40165,15 +40111,15 @@
       </entry>
       <entry>
          <file>..\src\config\default\initialization.c</file>
-         <hash>7cbf4c4335e82119dacae5d13ba12ef42e6479b6b42b8a36c5f99c114279dace</hash>
+         <hash>c93aedad6f63ccff1e62e353332ad1b2a85a4f3cc92effa2718bcec232e9dab8</hash>
       </entry>
       <entry>
          <file>..\src\config\default\interrupts.c</file>
-         <hash>a9e23d9b01f6146b05126ac5f8611a0328fe57e4d6a9191d6e4dec7423157857</hash>
+         <hash>79f1adcd0bd84e00d3fd4f32b34c92c5825699b0feba21fe0995f9d1ef693cd3</hash>
       </entry>
       <entry>
          <file>..\src\config\default\interrupts.h</file>
-         <hash>f765e30d1ec763d1960851b60f7cd6006a0518974e04ef60a6f814318288cfba</hash>
+         <hash>8a9106cc39655d3be7cb8b9eaf989e4ff407f4740adf1b1695af45fa34253696</hash>
       </entry>
       <entry>
          <file>..\src\config\default\libc_syscalls.c</file>
@@ -40833,11 +40779,11 @@
       </entry>
       <entry>
          <file>..\src\config\default\peripheral\eic\plib_eic.c</file>
-         <hash>b16f620326fe796e07bbf6d02ffae168ae3bfc9c7fc08ad4042ca2e28e76bbf9</hash>
+         <hash>f57b36944bd6206320fc3dc7dca5a472f7f19db313db17813f3be02e1eba1943</hash>
       </entry>
       <entry>
          <file>..\src\config\default\peripheral\eic\plib_eic.h</file>
-         <hash>c08ff51dd6935f9e3dffbb2191a9d8eae08561e067518774992f815ebded0c95</hash>
+         <hash>60aa00620d99be6361abafa4b3f57c264ad2f9cc78e05ba7783128cbfc70c341</hash>
       </entry>
       <entry>
          <file>..\src\config\default\peripheral\evsys\plib_evsys.c</file>
@@ -40849,7 +40795,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\peripheral\nvic\plib_nvic.c</file>
-         <hash>63db27491d204bc30596efb372d998e9ec3996be38165d3995394ede5421b5e5</hash>
+         <hash>7c41bc57d1839965fcf4ee44c848a8afe747c3292e1ceefb3858089599221b8c</hash>
       </entry>
       <entry>
          <file>..\src\config\default\peripheral\nvic\plib_nvic.h</file>
@@ -41197,7 +41143,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\tasks.c</file>
-         <hash>68c3567fd903b831c9d5b6aee1cfed316d14459c0fc33b7c09d2a57a60b43919</hash>
+         <hash>dd10aba4508a336fc876618986baeadd35b78447d69241b211d9e69e1933618d</hash>
       </entry>
       <entry>
          <file>..\src\config\default\toolchain_specifics.h</file>

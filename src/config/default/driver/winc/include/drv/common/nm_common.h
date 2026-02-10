@@ -11,7 +11,7 @@
 
 //DOM-IGNORE-BEGIN
 /*
-Copyright (C) 2019, Microchip Technology Inc., and its subsidiaries. All rights reserved.
+Copyright (C) 2022-25, Microchip Technology Inc., and its subsidiaries. All rights reserved.
 
 The software and documentation is provided by microchip and its contributors
 "as is" and any express, implied or statutory warranties, including, but not
@@ -34,6 +34,13 @@ Microchip or any third party.
 */
 //DOM-IGNORE-END
 
+/** @defgroup COMMON Common
+    @{
+        @defgroup COMMONDEF Defines
+        @defgroup COMMONAPI Functions
+    @}
+ */
+
 #ifndef _NM_COMMON_H_
 #define _NM_COMMON_H_
 
@@ -41,8 +48,8 @@ Microchip or any third party.
 #include "nm_debug.h"
 
 /**@addtogroup COMMONDEF
+ * @{
  */
-/**@{*/
 
 /*states*/
 #define M2M_SUCCESS                 ((int8_t)0)
@@ -60,6 +67,8 @@ Microchip or any third party.
 #define M2M_ERR_FAIL                ((int8_t)-12)
 #define M2M_ERR_FW_VER_MISMATCH     ((int8_t)-13)
 #define M2M_ERR_SCAN_IN_PROGRESS    ((int8_t)-14)
+
+/* Invalid argument */
 #define M2M_ERR_INVALID_ARG         ((int8_t)-15)
 #define M2M_ERR_INVALID             ((int8_t)-16)
 
@@ -97,18 +106,34 @@ Microchip or any third party.
 #define NBIT0                       (0x00000001)
 
 #ifndef BIG_ENDIAN
+/*! Most significant byte of 32bit word (LE) */
 #define BYTE_0(word)                    ((uint8_t)(((word) >> 0 ) & 0x000000FFUL))
+/*! Second most significant byte of 32bit word (LE) */
 #define BYTE_1(word)                    ((uint8_t)(((word) >> 8 ) & 0x000000FFUL))
+/*! Third most significant byte of 32bit word (LE) */
 #define BYTE_2(word)                    ((uint8_t)(((word) >> 16) & 0x000000FFUL))
+/*! Least significant byte of 32bit word (LE) */
 #define BYTE_3(word)                    ((uint8_t)(((word) >> 24) & 0x000000FFUL))
 #else
+/*! Most significant byte of 32bit word (BE) */
 #define BYTE_0(word)                    ((uint8_t)(((word) >> 24) & 0x000000FFUL))
+/*! Second most significant byte of 32bit word (BE) */
 #define BYTE_1(word)                    ((uint8_t)(((word) >> 16) & 0x000000FFUL))
+/*! Third most significant byte of 32bit word (BE) */
 #define BYTE_2(word)                    ((uint8_t)(((word) >> 8 ) & 0x000000FFUL))
+/*! Least significant byte of 32bit word (BE) */
 #define BYTE_3(word)                    ((uint8_t)(((word) >> 0 ) & 0x000000FFUL))
 #endif
 
-/**@}*/     //COMMONDEF
+#ifndef LOW
+#define LOW 0
+#endif
+#ifndef HIGH
+#define HIGH 1
+#endif
+
+/**@}*/
+
 #ifdef __cplusplus
 extern "C" {
 #endif

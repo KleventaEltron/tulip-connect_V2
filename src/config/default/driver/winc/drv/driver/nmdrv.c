@@ -11,7 +11,7 @@
 
 //DOM-IGNORE-BEGIN
 /*
-Copyright (C) 2019, Microchip Technology Inc., and its subsidiaries. All rights reserved.
+Copyright (C) 2022-25, Microchip Technology Inc., and its subsidiaries. All rights reserved.
 
 The software and documentation is provided by microchip and its contributors
 "as is" and any express, implied or statutory warranties, including, but not
@@ -289,9 +289,14 @@ int8_t nm_drv_init_hold(void)
         goto ERR2;
     }
 #endif
-    M2M_INFO("Chip ID %lx\r\n", nmi_get_chipid());
     /* Must do this after global reset to set SPI data packet size. */
-    nm_spi_init();
+    ret = nm_spi_init();
+    if (M2M_SUCCESS != ret) {
+        M2M_ERR("[nmi start]: fail init spi\r\n");
+        goto ERR1;
+    }
+
+    M2M_INFO("Chip ID %lx\r\n", nmi_get_chipid());
 
     return ret;
 #ifdef NO_HW_CHIP_EN

@@ -66,6 +66,7 @@ void DebugMonitor_Handler (void);
 void SysTick_Handler (void);
 void WDT_InterruptHandler (void);
 void EIC_EXTINT_8_InterruptHandler (void);
+void EIC_EXTINT_11_InterruptHandler (void);
 void DMAC_0_InterruptHandler (void);
 void DMAC_1_InterruptHandler (void);
 void DMAC_2_InterruptHandler (void);

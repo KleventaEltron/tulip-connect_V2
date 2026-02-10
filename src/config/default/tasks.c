@@ -129,6 +129,9 @@ NET_PRES_Tasks(sysObj.netPres);
     /* Call Application task APP_ACTIVE_MODE_CONTROLLER. */
     APP_ACTIVE_MODE_CONTROLLER_Tasks();
 
+    /* Call Application task APP_WIFI_ACCESS_POINT_CONTROLLER. */
+    APP_WIFI_ACCESS_POINT_CONTROLLER_Tasks();
+
 
 
 

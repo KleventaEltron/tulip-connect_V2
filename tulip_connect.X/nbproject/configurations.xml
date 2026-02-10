@@ -104,6 +104,7 @@
                 <itemPath>../src/config/default/driver/winc/include/wdrv_winc_httpprovctx.h</itemPath>
                 <itemPath>../src/config/default/driver/winc/include/wdrv_winc_client_api.h</itemPath>
                 <itemPath>../src/config/default/driver/winc/include/wdrv_winc.h</itemPath>
+                <itemPath>../src/config/default/driver/winc/include/wdrv_winc_enterprise.h</itemPath>
               </logicalFolder>
             </logicalFolder>
             <itemPath>../src/config/default/driver/driver.h</itemPath>
@@ -428,6 +429,7 @@
         <itemPath>../src/files/defrosting.h</itemPath>
         <itemPath>../src/files/cJSON.h</itemPath>
         <itemPath>../src/files/emergency_mode.h</itemPath>
+        <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/wincSoftAp.h</itemPath>
       </logicalFolder>
       <logicalFolder name="packs" displayName="packs" projectFiles="true">
         <logicalFolder name="ATSAME54P20A_DFP"
@@ -739,6 +741,7 @@
       <itemPath>../src/app_logging_tasks.h</itemPath>
       <itemPath>../src/app_sd_card_tasks.h</itemPath>
       <itemPath>../src/app_active_mode_controller.h</itemPath>
+      <itemPath>../src/app_wifi_access_point_controller.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -846,6 +849,7 @@
               <itemPath>../src/config/default/driver/winc/wdrv_winc_nvm.c</itemPath>
               <itemPath>../src/config/default/driver/winc/wdrv_winc_httpprovctx.c</itemPath>
               <itemPath>../src/config/default/driver/winc/wdrv_winc_wps.c</itemPath>
+              <itemPath>../src/config/default/driver/winc/wdrv_winc_enterprise.c</itemPath>
             </logicalFolder>
           </logicalFolder>
           <logicalFolder name="library" displayName="library" projectFiles="true">
@@ -1030,6 +1034,7 @@
         <itemPath>../src/files/defrosting.c</itemPath>
         <itemPath>../src/files/cJSON.c</itemPath>
         <itemPath>../src/files/emergency_mode.c</itemPath>
+        <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/wincSoftAp.c</itemPath>
       </logicalFolder>
       <logicalFolder name="wolfcrypt" displayName="wolfcrypt" projectFiles="true">
         <logicalFolder name="port" displayName="port" projectFiles="true">
@@ -1169,6 +1174,7 @@
       <itemPath>../src/app_logging_tasks.c</itemPath>
       <itemPath>../src/app_sd_card_tasks.c</itemPath>
       <itemPath>../src/app_active_mode_controller.c</itemPath>
+      <itemPath>../src/app_wifi_access_point_controller.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>

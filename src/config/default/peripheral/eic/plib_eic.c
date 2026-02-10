@@ -95,7 +95,7 @@ void EIC_Initialize (void)
     EIC_REGS->EIC_CONFIG[1] =  EIC_CONFIG_SENSE0_FALL 
          |  EIC_CONFIG_SENSE1_NONE  
          |  EIC_CONFIG_SENSE2_NONE  
-         |  EIC_CONFIG_SENSE3_NONE  
+         |  EIC_CONFIG_SENSE3_BOTH | EIC_CONFIG_FILTEN3_Msk 
          |  EIC_CONFIG_SENSE4_NONE  
          |  EIC_CONFIG_SENSE5_NONE  
          |  EIC_CONFIG_SENSE6_NONE  
@@ -103,11 +103,15 @@ void EIC_Initialize (void)
 
 
 
+    /* Debouncer enable */
+    EIC_REGS->EIC_DEBOUNCEN = 0x800U;
 
 
+    /* Debouncer Setting */
+    EIC_REGS->EIC_DPRESCALER = EIC_DPRESCALER_PRESCALER0(0UL) | EIC_DPRESCALER_PRESCALER1(0UL) ;
 
     /* External Interrupt enable*/
-    EIC_REGS->EIC_INTENSET = 0x100U;
+    EIC_REGS->EIC_INTENSET = 0x900U;
 
     /* Callbacks for enabled interrupts */
     eicCallbackObject[0].eicPinNo = EIC_PIN_MAX;
@@ -121,7 +125,7 @@ void EIC_Initialize (void)
     eicCallbackObject[8].eicPinNo = EIC_PIN_8;
     eicCallbackObject[9].eicPinNo = EIC_PIN_MAX;
     eicCallbackObject[10].eicPinNo = EIC_PIN_MAX;
-    eicCallbackObject[11].eicPinNo = EIC_PIN_MAX;
+    eicCallbackObject[11].eicPinNo = EIC_PIN_11;
     eicCallbackObject[12].eicPinNo = EIC_PIN_MAX;
     eicCallbackObject[13].eicPinNo = EIC_PIN_MAX;
     eicCallbackObject[14].eicPinNo = EIC_PIN_MAX;
@@ -164,6 +168,18 @@ void __attribute__((used)) EIC_EXTINT_8_InterruptHandler(void)
     {
         uintptr_t context = eicCallbackObject[8].context;
         eicCallbackObject[8].callback(context);
+    }
+
+}
+void __attribute__((used)) EIC_EXTINT_11_InterruptHandler(void)
+{
+    /* Clear interrupt flag */
+    EIC_REGS->EIC_INTFLAG = (1UL << 11);
+    /* Find any associated callback entries in the callback table */
+    if ((eicCallbackObject[11].callback != NULL))
+    {
+        uintptr_t context = eicCallbackObject[11].context;
+        eicCallbackObject[11].callback(context);
     }
 
 }

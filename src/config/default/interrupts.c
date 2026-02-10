@@ -79,7 +79,7 @@ void __attribute__((optimize("-O1"), long_call, noreturn, used))Dummy_Handler(vo
 }
 
 /* MISRAC 2023 deviation block start */
-/* MISRA C-2023 Rule 8.6 deviated 104 times.  Deviation record ID -  H3_MISRAC_2023_R_8_6_DR_1 */
+/* MISRA C-2023 Rule 8.6 deviated 103 times.  Deviation record ID -  H3_MISRAC_2023_R_8_6_DR_1 */
 /* Device vectors list dummy definition*/
 extern void SVCall_Handler             ( void ) __attribute__((weak, alias("Dummy_Handler"),noreturn));
 extern void PendSV_Handler             ( void ) __attribute__((weak, alias("Dummy_Handler"),noreturn));
@@ -104,7 +104,6 @@ extern void EIC_EXTINT_6_Handler       ( void ) __attribute__((weak, alias("Dumm
 extern void EIC_EXTINT_7_Handler       ( void ) __attribute__((weak, alias("Dummy_Handler"),noreturn));
 extern void EIC_EXTINT_9_Handler       ( void ) __attribute__((weak, alias("Dummy_Handler"),noreturn));
 extern void EIC_EXTINT_10_Handler      ( void ) __attribute__((weak, alias("Dummy_Handler"),noreturn));
-extern void EIC_EXTINT_11_Handler      ( void ) __attribute__((weak, alias("Dummy_Handler"),noreturn));
 extern void EIC_EXTINT_12_Handler      ( void ) __attribute__((weak, alias("Dummy_Handler"),noreturn));
 extern void EIC_EXTINT_13_Handler      ( void ) __attribute__((weak, alias("Dummy_Handler"),noreturn));
 extern void EIC_EXTINT_14_Handler      ( void ) __attribute__((weak, alias("Dummy_Handler"),noreturn));
@@ -194,7 +193,7 @@ extern void SDHC0_Handler              ( void ) __attribute__((weak, alias("Dumm
 
 
 /* MISRAC 2023 deviation block start */
-/* MISRA C-2023 Rule 2.8 deviated 104 times.  Deviation record ID -  H3_MISRAC_2023_R_2_8_DR_1 */
+/* MISRA C-2023 Rule 2.8 deviated 103 times.  Deviation record ID -  H3_MISRAC_2023_R_2_8_DR_1 */
 
 __attribute__ ((section(".vectors"), used))
 const H3DeviceVectors exception_table=
@@ -235,7 +234,7 @@ const H3DeviceVectors exception_table=
     .pfnEIC_EXTINT_8_Handler       = EIC_EXTINT_8_InterruptHandler,
     .pfnEIC_EXTINT_9_Handler       = EIC_EXTINT_9_Handler,
     .pfnEIC_EXTINT_10_Handler      = EIC_EXTINT_10_Handler,
-    .pfnEIC_EXTINT_11_Handler      = EIC_EXTINT_11_Handler,
+    .pfnEIC_EXTINT_11_Handler      = EIC_EXTINT_11_InterruptHandler,
     .pfnEIC_EXTINT_12_Handler      = EIC_EXTINT_12_Handler,
     .pfnEIC_EXTINT_13_Handler      = EIC_EXTINT_13_Handler,
     .pfnEIC_EXTINT_14_Handler      = EIC_EXTINT_14_Handler,
