@@ -123,6 +123,9 @@ void resetActiveModeStates() {
     hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
     hot_water_heating_mode_data.hotwaterPassive = false;
     hot_water_heating_mode_data.setpointHotWaterOffset = TEMPERATURE_ALARM_VALUE;
+    
+    hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = false;
+    hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
             
     if(app_active_mode_controllerData.currentRunningMode == COOLING 
             || app_active_mode_controllerData.currentRunningMode == HOT_WATER_COOLING) {
@@ -467,4 +470,39 @@ bool blockHotWaterBasedOnTimers(void)
 uint16_t getCascadeSlaveStatus()
 {
     return RealTimeData1[ADDRESS_CASCADE_SLAVES_ONLINE_1 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE];
+}
+
+int16_t getCorrectHeatingSetpoint(bool heatingCurveSet)
+{
+    int16_t heatingSetpoint; 
+    
+    if (heatingCurveSet == true) {
+        // Heating curve is set, get setpoint out of the heatpump
+        heatingSetpoint = getHeatpumpHeatingSetpoint()*10;
+    } else {
+        // No curve is set, get setpoint from Connect
+        heatingSetpoint = getHeatingSetpoint();
+    } 
+    
+    return heatingSetpoint;
+}
+
+bool checkIfBufferIsWithinSetpointMinusDelta(int16_t heatingBufferTemperature)
+{
+    int16_t setpoint = getCorrectHeatingSetpoint(heating_mode_data.heatingCurveSet);
+    int16_t delta = getAirConditionerReturnDifference();
+    
+    if (heatingBufferTemperature == TEMPERATURE_ALARM_VALUE || delta == TEMPERATURE_ALARM_VALUE || setpoint == UINT16_MAX || setpoint == TEMPERATURE_ALARM_VALUE) {
+        // No valid temperatures, return false
+        return false;
+    } 
+    
+    if (heatingBufferTemperature >= (setpoint - delta)) {
+        // Heating buffer temp is within setpoint minus delta
+        return true;
+    }
+    else {
+        // Heating buffer temp is not within setpoint minus delta
+        return false;
+    }
 }

@@ -92,6 +92,12 @@ extern "C" {
 #define CoolingActiveRelayToggle()      RelayPotfree1_Toggle()
 #define coolingActiveRelaySetOutput()   RelayPotfree1_OutputEnable()
     
+#define HybridActiveRelaySet()          RelayPotfree3_Set()
+#define HybridActiveRelayClear()        RelayPotfree3_Clear()
+#define HybridActiveRelayGet()          RelayPotfree3_Get()
+#define HybridActiveRelayToggle()       RelayPotfree3_Toggle()
+#define HybridActiveRelaySetOutput()    RelayPotfree3_OutputEnable()
+    
 #define getPowerFailStatus()                    NotPwrPowerFail_Get()
 #define getSupercapFaultStatus()                NotPwrCapFault_Get()   
 #define getSystemGoodIndicator()                PwrSysGood_Get()
