@@ -762,8 +762,15 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         printDebugInfo();  
         // Get Dip1 state
         setCurrentDip1SwitchState();     
-        // Sterilization was either on passive mode or off, but has to be set to ACTIVE mode
-        checkNeedForSterilization();
+        
+        // Only do sterilization in HOT_WATER states
+        if (app_active_mode_controllerData.currentRunningMode == HOT_WATER
+                || app_active_mode_controllerData.currentRunningMode == HOT_WATER_COOLING
+                || app_active_mode_controllerData.currentRunningMode == HOT_WATER_HEATING) {
+            // Sterilization was either on passive mode or off, but has to be set to ACTIVE mode
+            checkNeedForSterilization();
+        }
+        
         // Every 10 seconds the setpoint in the heatpump is checked
         checkHeatpumpHeatingSetpoint();
         // Every 10 seconds the running mode of the heatpump is checked

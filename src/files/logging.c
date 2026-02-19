@@ -1172,7 +1172,7 @@ bool getUpdateSettingsFromServer ( void ) {
         SYS_CONSOLE_PRINT("***** COULD NOT COMPLETE REQUEST, CHECK IF NETWORK TX BUFFER SIZE IS BIG ENOUGH TO SEND THE REQUEST! SIZE NOW >> %d *****\r\n", strlen(networkBuffer));  
         return false;
     } else {
-        SYS_CONSOLE_PRINT("*** REQUEST SEND WITH FOLLOWING SETTINGS: GET, /api/v1/settings?hardware_id=%s&type=heatpump, %s\r\n", HARDWARE_ID, NTP_TIME_BUFFER);
+        SYS_CONSOLE_PRINT("*** REQUEST SEND WITH FOLLOWING SETTINGS: GET, /api/v1/settings?hardware_id=%s&type=heatpump, %s, SIZE %i\r\n", HARDWARE_ID, NTP_TIME_BUFFER, strlen(networkBuffer));
     }
     return true;    
 }
@@ -1423,6 +1423,14 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
             break;
         }
         
+        case ADDRESS_TULIP_CONNECT_RELAIS_OUTPUT_THREE: {
+            // IF VALUE IS:
+            // 0 == HYBRID SYSTEM DISABLED
+            // 1 == HYBRID SYSTEM ENABLED
+            WriteSmartEeprom16(SEEP_ADDR_HYBRID_SYSTEM_ENABLED, value);
+            break;
+        }        
+        
         /* DONE */
         case ADDRESS_TULIP_CONNECT_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT: { 
             WriteSmartEeprom8(SEEP_ADDR_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT, value);
@@ -1550,11 +1558,30 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
         
         case ADDRESS_TULIP_CONNECT_CIRCULATION_ON_TEMPERATURE: {
             WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_ON_TEMPERATURE, value);
+            break;
         }
-        
         case ADDRESS_TULIP_CONNECT_CIRCULATION_CONTROL_AT_AMBIENT_TEMP: {
             WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_CONTROL_AT_AMBIENT_TEMPERATURE, value);
+            break;
         }
+        case ADDRESS_TULIP_CONNECT_HYBRID_SYSTEM_ENABLED_ON_HEATING_ELEMENT_RELAIS: {
+            WriteSmartEeprom16(SEEP_ADDR_HYBRID_SYSTEM_ENABLED_ON_HEATING_ELEMENT_RELAIS, value);
+            break;
+        }
+        case ADDRESS_TULIP_CONNECT_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON: {
+            WriteSmartEeprom16(SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON, value);
+            break;
+        }
+        case ADDRESS_TULIP_CONNECT_HEATING_MODE_MAX_TIME_WITH_CIRCULATION_PUMP_OFF: {
+            WriteSmartEeprom16(SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_CIRCULATION_PUMP_OFF, value);
+            break;
+        }
+        case ADDRESS_TULIP_CONNECT_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF: {
+            WriteSmartEeprom16(SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF, value);
+            break;
+        }
+         
+        
         
         default: {
             ChangeHeatpumpSetting(address, value);
@@ -1819,7 +1846,12 @@ bool sendUpdatedSettingsList ( void ) {
     
     
     const uint32_t eep_addrs_16_bit_3[] = {
-        SEEP_ADDR_HEATING_TIME_CONSTANT_SEC,             
+        SEEP_ADDR_HEATING_TIME_CONSTANT_SEC,      
+        SEEP_ADDR_HYBRID_SYSTEM_ENABLED_ON_HEATING_ELEMENT_RELAIS,
+        SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON,
+        SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_CIRCULATION_PUMP_OFF,
+        SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF,
+        SEEP_ADDR_HYBRID_SYSTEM_ENABLED,
      };
     
     getSettingValuesByEepromList16Bit(eep_addrs_16_bit_3, sizeof(eep_addrs_16_bit_3)/sizeof(eep_addrs_16_bit_3[0]));    
