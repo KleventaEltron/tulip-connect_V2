@@ -76,14 +76,14 @@ Pin Number,Pin ID,Custom Name,Function,Mode, Direction,Latch,Pull Up,Pull Down,D
 95,PA25,,USB_DP,Digital,High Impedance,n/a,No,No,NORMAL
 98,PB22,,Available,,,,,,NORMAL
 99,PB23,,Available,,,,,,NORMAL
-100,PB24,NotWiFiReset,GPIO,Digital,Out,Low,,,NORMAL
-101,PB25,WiFiEnable,GPIO,Digital,Out,Low,,,NORMAL
-102,PB26,WiFiMosi,SERCOM2_PAD0,Digital,High Impedance,n/a,No,No,NORMAL
-103,PB27,WiFiSck,SERCOM2_PAD1,Digital,High Impedance,n/a,No,No,NORMAL
-104,PB28,WiFiNotSS,SERCOM2_PAD2,Digital,High Impedance,n/a,No,No,NORMAL
-105,PB29,WiFiMiso,SERCOM2_PAD3,Digital,High Impedance,n/a,No,No,NORMAL
-108,PC24,WiFiInterrupt,GPIO,Digital,In,n/a,No,No,NORMAL
-109,PC25,WiFiWake,GPIO,Digital,Out,Low,,,NORMAL
+100,PB24,WDRV_WINC_RESETN,GPIO,Digital,Out,High,,,NORMAL
+101,PB25,WDRV_WINC_CHIP_EN,GPIO,Digital,Out,High,,,NORMAL
+102,PB26,WDRV_WINC_MOSI,SERCOM2_PAD0,Digital,High Impedance,n/a,No,No,NORMAL
+103,PB27,WDRV_WINC_SCK,SERCOM2_PAD1,Digital,High Impedance,n/a,No,No,NORMAL
+104,PB28,WifiSlaveSelect,SERCOM2_PAD2,Digital,Out,High,,,NORMAL
+105,PB29,WDRV_WINC_MISO,SERCOM2_PAD3,Digital,Out,High,,,NORMAL
+108,PC24,WiFiInterrupt,EIC_EXTINT8,Digital,In,n/a,No,No,NORMAL
+109,PC25,WDRV_WINC_WAKE,GPIO,Digital,Out,High,,,NORMAL
 110,PC26,NotInputSw1,GPIO,Digital,In,n/a,No,No,NORMAL
 111,PC27,NotInputBtn1,EIC_EXTINT11,Digital,In,n/a,No,No,NORMAL
 112,PC28,HwRev1,GPIO,Digital,In,n/a,Yes,No,NORMAL

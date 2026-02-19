@@ -306,7 +306,7 @@ void printCustomEepromParameters() {
 //        SYS_CONSOLE_PRINT("SEEP_ADDR_BOOST_MODE:                                %i\n", ReadSmartEeprom8(SEEP_ADDR_BOOST_MODE));
 //        SYS_CONSOLE_PRINT("SEEP_ADDR_USE_SILENT_MODE_TIMERS:                    %i\n", ReadSmartEeprom8(SEEP_ADDR_USE_SILENT_MODE_TIMERS));
 //        SYS_CONSOLE_PRINT("SEEP_ADDR_BLOCK_HOTWATER:                            %i\n\n", ReadSmartEeprom8(SEEP_ADDR_BLOCK_HOTWATER));
-SYS_CONSOLE_PRINT(" Pumpstate:            %s\n", getCirculationPumpStateToString());
+//SYS_CONSOLE_PRINT(" Pumpstate:            %s\n", getCirculationPumpStateToString());
 SYS_CONSOLE_PRINT("\nSEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED:          %i\n", ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED));
 SYS_CONSOLE_PRINT("SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED:         %i\n", ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED));
 SYS_CONSOLE_PRINT("SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW:                   %i\n", ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW));

@@ -40,7 +40,7 @@
 #include "files\alarms.h"
 #include "files\time_counters.h"
 #include "files/logging.h"
-
+#include "files/states.h"
 #include "files\eeprom.h"
 
 

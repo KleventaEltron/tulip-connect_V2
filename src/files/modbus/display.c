@@ -14,6 +14,7 @@
 #include "files/states.h"
 #include "../logging.h"
 //#include "shiftregisters.h
+#define CASCADE_BIT_IS_SET(mask, bit)   (((mask) & (1u << (bit))) != 0u)
 
 void ParseDisplayData(uint8_t * rxBuffer)
 {
@@ -318,7 +319,18 @@ uint8_t FillTransmitBuffer(uint8_t* txBuffer, uint8_t* rxBuffer)
         uint8_t modbusAddress = rxBuffer[MODBUS_ADDRESS_INDEX];
         uint16_t amountOfRegisters = ((uint16_t)rxBuffer[MODBUS_REG_AMOUNT_MSB_INDEX] << 8) + rxBuffer[MODBUS_REG_AMOUNT_LSB_INDEX]; 
         uint16_t readRegisterAddress = ((uint16_t)rxBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] << 8) + rxBuffer[MODBUS_REG_ADDRESS_LSB_INDEX];
-
+        
+        // Wait for cascade to be configured before starting to send
+        if (getCascadeSlaveStatus() == UINT16_MAX) {
+            return size;
+        }
+        
+        // Check if slave requested is a valid adress
+        uint16_t cascadeMask = getCascadeSlaveStatus();
+        if (!CASCADE_BIT_IS_SET(cascadeMask, (modbusAddress-1)) && modbusAddress != 1) {
+            return size;
+        }           
+        
         //txBuffer[MODBUS_ADDRESS_INDEX]          = 0x01;
         txBuffer[MODBUS_ADDRESS_INDEX]          = modbusAddress;
         txBuffer[MODBUS_COMMAND_INDEX]          = MB_FC_READ_REGS;

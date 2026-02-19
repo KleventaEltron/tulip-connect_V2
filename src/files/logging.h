@@ -68,6 +68,8 @@ extern "C" {
 #define circPumpOnTempLow               "TL46"
 #define circPumpOffTempHigh             "TL47"
 #define circPumpOnTempHigh              "TL48"
+#define circPumpOnTemp                  "TL49"
+#define circPumpControlOnAmbTemp        "TL50"
     
 #define GMAC_NSR_MDIO_READY_Msk (1 << 0)    
 #define GMAC_NSR_RX_IDLE_Msk (1 << 1)    
