@@ -42,7 +42,84 @@ bool factorySettingResetInProgress = false;
  
  
 
+void debugPI(void)
+{
+                    SYS_CONSOLE_PRINT("\n=== HEATPUMP PI DEBUG ===\n");
+                
+                SYS_CONSOLE_PRINT(" Time counter:         %lu s\n", getSecondCounterHeatpumpPowerRegulation());
+                SYS_CONSOLE_PRINT(" Update interval:      %lu s\n", getHeatingModeData().visualUpdateInterval_sec);
+                
+                SYS_CONSOLE_PRINT("\n--- TEMPERATURE ---\n");
+                
+                SYS_CONSOLE_PRINT(" Heatpump Setpoint:    %u C\n",
+                    getHeatpumpHeatingSetpoint());
+                
+                SYS_CONSOLE_PRINT(" Temp now:             %ld mC (%.2f C)\n",
+                    getHeatingModeData().visualTempNow_mC,
+                    getHeatingModeData().visualTempNow_mC / 1000.0f);
 
+                SYS_CONSOLE_PRINT(" Temp previous:        %ld mC (%.2f C)\n",
+                    getHeatingModeData().visualTempPrev_mC,
+                    getHeatingModeData().visualTempPrev_mC / 1000.0f);
+
+                SYS_CONSOLE_PRINT(" Delta T:              %ld mC (%.3f C)\n",
+                    getHeatingModeData().visualdT_mC,
+                    getHeatingModeData().visualdT_mC / 1000.0f);
+
+                SYS_CONSOLE_PRINT(" Delta time:           %lu s\n",
+                    getHeatingModeData().visualdt_sec);
+
+
+                SYS_CONSOLE_PRINT("\n--- SLOPE ---\n");
+                SYS_CONSOLE_PRINT(" Target slope:         %ld mC/min (%.3f C/100min)\n",
+                    getHeatingModeData().visualSlopeTarget_mC_min,
+                    getHeatingModeData().visualSlopeTarget_mC_min * 100 / 1000.0f);
+
+                SYS_CONSOLE_PRINT(" Measured slope:       %ld mC/min (%.3f C/100min)\n",
+                    getHeatingModeData().visualSlopeMeas_mC_min,
+                    getHeatingModeData().visualSlopeMeas_mC_min * 100 / 1000.0f);
+
+                SYS_CONSOLE_PRINT(" Error:                %ld mC/min\n",
+                    getHeatingModeData().visualError_mC_min);
+
+
+                SYS_CONSOLE_PRINT("\n--- PI OUTPUT ---\n");
+                SYS_CONSOLE_PRINT(" P term:               %ld (x1000 Hz)\n",
+                    getHeatingModeData().visualP_Hz_x1000);
+
+                SYS_CONSOLE_PRINT(" I term:               %ld (x1000 Hz)\n",
+                    getHeatingModeData().visualI_Hz_x1000);
+
+                SYS_CONSOLE_PRINT(" Output:               %ld Hz\n",
+                    getHeatingModeData().visualU_Hz);
+
+
+                SYS_CONSOLE_PRINT("\n--- FREQUENCY ---\n");
+                SYS_CONSOLE_PRINT(" Frequency before:     %u Hz\n",
+                    getHeatingModeData().visualFreqBefore);
+
+                SYS_CONSOLE_PRINT(" Frequency after:      %u Hz\n",
+                    getHeatingModeData().visualFreqAfter);
+                
+                SYS_CONSOLE_PRINT(" Target frequency:     %u Hz\n",
+                    getHeatpumpTargetFrequency());
+                
+                SYS_CONSOLE_PRINT(" Running frequency:    %u Hz\n",
+                    getHeatpumpCompressorFrequency(0));
+
+                SYS_CONSOLE_PRINT("\n--- EVENTS ---\n");
+                SYS_CONSOLE_PRINT(" Flags raw:            0x%02X\n",
+                    getHeatingModeData().visualEventFlags);
+
+                SYS_CONSOLE_PRINT("  Time reached:        %s\n",
+                    (getHeatingModeData().visualEventFlags & 0x01) ? "YES" : "NO");
+
+                SYS_CONSOLE_PRINT("  Step reached (0.2C): %s\n",
+                    (getHeatingModeData().visualEventFlags & 0x02) ? "YES" : "NO");
+
+                SYS_CONSOLE_PRINT("  Temp dropped:        %s\n",
+                    (getHeatingModeData().visualEventFlags & 0x04) ? "YES" : "NO");
+}
  
  void printDebugInfo() {
     //printCustomEepromParameters();
@@ -143,19 +220,19 @@ bool factorySettingResetInProgress = false;
             heatingSetpoint = getHeatingSetpoint(); 
         }
         
-        SYS_CONSOLE_PRINT("\r\nINFO: %s\n\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
-        
-        SYS_CONSOLE_PRINT(" Emergency Mode Heating:     %d\n", ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED));
-        SYS_CONSOLE_PRINT(" Heating setpoint:           %d\n", (int16_t)heatingSetpoint);
-        SYS_CONSOLE_PRINT(" Delta:                      %d\n", (int16_t)getAirConditionerReturnDifference());
-        SYS_CONSOLE_PRINT(" Buffer:                     %d\n", GetNtcTemperature(NTC_HEATING_BUFFER));
-        SYS_CONSOLE_PRINT(" Heating element:            %d\n\n", getHeatingElementBoolFromEmergencyMode());
-        
-        SYS_CONSOLE_PRINT(" Emergency Mode Hotwater:    %d\n", ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED));
-        SYS_CONSOLE_PRINT(" Hotwater setpoint:          %d\n", (int16_t)getHotwaterSetpoint());
-        SYS_CONSOLE_PRINT(" Delta:                      %d\n", (int16_t)getAirConditionerReturnDifference());
-        SYS_CONSOLE_PRINT(" Boiler:                     %d\n", GetNtcTemperature(NTC_HOT_WATER_BUFFER));
-        SYS_CONSOLE_PRINT(" Hot water element:          %d\n\n", getHotWaterElementBoolFromEmergencyMode());
+//        SYS_CONSOLE_PRINT("\r\nINFO: %s\n\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
+//        
+//        SYS_CONSOLE_PRINT(" Emergency Mode Heating:     %d\n", ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED));
+//        SYS_CONSOLE_PRINT(" Heating setpoint:           %d\n", (int16_t)heatingSetpoint);
+//        SYS_CONSOLE_PRINT(" Delta:                      %d\n", (int16_t)getAirConditionerReturnDifference());
+//        SYS_CONSOLE_PRINT(" Buffer:                     %d\n", GetNtcTemperature(NTC_HEATING_BUFFER));
+//        SYS_CONSOLE_PRINT(" Heating element:            %d\n\n", getHeatingElementBoolFromEmergencyMode());
+//        
+//        SYS_CONSOLE_PRINT(" Emergency Mode Hotwater:    %d\n", ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED));
+//        SYS_CONSOLE_PRINT(" Hotwater setpoint:          %d\n", (int16_t)getHotwaterSetpoint());
+//        SYS_CONSOLE_PRINT(" Delta:                      %d\n", (int16_t)getAirConditionerReturnDifference());
+//        SYS_CONSOLE_PRINT(" Boiler:                     %d\n", GetNtcTemperature(NTC_HOT_WATER_BUFFER));
+//        SYS_CONSOLE_PRINT(" Hot water element:          %d\n\n", getHotWaterElementBoolFromEmergencyMode());
         
         
         /*
@@ -196,18 +273,19 @@ bool factorySettingResetInProgress = false;
 
             if (heatpumpMode == HEATING) {
 
-                SYS_CONSOLE_PRINT("\r\nHEATING:\n");
-                SYS_CONSOLE_PRINT(" State:                %s\n", getHeatingStateToString());
-                SYS_CONSOLE_PRINT(" Element ON:           %s\n", getStatusHeatingElementHeatingBuffer() ? "True" : "False");
-                SYS_CONSOLE_PRINT(" Buffer:               %i\n", GetNtcTemperature(NTC_HEATING_BUFFER));
-                SYS_CONSOLE_PRINT(" Initial buffer temp.: %i\n", getHeatingModeData().initialBufferTemp);
-                SYS_CONSOLE_PRINT(" Stepper setpoint:     %i\n", getHeatingModeData().stepperSetpoint);
-                SYS_CONSOLE_PRINT(" Heating setpoint:     %i\n", getHeatingSetpoint());
-                SYS_CONSOLE_PRINT(" Inlet temp. master:   %i\n", getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE));
-                SYS_CONSOLE_PRINT(" Ambient temp. master: %i\n", getExternalAmbientTemperature(MASTER_HEATPUMP_IN_CASCADE));
-                SYS_CONSOLE_PRINT(" Setpoint in HP:       %i\n", getHeatpumpHeatingSetpoint() * 10);
-                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, MASTER_HEATPUMP_IN_CASCADE));
-                SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getSecondCounterHeatingTask());
+//                SYS_CONSOLE_PRINT("\r\nHEATING:\n");
+//                SYS_CONSOLE_PRINT(" State:                %s\n", getHeatingStateToString());
+//                SYS_CONSOLE_PRINT(" Element ON:           %s\n", getStatusHeatingElementHeatingBuffer() ? "True" : "False");
+//                SYS_CONSOLE_PRINT(" Buffer:               %i\n", GetNtcTemperature(NTC_HEATING_BUFFER));
+//                SYS_CONSOLE_PRINT(" Initial buffer temp.: %i\n", getHeatingModeData().initialBufferTemp);
+//                SYS_CONSOLE_PRINT(" Stepper setpoint:     %i\n", getHeatingModeData().stepperSetpoint);
+//                SYS_CONSOLE_PRINT(" Heating setpoint:     %i\n", getHeatingSetpoint());
+//                SYS_CONSOLE_PRINT(" Inlet temp. master:   %i\n", getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE));
+//                SYS_CONSOLE_PRINT(" Ambient temp. master: %i\n", getExternalAmbientTemperature(MASTER_HEATPUMP_IN_CASCADE));
+//                SYS_CONSOLE_PRINT(" Setpoint in HP:       %i\n", getHeatpumpHeatingSetpoint() * 10);
+//                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, MASTER_HEATPUMP_IN_CASCADE));
+//                SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getSecondCounterHeatingTask());
+                debugPI();
             }
             
             if (heatpumpMode == COOLING) {
@@ -337,6 +415,24 @@ bool factorySettingResetInProgress = false;
     
     setWriteHeatpumpRunningModeCounter(0); 
  }
+ 
+void checkHeatpumpTargetFrequency() {
+    if (getWriteHeatpumpTargetFrequencyCounter() < 10) {
+        return;
+    }
+
+    if (getHeatingModeData().compressorTargetFrequency != getHeatpumpTargetFrequency() && getHeatingModeData().compressorTargetFrequency != UINT8_MAX) {   
+        // Target frequency is not correct
+        ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_CONSTANT_B, getHeatingModeData().compressorTargetFrequency);
+    }
+    
+    if (getHeatingModeData().compressorTargetFrequency != getHeatpumpMinimumFrequency() && getHeatingModeData().compressorTargetFrequency != UINT8_MAX) {   
+        // Minimum frequency is not correct
+        ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT, getHeatingModeData().compressorTargetFrequency);
+    }
+
+    setWriteHeatpumpTargetFrequencyCounter(0); 
+}
  
  void checkHeatpumpForcedOff() {
     if (getWriteHeatpumpForcedOffCounter() < 10) {
@@ -649,6 +745,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Initialize ( void )
     setWriteNewSetPointHeatpumpCounter(0); 
     setWriteHeatpumpRunningModeCounter(0); 
     setCheckSilentModeOnTimerCounter(0);
+    setWriteHeatpumpTargetFrequencyCounter(0);
     
     // Initialize every active mode
     HEATING_MODE_Initialize();
@@ -746,7 +843,9 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         // Every 10 seconds the setpoint in the heatpump is checked
         checkHeatpumpHeatingSetpoint();
         // Every 10 seconds the running mode of the heatpump is checked
-        checkHeatpumpRunningMode();     
+        checkHeatpumpRunningMode();
+        // Every 10 seconds the P54 of the heatpump is checked
+        checkHeatpumpTargetFrequency();
     }
     
     

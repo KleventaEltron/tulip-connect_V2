@@ -84,6 +84,35 @@ typedef struct{
     bool HeatingElementOn;
     int16_t stepperSetpoint;
     bool heatingCurveSet;
+    
+    uint8_t compressorTargetFrequency;
+    int32_t previousTemp_mC; 
+    int32_t previousDt_sec;
+    
+    // temps
+int32_t visualTempNow_mC;
+int32_t visualTempPrev_mC;
+int32_t visualdT_mC;
+uint32_t visualdt_sec;
+
+// slopes
+int32_t visualSlopeTarget_mC_min;
+int32_t visualSlopeMeas_mC_min;
+int32_t visualSlopeTarget_mC_100min;
+int32_t visualSlopeMeas_mC_100min;
+
+// PI
+int32_t visualError_mC_min;
+int32_t visualP_Hz_x1000;
+int32_t visualI_Hz_x1000;
+int32_t visualU_Hz;
+uint16_t visualFreqBefore;
+uint16_t visualFreqAfter;
+
+// timing / events
+uint32_t visualUpdateInterval_sec;
+uint8_t  visualEventFlags; // bit0=time, bit1=step, bit2=drop
+    
 } HEATING_MODE_DATA;
 
 
@@ -322,6 +351,8 @@ int16_t getHotwaterDelta();
 int16_t getAirConditionerReturnDifference();
 int16_t getExternalAmbientTemperature(uint8_t whichHeatpump);
 uint16_t getCascadeSlaveStatus();
+int16_t getHeatpumpTargetFrequency();
+int16_t getHeatpumpMinimumFrequency();
 
 bool getCurrentDip1SwitchState();
 bool getPreviousDip1SwitchState();

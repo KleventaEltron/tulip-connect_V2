@@ -265,6 +265,13 @@ static void parseReadRegs(uint8_t * txBuffer, uint8_t * rxBuffer)
         //checkWhatData(i);
         saveDataToMemory(i, data, deviceAddress);
     }
+    
+//    if (GetDigitalInput2()){
+//        RealTimeData1[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE] = 50;
+//    }
+//    else {
+//        RealTimeData1[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE] = 0;
+//    }
 }
 
 void ParseHeatpumpData(uint8_t * txBuffer, uint8_t * rxBuffer)
