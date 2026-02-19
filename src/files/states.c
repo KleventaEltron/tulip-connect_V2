@@ -480,6 +480,8 @@ int16_t getHeatpumpTargetFrequency()
 int16_t getHeatpumpMinimumFrequency()
 {
     return (int16_t)UnitSystemParameters[ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT - START_ADDRESS_UNIT_SYSTEM_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+}
+
 int16_t getCorrectHeatingSetpoint(bool heatingCurveSet)
 {
     int16_t heatingSetpoint; 
