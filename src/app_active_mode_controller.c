@@ -351,17 +351,38 @@ void debugPI(void)
     return;
  }
  
+ void TurnOnAuxiliaryHeatingSource(void)
+ {
+    if (ReadSmartEeprom16(SEEP_ADDR_HYBRID_SYSTEM_ENABLED) == true) {
+        // Hybrid relay must be set
+        HybridActiveRelaySet();
+    } 
+    else {
+        // Hybrid relay must not be set
+        HybridActiveRelayClear();
+    }
+    
+    if ((ReadSmartEeprom16(SEEP_ADDR_HYBRID_SYSTEM_ENABLED) == false) || (ReadSmartEeprom16(SEEP_ADDR_HYBRID_SYSTEM_ENABLED_ON_HEATING_ELEMENT_RELAIS) == true)) {
+        // Hybrid relais is not enabled OR hybrid is on heating element relay
+        TurnOnHeatingElementHeatingBuffer();
+    }
+    else {
+        TurnOffHeatingElementHeatingBuffer();
+    }
+ }
  
- void checkHeatingElementStates() {
+ void checkHeatingElementOrHybridStates() {
     
      // Heating element
     if ((getHeatingElementBoolFromHotwaterHeatingMode() == true) || 
             (getHeatingElementBoolFromHeatingMode() == true)     || 
             (getHeatingElementBoolFromEmergencyMode() == true)) {
-        TurnOnHeatingElementHeatingBuffer();
+        //TurnOnHeatingElementHeatingBuffer();
+        TurnOnAuxiliaryHeatingSource();
     }
     else{
         TurnOffHeatingElementHeatingBuffer();
+        HybridActiveRelayClear();
     }
 
     // Hot water element
@@ -838,8 +859,15 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         printDebugInfo();  
         // Get Dip1 state
         setCurrentDip1SwitchState();     
-        // Sterilization was either on passive mode or off, but has to be set to ACTIVE mode
-        checkNeedForSterilization();
+        
+        // Only do sterilization in HOT_WATER states
+        if (app_active_mode_controllerData.currentRunningMode == HOT_WATER
+                || app_active_mode_controllerData.currentRunningMode == HOT_WATER_COOLING
+                || app_active_mode_controllerData.currentRunningMode == HOT_WATER_HEATING) {
+            // Sterilization was either on passive mode or off, but has to be set to ACTIVE mode
+            checkNeedForSterilization();
+        }
+        
         // Every 10 seconds the setpoint in the heatpump is checked
         checkHeatpumpHeatingSetpoint();
         // Every 10 seconds the running mode of the heatpump is checked
@@ -870,6 +898,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
         // Heatpump is forced off, don't go further
         TurnOffHeatingElementHeatingBuffer();
         TurnOffHeatingElementHotWaterBuffer();
+        HybridActiveRelayClear();
         
         // Guard against system reset, because it is not actually stuck
         //setSystemStuckProtectionCounter(0);
@@ -894,7 +923,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
      * 
      *
      */
-    checkHeatingElementStates();
+    checkHeatingElementOrHybridStates();
     
     
     /* 

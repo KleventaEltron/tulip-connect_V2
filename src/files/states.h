@@ -73,7 +73,9 @@ typedef enum{
     HEATING_INITIALIZE,
     HEATING_IDLE,
     HEATING_RUNNING,
-    HEATING_RUNNING_WITH_ELEMENT_ON
+    HEATING_RUNNING_WITH_ELEMENT_ON,
+    HEATING_RUNNING_WITH_CIRCULATION_PUMP_OFF,
+    HEATING_RUNNING_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF        
 } HEATING_MODE_STATES;
 
 
@@ -239,6 +241,8 @@ typedef enum{
     HOT_WATER_HEATING_IDLE_HEATING,
     HOT_WATER_HEATING_RUNNING_ON_HEATING,
     HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON,
+    HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_CIRCULATION_PUMP_OFF,
+    HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF,
             
     // Hot water modes: 
     HOT_WATER_HEATING_INITIALIZE_HOT_WATER,   
@@ -353,6 +357,9 @@ int16_t getExternalAmbientTemperature(uint8_t whichHeatpump);
 uint16_t getCascadeSlaveStatus();
 int16_t getHeatpumpTargetFrequency();
 int16_t getHeatpumpMinimumFrequency();
+uint16_t getCascadeSlaveStatus( void );
+
+bool checkIfBufferIsWithinSetpointMinusDelta(int16_t heatingBufferTemperature);
 
 bool getCurrentDip1SwitchState();
 bool getPreviousDip1SwitchState();

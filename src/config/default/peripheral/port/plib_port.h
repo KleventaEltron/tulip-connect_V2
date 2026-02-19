@@ -451,57 +451,52 @@
 #define I2CSda_Get()               (((PORT_REGS->GROUP[0].PORT_IN >> 23U)) & 0x01U)
 #define I2CSda_PIN                  PORT_PIN_PA23
 
-/*** Macros for NotWiFiReset pin ***/
-#define NotWiFiReset_Set()               (PORT_REGS->GROUP[1].PORT_OUTSET = ((uint32_t)1U << 24U))
-#define NotWiFiReset_Clear()             (PORT_REGS->GROUP[1].PORT_OUTCLR = ((uint32_t)1U << 24U))
-#define NotWiFiReset_Toggle()            (PORT_REGS->GROUP[1].PORT_OUTTGL = ((uint32_t)1U << 24U))
-#define NotWiFiReset_OutputEnable()      (PORT_REGS->GROUP[1].PORT_DIRSET = ((uint32_t)1U << 24U))
-#define NotWiFiReset_InputEnable()       (PORT_REGS->GROUP[1].PORT_DIRCLR = ((uint32_t)1U << 24U))
-#define NotWiFiReset_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 24U)) & 0x01U)
-#define NotWiFiReset_PIN                  PORT_PIN_PB24
+/*** Macros for WDRV_WINC_RESETN pin ***/
+#define WDRV_WINC_RESETN_Set()               (PORT_REGS->GROUP[1].PORT_OUTSET = ((uint32_t)1U << 24U))
+#define WDRV_WINC_RESETN_Clear()             (PORT_REGS->GROUP[1].PORT_OUTCLR = ((uint32_t)1U << 24U))
+#define WDRV_WINC_RESETN_Toggle()            (PORT_REGS->GROUP[1].PORT_OUTTGL = ((uint32_t)1U << 24U))
+#define WDRV_WINC_RESETN_OutputEnable()      (PORT_REGS->GROUP[1].PORT_DIRSET = ((uint32_t)1U << 24U))
+#define WDRV_WINC_RESETN_InputEnable()       (PORT_REGS->GROUP[1].PORT_DIRCLR = ((uint32_t)1U << 24U))
+#define WDRV_WINC_RESETN_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 24U)) & 0x01U)
+#define WDRV_WINC_RESETN_PIN                  PORT_PIN_PB24
 
-/*** Macros for WiFiEnable pin ***/
-#define WiFiEnable_Set()               (PORT_REGS->GROUP[1].PORT_OUTSET = ((uint32_t)1U << 25U))
-#define WiFiEnable_Clear()             (PORT_REGS->GROUP[1].PORT_OUTCLR = ((uint32_t)1U << 25U))
-#define WiFiEnable_Toggle()            (PORT_REGS->GROUP[1].PORT_OUTTGL = ((uint32_t)1U << 25U))
-#define WiFiEnable_OutputEnable()      (PORT_REGS->GROUP[1].PORT_DIRSET = ((uint32_t)1U << 25U))
-#define WiFiEnable_InputEnable()       (PORT_REGS->GROUP[1].PORT_DIRCLR = ((uint32_t)1U << 25U))
-#define WiFiEnable_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 25U)) & 0x01U)
-#define WiFiEnable_PIN                  PORT_PIN_PB25
+/*** Macros for WDRV_WINC_CHIP_EN pin ***/
+#define WDRV_WINC_CHIP_EN_Set()               (PORT_REGS->GROUP[1].PORT_OUTSET = ((uint32_t)1U << 25U))
+#define WDRV_WINC_CHIP_EN_Clear()             (PORT_REGS->GROUP[1].PORT_OUTCLR = ((uint32_t)1U << 25U))
+#define WDRV_WINC_CHIP_EN_Toggle()            (PORT_REGS->GROUP[1].PORT_OUTTGL = ((uint32_t)1U << 25U))
+#define WDRV_WINC_CHIP_EN_OutputEnable()      (PORT_REGS->GROUP[1].PORT_DIRSET = ((uint32_t)1U << 25U))
+#define WDRV_WINC_CHIP_EN_InputEnable()       (PORT_REGS->GROUP[1].PORT_DIRCLR = ((uint32_t)1U << 25U))
+#define WDRV_WINC_CHIP_EN_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 25U)) & 0x01U)
+#define WDRV_WINC_CHIP_EN_PIN                  PORT_PIN_PB25
 
-/*** Macros for WiFiMosi pin ***/
-#define WiFiMosi_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 26U)) & 0x01U)
-#define WiFiMosi_PIN                  PORT_PIN_PB26
+/*** Macros for WDRV_WINC_MOSI pin ***/
+#define WDRV_WINC_MOSI_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 26U)) & 0x01U)
+#define WDRV_WINC_MOSI_PIN                  PORT_PIN_PB26
 
-/*** Macros for WiFiSck pin ***/
-#define WiFiSck_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 27U)) & 0x01U)
-#define WiFiSck_PIN                  PORT_PIN_PB27
+/*** Macros for WDRV_WINC_SCK pin ***/
+#define WDRV_WINC_SCK_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 27U)) & 0x01U)
+#define WDRV_WINC_SCK_PIN                  PORT_PIN_PB27
 
-/*** Macros for WiFiNotSS pin ***/
-#define WiFiNotSS_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 28U)) & 0x01U)
-#define WiFiNotSS_PIN                  PORT_PIN_PB28
+/*** Macros for WifiSlaveSelect pin ***/
+#define WifiSlaveSelect_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 28U)) & 0x01U)
+#define WifiSlaveSelect_PIN                  PORT_PIN_PB28
 
-/*** Macros for WiFiMiso pin ***/
-#define WiFiMiso_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 29U)) & 0x01U)
-#define WiFiMiso_PIN                  PORT_PIN_PB29
+/*** Macros for WDRV_WINC_MISO pin ***/
+#define WDRV_WINC_MISO_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 29U)) & 0x01U)
+#define WDRV_WINC_MISO_PIN                  PORT_PIN_PB29
 
 /*** Macros for WiFiInterrupt pin ***/
-#define WiFiInterrupt_Set()               (PORT_REGS->GROUP[2].PORT_OUTSET = ((uint32_t)1U << 24U))
-#define WiFiInterrupt_Clear()             (PORT_REGS->GROUP[2].PORT_OUTCLR = ((uint32_t)1U << 24U))
-#define WiFiInterrupt_Toggle()            (PORT_REGS->GROUP[2].PORT_OUTTGL = ((uint32_t)1U << 24U))
-#define WiFiInterrupt_OutputEnable()      (PORT_REGS->GROUP[2].PORT_DIRSET = ((uint32_t)1U << 24U))
-#define WiFiInterrupt_InputEnable()       (PORT_REGS->GROUP[2].PORT_DIRCLR = ((uint32_t)1U << 24U))
 #define WiFiInterrupt_Get()               (((PORT_REGS->GROUP[2].PORT_IN >> 24U)) & 0x01U)
 #define WiFiInterrupt_PIN                  PORT_PIN_PC24
 
-/*** Macros for WiFiWake pin ***/
-#define WiFiWake_Set()               (PORT_REGS->GROUP[2].PORT_OUTSET = ((uint32_t)1U << 25U))
-#define WiFiWake_Clear()             (PORT_REGS->GROUP[2].PORT_OUTCLR = ((uint32_t)1U << 25U))
-#define WiFiWake_Toggle()            (PORT_REGS->GROUP[2].PORT_OUTTGL = ((uint32_t)1U << 25U))
-#define WiFiWake_OutputEnable()      (PORT_REGS->GROUP[2].PORT_DIRSET = ((uint32_t)1U << 25U))
-#define WiFiWake_InputEnable()       (PORT_REGS->GROUP[2].PORT_DIRCLR = ((uint32_t)1U << 25U))
-#define WiFiWake_Get()               (((PORT_REGS->GROUP[2].PORT_IN >> 25U)) & 0x01U)
-#define WiFiWake_PIN                  PORT_PIN_PC25
+/*** Macros for WDRV_WINC_WAKE pin ***/
+#define WDRV_WINC_WAKE_Set()               (PORT_REGS->GROUP[2].PORT_OUTSET = ((uint32_t)1U << 25U))
+#define WDRV_WINC_WAKE_Clear()             (PORT_REGS->GROUP[2].PORT_OUTCLR = ((uint32_t)1U << 25U))
+#define WDRV_WINC_WAKE_Toggle()            (PORT_REGS->GROUP[2].PORT_OUTTGL = ((uint32_t)1U << 25U))
+#define WDRV_WINC_WAKE_OutputEnable()      (PORT_REGS->GROUP[2].PORT_DIRSET = ((uint32_t)1U << 25U))
+#define WDRV_WINC_WAKE_InputEnable()       (PORT_REGS->GROUP[2].PORT_DIRCLR = ((uint32_t)1U << 25U))
+#define WDRV_WINC_WAKE_Get()               (((PORT_REGS->GROUP[2].PORT_IN >> 25U)) & 0x01U)
+#define WDRV_WINC_WAKE_PIN                  PORT_PIN_PC25
 
 /*** Macros for NotInputSw1 pin ***/
 #define NotInputSw1_Set()               (PORT_REGS->GROUP[2].PORT_OUTSET = ((uint32_t)1U << 26U))
@@ -515,7 +510,7 @@
 /*** Macros for NotInputBtn1 pin ***/
 #define NotInputBtn1_Get()               (((PORT_REGS->GROUP[2].PORT_IN >> 27U)) & 0x01U)
 #define NotInputBtn1_PIN                  PORT_PIN_PC27
- 
+
 /*** Macros for HwRev1 pin ***/
 #define HwRev1_Set()               (PORT_REGS->GROUP[2].PORT_OUTSET = ((uint32_t)1U << 28U))
 #define HwRev1_Clear()             (PORT_REGS->GROUP[2].PORT_OUTCLR = ((uint32_t)1U << 28U))
@@ -533,7 +528,7 @@
 #define HwRev2_InputEnable()       (PORT_REGS->GROUP[0].PORT_DIRCLR = ((uint32_t)1U << 27U))
 #define HwRev2_Get()               (((PORT_REGS->GROUP[0].PORT_IN >> 27U)) & 0x01U)
 #define HwRev2_PIN                  PORT_PIN_PA27
-        
+
 /*** Macros for NotInputDip4 pin ***/
 #define NotInputDip4_Set()               (PORT_REGS->GROUP[1].PORT_OUTSET = ((uint32_t)1U << 31U))
 #define NotInputDip4_Clear()             (PORT_REGS->GROUP[1].PORT_OUTCLR = ((uint32_t)1U << 31U))

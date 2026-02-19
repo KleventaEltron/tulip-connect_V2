@@ -134,11 +134,13 @@ bool canPumpRunInThisHeatingState(HEATING_MODE_DATA heatingModeData, COOLING_MOD
     }
     
     if ((heatingModeData.state == HEATING_IDLE) || 
-            (heatingModeData.state == HEATING_RUNNING) || 
+            (heatingModeData.state == HEATING_RUNNING) ||
+            (heatingModeData.state == HEATING_RUNNING_WITH_ELEMENT_ON) ||
             (coolingModeData.state == COOLING_IDLE) || 
             (coolingModeData.state == COOLING_RUNNING) || 
             (hotwaterHeatingModeData.state == HOT_WATER_HEATING_IDLE_HEATING) || 
             (hotwaterHeatingModeData.state == HOT_WATER_HEATING_RUNNING_ON_HEATING) ||
+            (hotwaterHeatingModeData.state == HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON) ||
             (hotwaterCoolingModeData.state == HOT_WATER_COOLING_IDLE_COOLING) || 
             (hotwaterCoolingModeData.state == HOT_WATER_COOLING_MODE_RUNNING_ON_COOLING)) {
         // Pump can run
@@ -185,6 +187,16 @@ bool circulationPumpConditions()
     
     if (getHotWaterHeatingModeData().blockCirculationPumpAtHeatingStart == true || getHotWaterHeatingModeData().blockCirculationPumpLongerBecauseTempTooLow == true) {
         // Block the circulation pump
+        return false;
+    }
+    
+    if (HybridActiveRelayGet() == true) {
+        // Block the circulation pump in hybrid mode
+        return false;
+    }
+    
+    if ((getStatusHeatingElementHeatingBuffer() == true) && (ReadSmartEeprom16(SEEP_ADDR_HYBRID_SYSTEM_ENABLED_ON_HEATING_ELEMENT_RELAIS) == true)) {
+        // Heating element heating buffer is active, and the settings that the hybrid is on this relais is true, so turn off the circulation pump, this is done on the hybrid side.
         return false;
     }
     

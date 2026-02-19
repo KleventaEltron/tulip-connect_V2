@@ -422,6 +422,16 @@ const char * getHeatingStateToString()
             break;
         }
         
+        case(HEATING_RUNNING_WITH_CIRCULATION_PUMP_OFF): {
+            return "4, Running with circulation pump off";
+            break;
+        }
+        
+        case(HEATING_RUNNING_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF): {
+            return "5, Running with element on and circulation pump off";
+            break;
+        }
+        
         default:{
             return "-1, Unkown";
             break;
@@ -480,6 +490,7 @@ void HEATING_MODE_Tasks ( void )
     
     switch ( heating_mode_data.state )
     {
+        // 0
         case HEATING_INITIALIZE:{
             
             //TurnOffHeatingElementHeatingBuffer();
@@ -506,6 +517,7 @@ void HEATING_MODE_Tasks ( void )
             break;
         }
         
+        // 1
         case HEATING_IDLE:{                
             if (getActiveCompressorsMask() != 0){
                 // Compressor is running
@@ -527,6 +539,7 @@ void HEATING_MODE_Tasks ( void )
             break;
         }
         
+        // 2
         case HEATING_RUNNING:{
             
             if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
@@ -546,6 +559,11 @@ void HEATING_MODE_Tasks ( void )
                 break;
             }
             
+            if (heatingBufferTemperature < heating_mode_data.initialBufferTemp) {
+                // Adjust the reference temp to the lowest measured temperature 
+                heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+            }
+            
             if (heatingBufferTemperature >= heating_mode_data.initialBufferTemp + ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME)){
                 // Temperature rised a set temperature in a set time
                 setSecondCounterHeatingTask(0);
@@ -556,9 +574,17 @@ void HEATING_MODE_Tasks ( void )
             if (getSecondCounterHeatingTask() >= ReadSmartEeprom16(SEEP_ADDR_HEATING_TIME_CONSTANT_SEC)){
                 // Temperature not rised a set temperature in a set time
                 setSecondCounterHeatingTask(0);
-                heating_mode_data.initialBufferTemp = heatingBufferTemperature;
-                //TurnOnHeatingElementHeatingBuffer();
+                //heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 heating_mode_data.HeatingElementOn = true;
+                
+                if (checkIfBufferIsWithinSetpointMinusDelta(heatingBufferTemperature) == true) {
+                    // Buffer temp is within setpoint - delta, must rise 1 degree within the given time next phase
+                    heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+                }
+                else {
+                    // Buffer temp is not within setpoint - delta must rise untill the setpoint - delta next phase
+                    heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
+                }
                 
                 heating_mode_data.state = HEATING_RUNNING_WITH_ELEMENT_ON;
                 break;
@@ -569,11 +595,11 @@ void HEATING_MODE_Tasks ( void )
             break;
         }
         
+        // 3
         case HEATING_RUNNING_WITH_ELEMENT_ON:{
             
             if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
-                //TurnOffHeatingElementHeatingBuffer();
                 heating_mode_data.HeatingElementOn = false;
                 heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
@@ -587,29 +613,194 @@ void HEATING_MODE_Tasks ( void )
                 break;
             }
             
-            if (heatingBufferTemperature >= heating_mode_data.initialBufferTemp + ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME)){
-                // Temperature rised a set temperature in a set time
+            if (getSecondCounterHeatingTask() >= ReadSmartEeprom16(SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON)){
+                // Temperature not rised a set temperature in a set time
                 setSecondCounterHeatingTask(0);
-                heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+                heating_mode_data.HeatingElementOn = false;
+                
+                if (checkIfBufferIsWithinSetpointMinusDelta(heatingBufferTemperature) == true) {
+                    // Buffer temp is within setpoint - delta, must rise 1 degree within the given time next phase
+                    heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+                }
+                else {
+                    // Buffer temp is not within setpoint - delta must rise untill the setpoint - delta next phase
+                    heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
+                }
+                
+                heating_mode_data.state = HEATING_RUNNING_WITH_CIRCULATION_PUMP_OFF;
                 break;
             }
             
-            if (getSecondCounterHeatingTask() >= ReadSmartEeprom16(SEEP_ADDR_HEATING_TIME_CONSTANT_SEC)){
-                // Temperature not rised a set temperature in a set time
-                setSecondCounterHeatingTask(0);
-                heating_mode_data.initialBufferTemp = heatingBufferTemperature;
-                //TurnOffHeatingElementHeatingBuffer();
-                heating_mode_data.HeatingElementOn = false;
+            if (heating_mode_data.initialBufferTemp != TEMPERATURE_ALARM_VALUE) {
+                // Has a valid value, so must rise 1 degree now
+                if (heatingBufferTemperature < heating_mode_data.initialBufferTemp) {
+                    // Adjust the reference temp to the lowest measured temperature 
+                    heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+                }
                 
-                heating_mode_data.state = HEATING_RUNNING;
-                break;
+                if (heatingBufferTemperature >= heating_mode_data.initialBufferTemp + ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME)){
+                    // Temperature rised a set temperature in a set time
+                    setSecondCounterHeatingTask(0);
+                    heating_mode_data.HeatingElementOn = false;
+                    heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+                    //heating_mode_data.stepperSetpoint = getHeatingSetpoint();
+
+                    heating_mode_data.state = HEATING_RUNNING;
+                    break;
+                }
+            }
+            else {
+                // Has not a valid value, must rise untill the setpoint-delta
+                if (checkIfBufferIsWithinSetpointMinusDelta(heatingBufferTemperature) == true) {
+                    // Buffer temp is within setpoint - delta, go back to running
+                    setSecondCounterHeatingTask(0);
+                    heating_mode_data.HeatingElementOn = false;
+                    heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+                    //heating_mode_data.stepperSetpoint = getHeatingSetpoint();
+
+                    heating_mode_data.state = HEATING_RUNNING;
+                    break;
+                }
             }
             
             break;
         }
         
+        // 4
+        case HEATING_RUNNING_WITH_CIRCULATION_PUMP_OFF:{
+            
+            if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
+                // Compressor is not running and is also not in defrosting
+                heating_mode_data.HeatingElementOn = false;
+                heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
+                setSecondCounterHeatingTask(UINT32_MAX);
+
+                if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
+                    //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                    setActiveModeControllerPumpOffDueToDipSwitch1(true);
+                }
+                
+                heating_mode_data.state = HEATING_IDLE;
+                break;
+            }
+            
+            if (getSecondCounterHeatingTask() >= ReadSmartEeprom16(SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_CIRCULATION_PUMP_OFF)){
+                // Temperature not rised a set temperature in a set time
+                setSecondCounterHeatingTask(0);
+                heating_mode_data.HeatingElementOn = true;
+                
+                if (checkIfBufferIsWithinSetpointMinusDelta(heatingBufferTemperature) == true) {
+                    // Buffer temp is within setpoint - delta, must rise 1 degree within the given time next phase
+                    heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+                }
+                else {
+                    // Buffer temp is not within setpoint - delta must rise untill the setpoint - delta next phase
+                    heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
+                }
+                
+                heating_mode_data.state = HEATING_RUNNING_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF;
+                break;
+            }
+            
+            if (heating_mode_data.initialBufferTemp != TEMPERATURE_ALARM_VALUE) {
+                // Has a valid value, so must rise 1 degree now
+                if (heatingBufferTemperature < heating_mode_data.initialBufferTemp) {
+                    // Adjust the reference temp to the lowest measured temperature 
+                    heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+                }
+                
+                if (heatingBufferTemperature >= heating_mode_data.initialBufferTemp + ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME)){
+                    // Temperature rised a set temperature in a set time
+                    setSecondCounterHeatingTask(0);
+                    heating_mode_data.HeatingElementOn = false;
+                    heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+                    //heating_mode_data.stepperSetpoint = getHeatingSetpoint();
+
+                    heating_mode_data.state = HEATING_RUNNING;
+                    break;
+                }
+            }
+            else {
+                // Has not a valid value, must rise untill the setpoint-delta
+                if (checkIfBufferIsWithinSetpointMinusDelta(heatingBufferTemperature) == true) {
+                    // Buffer temp is within setpoint - delta, go back to running
+                    setSecondCounterHeatingTask(0);
+                    heating_mode_data.HeatingElementOn = false;
+                    heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+                    //heating_mode_data.stepperSetpoint = getHeatingSetpoint();
+
+                    heating_mode_data.state = HEATING_RUNNING;
+                    break;
+                }
+            }
+
+            break;
+        }
         
+        // 5
+        case HEATING_RUNNING_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF:{
+            
+            if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
+                // Compressor is not running and is also not in defrosting
+                heating_mode_data.HeatingElementOn = false;
+                heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
+                setSecondCounterHeatingTask(UINT32_MAX);
+
+                if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
+                    //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
+                    setActiveModeControllerPumpOffDueToDipSwitch1(true);
+                }
+                
+                heating_mode_data.state = HEATING_IDLE;
+                break;
+            }
+            
+            if (getSecondCounterHeatingTask() >= ReadSmartEeprom16(SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF)){
+                // Temperature not rised a set temperature in a set time
+                setSecondCounterHeatingTask(0);
+                heating_mode_data.HeatingElementOn = false;
+                heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+                
+                heating_mode_data.state = HEATING_RUNNING;
+                break;
+            }
+            
+            if (heating_mode_data.initialBufferTemp != TEMPERATURE_ALARM_VALUE) {
+                // Has a valid value, so must rise 1 degree now
+                if (heatingBufferTemperature < heating_mode_data.initialBufferTemp) {
+                    // Adjust the reference temp to the lowest measured temperature 
+                    heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+                }
+                
+                if (heatingBufferTemperature >= heating_mode_data.initialBufferTemp + ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME)){
+                    // Temperature rised a set temperature in a set time
+                    setSecondCounterHeatingTask(0);
+                    heating_mode_data.HeatingElementOn = false;
+                    heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+                    //heating_mode_data.stepperSetpoint = getHeatingSetpoint();
+
+                    heating_mode_data.state = HEATING_RUNNING;
+                    break;
+                }
+            }
+            else {
+                // Has not a valid value, must rise untill the setpoint-delta
+                if (checkIfBufferIsWithinSetpointMinusDelta(heatingBufferTemperature) == true) {
+                    // Buffer temp is within setpoint - delta, go back to running
+                    setSecondCounterHeatingTask(0);
+                    heating_mode_data.HeatingElementOn = false;
+                    heating_mode_data.initialBufferTemp = heatingBufferTemperature;
+                    //heating_mode_data.stepperSetpoint = getHeatingSetpoint();
+
+                    heating_mode_data.state = HEATING_RUNNING;
+                    break;
+                }
+            }
+
+            break;
+        }
         
+        // Others:
         default:{
             HEATING_MODE_Initialize();
             break;

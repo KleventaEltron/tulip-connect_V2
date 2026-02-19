@@ -19,6 +19,7 @@
 #include "tcpip/tcpip.h"
 #include "files/credentials.h"
 #include "files/modbus/heatpump_parameters.h"
+#include "files/wincSoftAp.h"
 
 #define LOGGING_TIMEOUT_MS 200000
 #define TCPIP_STACK_INDEX_0 0
@@ -76,6 +77,10 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         case APP_LOGGING_TASKS_IDLE:
         {
+            if (getActivateWifiAp()) {
+                break;
+            }
+            
             if (LoggingTimerExpiredSettingsInterval() && !onlyDoSettings) {
                 SYS_CONSOLE_PRINT("***** ONLY DO SETTINGS ***** \r\n");
                 app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_LOGGING_UNLOCK;

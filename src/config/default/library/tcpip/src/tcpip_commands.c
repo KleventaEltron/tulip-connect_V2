@@ -154,8 +154,11 @@ static void _Command_AddressService(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char*
 static void _CommandDhcpOptions(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv);
 #endif 
 static void _Command_ZcllOnOff(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv);
-static void _Command_DNSAddressSet(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv);
+static void _Command_DNSAddressSet4(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv);
 #endif  // defined(TCPIP_STACK_USE_IPV4)
+#if defined(TCPIP_STACK_USE_IPV6)
+static void _Command_DNSAddressSet6(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv);
+#endif  // defined(TCPIP_STACK_USE_IPV6)
 static void _Command_IPAddressSet(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv);
 static void _Command_GatewayAddressSet(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv);
 static void _Command_BIOSNameSet(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv);
@@ -514,8 +517,11 @@ static const SYS_CMD_DESCRIPTOR    tcpipCmdTbl[]=
     {"dhcp",        _CommandDhcpOptions,           ": DHCP client commands"},
 #endif
     {"zcll",        _Command_ZcllOnOff,            ": Turn ZCLL on/off"},
-    {"setdns",      _Command_DNSAddressSet,        ": Set DNS address"},
+    {"setdns4",     _Command_DNSAddressSet4,       ": Set DNS IPv4 address"},
 #endif  // defined(TCPIP_STACK_USE_IPV4)
+#if defined(TCPIP_STACK_USE_IPV6)
+    {"setdns6",     _Command_DNSAddressSet6,       ": Set DNS IPv6 address"},
+#endif  // defined(TCPIP_STACK_USE_IPV6)
     {"setip",       _Command_IPAddressSet,         ": Set IP address and mask"},
     {"setgw",       _Command_GatewayAddressSet,    ": Set Gateway address"},
     {"setbios",     _Command_BIOSNameSet,          ": Set host's NetBIOS name"},
@@ -851,6 +857,17 @@ static void _Command_NetInfo(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
         if(prevHandle == 0)
         {   // no valid address
             (*pCmdIO->pCmdApi->msg)(cmdIoParam, "    Unknown\r\n");
+        }
+
+        bool res = TCPIP_STACK_NetDnsIPv6Get(netH, &addr6); 
+        if(res)
+        {
+            (void)TCPIP_Helper_IPv6AddressToString(&addr6, addrBuff, sizeof(addrBuff));
+            (*pCmdIO->pCmdApi->print)(cmdIoParam, "IPv6 DNS: %s\r\n", addrBuff);
+        }
+        else
+        {
+            (*pCmdIO->pCmdApi->msg)(cmdIoParam, "IPv6 DNS: None\r\n");
         }
 
 #endif  // defined(TCPIP_STACK_USE_IPV6)
@@ -1936,43 +1953,80 @@ static void _Command_GatewayAddressSet(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, ch
 }
 
 #if defined(TCPIP_STACK_USE_IPV4)
-static void _Command_DNSAddressSet(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
+static void _Command_DNSAddressSet4(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
 {
     TCPIP_NET_HANDLE netH;
     IPV4_ADDR ipDNS;
     const void* cmdIoParam = pCmdIO->cmdIoParam;
 
-    if (argc != 4)
+    if (argc < 3)
     {
-        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Usage: setdns 1/2 <interface> <x.x.x.x> \r\n");
-        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Ex: setdns 1 eth0 255.255.255.0 \r\n");
+        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Usage: setdns4 if add <1/2>\r\n");
+        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Ex: setdns4 eth0 192.168.1.1\r\n");
         return;
     }
 
-    int dnsIx = atoi(argv[1]);
-    if(dnsIx != 1 && dnsIx != 2)
+    netH = TCPIP_STACK_NetHandleGet(argv[1]);
+    if (netH == NULL)
     {
-        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Unknown DNS index\r\n");
+        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Unknown interface specified\r\n");
         return;
     }
 
-    netH = TCPIP_STACK_NetHandleGet(argv[2]);
-    if (netH == 0)
+    if (!TCPIP_Helper_StringToIPAddress(argv[2], &ipDNS))
     {
-        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Unknown interface specified \r\n");
+        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Invalid IPv4 address string\r\n");
         return;
     }
 
-    if (!TCPIP_Helper_StringToIPAddress(argv[3], &ipDNS))
+    int dnsIx = 1;
+    if(argc > 3)
     {
-        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Invalid IP address string \r\n");
-        return;
+        dnsIx = atoi(argv[3]);
+        if(dnsIx != 1 && dnsIx != 2)
+        {
+            (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Unknown DNS index\r\n");
+            return;
+        }
     }
 
     bool res = dnsIx == 1 ? TCPIP_STACK_NetAddressDnsPrimarySet(netH, &ipDNS) : TCPIP_STACK_NetAddressDnsSecondSet(netH, &ipDNS); 
     (*pCmdIO->pCmdApi->print)(cmdIoParam, "Set DNS %d address %s\r\n", dnsIx, res ? "success" : "failed");
 }
 #endif  // defined(TCPIP_STACK_USE_IPV4)
+
+#if defined(TCPIP_STACK_USE_IPV6)
+static void _Command_DNSAddressSet6(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
+{
+    TCPIP_NET_HANDLE netH;
+    IPV6_ADDR ipDNS;
+    const void* cmdIoParam = pCmdIO->cmdIoParam;
+
+    if (argc < 3)
+    {
+        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Usage: setdns6 if ipv6Add\r\n");
+        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Ex: setdns6 eth0 2001::3:2:1\r\n");
+        return;
+    }
+
+    netH = TCPIP_STACK_NetHandleGet(argv[1]);
+    if (netH == NULL)
+    {
+        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Unknown interface specified\r\n");
+        return;
+    }
+
+    if (!TCPIP_Helper_StringToIPv6Address(argv[2], &ipDNS))
+    {
+        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Invalid IPv6 address string\r\n");
+        return;
+    }
+
+
+    bool res = TCPIP_STACK_NetDnsIPv6Set(netH, &ipDNS);
+    (*pCmdIO->pCmdApi->print)(cmdIoParam, "Set DNS6 address %s\r\n", res ? "success" : "failed");
+}
+#endif  // defined(TCPIP_STACK_USE_IPV6)
 
 #if defined (TCPIP_STACK_USE_TFTP_CLIENT)
 static void _Command_TFTPC_Service(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
@@ -2249,7 +2303,7 @@ static int _Command_DNSLookUP(SYS_CMD_DEVICE_NODE* pCmdIO, char** argv)
     strcpy(dnslookupTargetHost, argv[3]);
 
     dnsLookupCmdIoParam = pCmdIO->cmdIoParam;
-    (*pCmdIO->pCmdApi->print)(pCmdIO, "dnsc lookup: resolving host: %s for type:%s \r\n", dnslookupTargetHost,argv[2]);
+    (*pCmdIO->pCmdApi->print)(pCmdIO, "dnsc lookup: resolving host: %s for type: %s \r\n", dnslookupTargetHost,argv[2]);
     tcpipCmdStat = TCPIP_DNS_LOOKUP_CMD_GET;
     pTcpipCmdDevice = pCmdIO;
     _TCPIPStackSignalHandlerSetParams(TCPIP_THIS_MODULE_ID, tcpipCmdSignalHandle, TCPIP_DNS_CLIENT_TASK_PROCESS_RATE);
@@ -3381,7 +3435,7 @@ void TCPIPCmdDnsTask(void)
                 if(ipv4Index<nIPv4Entries)
                 {
                     TCPIP_DNS_GetIPv4Addresses(dnslookupTargetHost, ipv4Index, &ip4Address, 1);
-                    (*pTcpipCmdDevice->pCmdApi->print)(dnsLookupCmdIoParam, "[%s] A IPv4 Address : %d.%d.%d.%d\r\n",dnslookupTargetHost,ip4Address.v[0],
+                    (*pTcpipCmdDevice->pCmdApi->print)(dnsLookupCmdIoParam, "[%s] A IPv4 Address: %d.%d.%d.%d\r\n",dnslookupTargetHost,ip4Address.v[0],
                             ip4Address.v[1],ip4Address.v[2],ip4Address.v[3]);
                     ipv4Index++;
                 }
@@ -3390,7 +3444,7 @@ void TCPIPCmdDnsTask(void)
                     TCPIP_DNS_GetIPv6Addresses(dnslookupTargetHost, ipv6Index, &ip6Address, 1);
                     memset(addrBuf,0,sizeof(addrBuf));
                     TCPIP_Helper_IPv6AddressToString(&ip6Address,(char*)addrBuf,sizeof(addrBuf));
-                    (*pTcpipCmdDevice->pCmdApi->print)(dnsLookupCmdIoParam, "[%s] AAAA IPv6 Address :%s\r\n",dnslookupTargetHost,addrBuf);
+                    (*pTcpipCmdDevice->pCmdApi->print)(dnsLookupCmdIoParam, "[%s] AAAA IPv6 Address: %s\r\n",dnslookupTargetHost,addrBuf);
                     ipv6Index++;
                 }
                 else
@@ -7977,80 +8031,121 @@ static void _Command_SNMPv3USMSet(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** 
     
     if(argc < 3)
     {
-        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Usage: snmpv3 usm <pos> <u name> <l security-level> <a type authpass> <p type privpass>\r\n");
+        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Usage: snmpv3 usm <pos> <u name> <l security-level> <a type authpass> <p type privpass> <info>\r\n");
         (*pCmdIO->pCmdApi->print)(cmdIoParam, "SNMPv3 USM position range - 0 to %d \r\n", TCPIP_SNMPV3_USM_MAX_USER-1);
         (*pCmdIO->pCmdApi->print)(cmdIoParam, "SNMPv3 USM security level NoAuthNoPriv- %d, AuthNoPriv- %d, AuthPriv- %d \r\n", NO_AUTH_NO_PRIV, AUTH_NO_PRIV, AUTH_PRIV);
         (*pCmdIO->pCmdApi->print)(cmdIoParam, "SNMPv3 USM authentication supported type md5- %d sha- %d \r\n", SNMPV3_HMAC_MD5, SNMPV3_HMAC_SHA1);
         (*pCmdIO->pCmdApi->print)(cmdIoParam, "SNMPv3 USM privacy supported type DES- %d AES- %d \r\n", SNMPV3_DES_PRIV, SNMPV3_AES_PRIV);
         (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Ex: snmpv3 usm 2 u mchp l 3 a 0 auth12345 p 1 priv12345 \r\n");
+        (*pCmdIO->pCmdApi->msg)(cmdIoParam, "Ex: snmpv3 usm info \r\n");
         return;
     }
 
-    if(argc>=3)
+    configArgs = 1;
+    if(argc >= 3)
     {
-        if(strcmp(argv[1], "usm") == 0)
+        if(strcmp(argv[configArgs], "usm") == 0)
         {
-            usmPos = atoi(argv[2]);
-            if(usmPos>= TCPIP_SNMPV3_USM_MAX_USER)
+            configArgs = configArgs +1;
+            if(strcmp("info",argv[configArgs]) == 0)
             {
-                (*pCmdIO->pCmdApi->msg)(cmdIoParam,"Invalid USM configuration position\r\n");
-                return;
+                usmUserInfo = true;
+            }
+            else
+            {
+                usmPos = atoi(argv[configArgs]);
+                if(usmPos>= TCPIP_SNMPV3_USM_MAX_USER)
+                {
+                    (*pCmdIO->pCmdApi->msg)(cmdIoParam,"Invalid USM configuration position\r\n");
+                    return;
+                }
             }
         }
     }
-    else
-    {
-        (*pCmdIO->pCmdApi->msg)(cmdIoParam,"insufficient number of arguments\r\n");
-        return;
-    }
+  
     // more than position field 
     memset(userNameBuf, 0, sizeof(userNameBuf));
     memset(authPwBuf, 0, sizeof(authPwBuf));
     memset(privPwBuf, 0, sizeof(privPwBuf));
 
-    configArgs = 3;
-    while(argc >= 3)
+    configArgs = configArgs + 1;
+    // verify there are enough commands for this SNMPv3 configuration
+    if(argc == configArgs)
     {
-        if(strncmp("u",argv[configArgs],1) == 0)
+        (*pCmdIO->pCmdApi->msg)(cmdIoParam,"SNMPv3 insufficient user inputs\r\n");
+        return;
+    }
+    
+    if(usmUserInfo != true)
+    {
+        while(argc > 3)
         {
-            strncpy(userNameBuf,argv[configArgs+1],TCPIP_SNMPV3_USER_SECURITY_NAME_LEN);
-            usmUserNameOpcode = true;
-            configArgs = configArgs+2;
-        }
-        else if(strncmp("l",argv[configArgs],1) == 0)
-        {
-            secLev = atoi(argv[configArgs+1]);
-            usmSecLevelOpcode = true;
-            configArgs = configArgs+2;
-        }
-        else if(strncmp("a",argv[configArgs],1) == 0)
-        {
-            hashType = atoi(argv[configArgs+1]);
-            strncpy(authPwBuf,argv[configArgs+2],TCPIP_SNMPV3_PRIVAUTH_PASSWORD_LEN);
-            usmAuthPasswdOpcode = true;
-            configArgs = configArgs+3;
-        }
-        else if(strncmp("p",argv[configArgs],1) == 0)
-        {
-            privType = atoi(argv[configArgs+1]);
-            strncpy(privPwBuf,argv[configArgs+2],TCPIP_SNMPV3_PRIVAUTH_PASSWORD_LEN);
-            usmPrivPasswdOpcode = true;
-            configArgs = configArgs+3;
-        }
-        else if(strcmp("info",argv[configArgs-1]) == 0)
-        {
-            usmUserInfo = true;
-            break;
-        }
-        else
-        {
-            (*pCmdIO->pCmdApi->msg)(cmdIoParam,"invalid number of arguments\r\n");
-            return;
-        }
-        if(configArgs>=argc)
-        {
-            (*pCmdIO->pCmdApi->msg)(cmdIoParam,"End of arguments\r\n");
-            break;
+            if(strncmp("u",argv[configArgs],1) == 0)
+            {
+                if(argc == configArgs+1)
+                {
+                    (*pCmdIO->pCmdApi->msg)(cmdIoParam,"SNMPv3 User name is missing\r\n");
+                    return;
+                }
+                strncpy(userNameBuf,argv[configArgs+1],TCPIP_SNMPV3_USER_SECURITY_NAME_LEN);
+                usmUserNameOpcode = true;
+                configArgs = configArgs+2;
+            }
+            else if(strncmp("l",argv[configArgs],1) == 0)
+            {
+                if(argc == configArgs+1)
+                {
+                    (*pCmdIO->pCmdApi->msg)(cmdIoParam,"SNMPv3 security level is missing\r\n");
+                    return;
+                }
+                secLev = atoi(argv[configArgs+1]);
+                usmSecLevelOpcode = true;
+                configArgs = configArgs+2;
+            }
+            else if(strncmp("a",argv[configArgs],1) == 0)
+            {
+                if(argc == configArgs+1)
+                {
+                    (*pCmdIO->pCmdApi->msg)(cmdIoParam,"SNMPv3 Authentication Hash type is missing\r\n");
+                    return;
+                }
+                hashType = atoi(argv[configArgs+1]);
+                if(argc == configArgs+2)
+                {
+                    (*pCmdIO->pCmdApi->msg)(cmdIoParam,"SNMPv3 Authentication password is missing\r\n");
+                    return;
+                }
+                strncpy(authPwBuf,argv[configArgs+2],TCPIP_SNMPV3_PRIVAUTH_PASSWORD_LEN);
+                usmAuthPasswdOpcode = true;
+                configArgs = configArgs+3;
+            }
+            else if(strncmp("p",argv[configArgs],1) == 0)
+            {
+                if(argc == configArgs+1)
+                {
+                    (*pCmdIO->pCmdApi->msg)(cmdIoParam,"SNMPv3 Privacy Hash type is missing\r\n");
+                    return;
+                }
+                privType = atoi(argv[configArgs+1]);
+                if(argc == configArgs+2)
+                {
+                    (*pCmdIO->pCmdApi->msg)(cmdIoParam,"SNMPv3 Privacy password is missing\r\n");
+                    return;
+                }
+                strncpy(privPwBuf,argv[configArgs+2],TCPIP_SNMPV3_PRIVAUTH_PASSWORD_LEN);
+                usmPrivPasswdOpcode = true;
+                configArgs = configArgs+3;
+            }
+            else
+            {
+                (*pCmdIO->pCmdApi->msg)(cmdIoParam,"invalid number of arguments\r\n");
+                return;
+            }
+            if(configArgs>=argc)
+            {
+                (*pCmdIO->pCmdApi->msg)(cmdIoParam,"End of arguments\r\n");
+                break;
+            }
         }
     }
     

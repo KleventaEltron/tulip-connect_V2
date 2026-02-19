@@ -12,6 +12,7 @@
 #include "time_counters.h"
 #include "../config/default/user.h"
 #include "ntc.h"
+#include "modbus/display.h"
 
 
 
@@ -53,7 +54,7 @@ bool getActiveModeControllerPumpOffDueToDipSwitch1() {
 
 
 bool checkIfDefrostingActive(void) {
-    uint16_t runningStatusOne = getDataFromMemoryCallable(ADDRESS_RUNNING_STATUS_1);
+    uint16_t runningStatusOne = getDataFromMemoryCallable(ADDRESS_RUNNING_STATUS_1, MASTER_HEATPUMP_IN_CASCADE);
     return (runningStatusOne & (1u << 1)) != 0;
 }
 
@@ -122,6 +123,9 @@ void resetActiveModeStates() {
     hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
     hot_water_heating_mode_data.hotwaterPassive = false;
     hot_water_heating_mode_data.setpointHotWaterOffset = TEMPERATURE_ALARM_VALUE;
+    
+    hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = false;
+    hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
             
     if(app_active_mode_controllerData.currentRunningMode == COOLING 
             || app_active_mode_controllerData.currentRunningMode == HOT_WATER_COOLING) {
@@ -476,4 +480,37 @@ int16_t getHeatpumpTargetFrequency()
 int16_t getHeatpumpMinimumFrequency()
 {
     return (int16_t)UnitSystemParameters[ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT - START_ADDRESS_UNIT_SYSTEM_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+int16_t getCorrectHeatingSetpoint(bool heatingCurveSet)
+{
+    int16_t heatingSetpoint; 
+    
+    if (heatingCurveSet == true) {
+        // Heating curve is set, get setpoint out of the heatpump
+        heatingSetpoint = getHeatpumpHeatingSetpoint()*10;
+    } else {
+        // No curve is set, get setpoint from Connect
+        heatingSetpoint = getHeatingSetpoint();
+    } 
+    
+    return heatingSetpoint;
+}
+
+bool checkIfBufferIsWithinSetpointMinusDelta(int16_t heatingBufferTemperature)
+{
+    int16_t setpoint = getCorrectHeatingSetpoint(heating_mode_data.heatingCurveSet);
+    int16_t delta = getAirConditionerReturnDifference();
+    
+    if (heatingBufferTemperature == TEMPERATURE_ALARM_VALUE || delta == TEMPERATURE_ALARM_VALUE || setpoint == UINT16_MAX || setpoint == TEMPERATURE_ALARM_VALUE) {
+        // No valid temperatures, return false
+        return false;
+    } 
+    
+    if (heatingBufferTemperature >= (setpoint - delta)) {
+        // Heating buffer temp is within setpoint minus delta
+        return true;
+    }
+    else {
+        // Heating buffer temp is not within setpoint minus delta
+        return false;
+    }
 }

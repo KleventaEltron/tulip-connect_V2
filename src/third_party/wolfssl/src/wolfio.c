@@ -270,7 +270,7 @@ int EmbedReceive(WOLFSSL *ssl, char *buf, int sz, void *ctx)
 #ifndef WOLFSSL_LINUXKM
     int sd = *(int*)ctx;
 #else
-    struct socket *sd = (struct socket*)ctx;
+    struct log_socket *sd = (struct log_socket*)ctx;
 #endif
 
     recvd = wolfIO_Recv(sd, buf, sz, ssl->rflags);
@@ -295,7 +295,7 @@ int EmbedSend(WOLFSSL* ssl, char *buf, int sz, void *ctx)
 #ifndef WOLFSSL_LINUXKM
     int sd = *(int*)ctx;
 #else
-    struct socket *sd = (struct socket*)ctx;
+    struct log_socket *sd = (struct log_socket*)ctx;
 #endif
 
 #ifdef WOLFSSL_MAX_SEND_SZ
@@ -769,23 +769,23 @@ int EmbedGenerateCookie(WOLFSSL* ssl, byte *buf, int sz, void *ctx)
 #endif /* WOLFSSL_SESSION_EXPORT */
 
 #ifdef WOLFSSL_LINUXKM
-static int linuxkm_send(struct socket *socket, void *buf, int size,
+static int linuxkm_send(struct log_socket *log_socket, void *buf, int size,
     unsigned int flags)
 {
     int ret;
     struct kvec vec = { .iov_base = buf, .iov_len = size };
     struct msghdr msg = { .msg_flags = flags };
-    ret = kernel_sendmsg(socket, &msg, &vec, 1, size);
+    ret = kernel_sendmsg(log_socket, &msg, &vec, 1, size);
     return ret;
 }
 
-static int linuxkm_recv(struct socket *socket, void *buf, int size,
+static int linuxkm_recv(struct log_socket *log_socket, void *buf, int size,
     unsigned int flags)
 {
     int ret;
     struct kvec vec = { .iov_base = buf, .iov_len = size };
     struct msghdr msg = { .msg_flags = flags };
-    ret = kernel_recvmsg(socket, &msg, &vec, 1, size, msg.msg_flags);
+    ret = kernel_recvmsg(log_socket, &msg, &vec, 1, size, msg.msg_flags);
     return ret;
 }
 #endif /* WOLFSSL_LINUXKM */
@@ -2450,8 +2450,8 @@ void* mynewt_ctx_new() {
 static void mynewt_sock_writable(void *arg, int err);
 static void mynewt_sock_readable(void *arg, int err);
 static const union mn_socket_cb mynewt_sock_cbs = {
-    .socket.writable = mynewt_sock_writable,
-    .socket.readable = mynewt_sock_readable,
+    .log_socket.writable = mynewt_sock_writable,
+    .log_socket.readable = mynewt_sock_readable,
 };
 static void mynewt_sock_writable(void *arg, int err)
 {

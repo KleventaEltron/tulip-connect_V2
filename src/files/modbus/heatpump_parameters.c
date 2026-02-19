@@ -6,6 +6,7 @@
 #include "heatpump_parameters.h"
 #include "modbus.h"
 #include "../time_counters.h"
+#include "../states.h"
 
 #define CASCADE_BIT_IS_SET(mask, bit)   (((mask) & (1u << (bit))) != 0u)
 

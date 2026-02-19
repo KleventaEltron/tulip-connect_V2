@@ -114,8 +114,8 @@ void PORT_Initialize(void)
    PORT_REGS->GROUP[0].PORT_PMUX[13] = 0x0U;
 
    /************************** GROUP 1 Initialization *************************/
-   PORT_REGS->GROUP[1].PORT_DIR = 0x3004231U;
-   PORT_REGS->GROUP[1].PORT_OUT = 0x80020002U;
+   PORT_REGS->GROUP[1].PORT_DIR = 0x33004231U;
+   PORT_REGS->GROUP[1].PORT_OUT = 0xb3020002U;
    PORT_REGS->GROUP[1].PORT_PINCFG[0] = 0x1U;
    PORT_REGS->GROUP[1].PORT_PINCFG[1] = 0x6U;
    PORT_REGS->GROUP[1].PORT_PINCFG[2] = 0x1U;
@@ -164,7 +164,7 @@ void PORT_Initialize(void)
 
    /************************** GROUP 2 Initialization *************************/
    PORT_REGS->GROUP[2].PORT_DIR = 0x201e4c0U;
-   PORT_REGS->GROUP[2].PORT_OUT = 0xd004c000U;
+   PORT_REGS->GROUP[2].PORT_OUT = 0xd204c000U;
    PORT_REGS->GROUP[2].PORT_PINCFG[0] = 0x1U;
    PORT_REGS->GROUP[2].PORT_PINCFG[1] = 0x1U;
    PORT_REGS->GROUP[2].PORT_PINCFG[2] = 0x1U;
@@ -185,7 +185,7 @@ void PORT_Initialize(void)
    PORT_REGS->GROUP[2].PORT_PINCFG[20] = 0x1U;
    PORT_REGS->GROUP[2].PORT_PINCFG[22] = 0x1U;
    PORT_REGS->GROUP[2].PORT_PINCFG[23] = 0x1U;
-   PORT_REGS->GROUP[2].PORT_PINCFG[24] = 0x2U;
+   PORT_REGS->GROUP[2].PORT_PINCFG[24] = 0x3U;
    PORT_REGS->GROUP[2].PORT_PINCFG[25] = 0x0U;
    PORT_REGS->GROUP[2].PORT_PINCFG[26] = 0x2U;
    PORT_REGS->GROUP[2].PORT_PINCFG[27] = 0x3U;
@@ -396,6 +396,14 @@ void PORT_GroupToggle(PORT_GROUP group, uint32_t mask)
 void PORT_GroupInputEnable(PORT_GROUP group, uint32_t mask)
 {
     ((port_group_registers_t*)group)->PORT_DIRCLR = mask;
+    
+    for(uint32_t i = 0U; i < 32U; i++)
+    {
+        if((mask & ((uint32_t)1U << i)) != 0U)
+        {
+            ((port_group_registers_t*)group)->PORT_PINCFG[i] |= PORT_PINCFG_INEN_Msk;
+        }
+    }
 }
 
 // *****************************************************************************
