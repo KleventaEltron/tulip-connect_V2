@@ -4563,7 +4563,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="!@#harmonyUserData"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;UserData&gt;
   &lt;UserData dnOrder=&quot;0&quot;&gt;
-    &lt;GraphSettings canvasHeight=&quot;658&quot; canvasWidth=&quot;1181&quot; dnOrder=&quot;0&quot;/&gt;
+    &lt;GraphSettings canvasHeight=&quot;628&quot; canvasWidth=&quot;1182&quot; dnOrder=&quot;0&quot;/&gt;
     &lt;PowerProfiles dnOrder=&quot;1&quot;&gt;
       &lt;Profile dnOrder=&quot;0&quot; id=&quot;profile0&quot; name=&quot;Main&quot;/&gt;
     &lt;/PowerProfiles&gt;
@@ -4655,7 +4655,7 @@
         &lt;ElementPosition dnOrder=&quot;7&quot; id=&quot;cmsis&quot; x=&quot;7&quot; y=&quot;153&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;8&quot; id=&quot;core&quot; x=&quot;7&quot; y=&quot;98&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;9&quot; id=&quot;dfp&quot; x=&quot;7&quot; y=&quot;127&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;10&quot; id=&quot;drvWifiWinc&quot; x=&quot;1021&quot; y=&quot;496&quot;/&gt;
+        &lt;ElementPosition dnOrder=&quot;10&quot; id=&quot;drvWifiWinc&quot; x=&quot;1022&quot; y=&quot;496&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;11&quot; id=&quot;drv_sdmmc&quot; x=&quot;467&quot; y=&quot;448&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;12&quot; id=&quot;eic&quot; x=&quot;603&quot; y=&quot;50&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;13&quot; id=&quot;evsys&quot; x=&quot;5&quot; y=&quot;183&quot;/&gt;

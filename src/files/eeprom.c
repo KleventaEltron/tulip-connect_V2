@@ -404,6 +404,11 @@ void SmartEepromInit(void)
         WriteSmartEeprom16(SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF, 1800);
     }
 
+    if (thisEepromVersion < 2000017) {
+        WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_OFF_TEMPERATURE, 300);
+        WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_ON_TEMPERATURE, 350);
+        WriteSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_CONTROL_AT_AMBIENT_TEMPERATURE, 20);
+    }    
     //if (thisEepromVersion < 1000013) // 1.0.13
     //{   // Current eeprom version is lower than 1.0.13
     //    // Put Smart Eeprom variables added in 1.0.13 here:

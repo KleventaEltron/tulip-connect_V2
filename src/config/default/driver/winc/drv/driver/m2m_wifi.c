@@ -476,7 +476,6 @@ int8_t m2m_wifi_init_start(tstrWifiInitParam *pWifiInitParam)
     if(M2M_ERR_FW_VER_MISMATCH == ret)
     {
         M2M_ERR("Mismatch Firmware Version\r\n");
-        ret = M2M_SUCCESS;
     }
 
     goto _EXIT0;
