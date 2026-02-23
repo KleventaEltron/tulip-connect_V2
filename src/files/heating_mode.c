@@ -180,7 +180,9 @@ void powerControlHeatpump(void)
     // Bijhouden wat laatste seconde was, zodat het maar elke seconde wordt gedaan.
     static uint32_t lastSecCounter = UINT32_MAX;  // gate: laatste verwerkte seconde-tellerwaarde
     
-    if (getSecondCounterHeatpumpPowerRegulation() == UINT32_MAX) {
+    uint32_t secCounter = getSecondCounterHeatpumpPowerRegulation();
+    
+    if (secCounter == UINT32_MAX) {
         // Timer has no valid value
         setSecondCounterHeatpumpPowerRegulation(0);
         
@@ -196,12 +198,20 @@ void powerControlHeatpump(void)
         return;
     }
     
-    uint32_t secCounter = getSecondCounterHeatpumpPowerRegulation();
     if (secCounter == lastSecCounter) {
         return; // dezelfde seconde: niets doen
     }
     lastSecCounter = secCounter; // nieuwe seconde: door met de regeling
-
+    
+    if (secCounter < 180) {
+        // Eerste 3 minuten nog niks doen, warmtepomp blijft dan ook op 45 Hz draaien.
+        return; // dezelfde seconde: niets doen
+    }
+    
+    if ((secCounter % 60) != 0) {
+        // Eens per minuut doorlopen
+        return; // dezelfde seconde: niets doen
+    }
     
     int32_t riseTemp_mC = (int32_t)ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME) * 100;  // bv 1000 Standaard 10 (1.0 graden)
     int32_t riseTime_min = (int32_t)ReadSmartEeprom16(SEEP_ADDR_HEATING_TIME_CONSTANT_SEC) / 60; // bv 100 Standaard 6000 (100 minuten)
