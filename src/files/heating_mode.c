@@ -180,6 +180,9 @@ void powerControlHeatpump(void)
     // Bijhouden wat laatste seconde was, zodat het maar elke seconde wordt gedaan.
     static uint32_t lastSecCounter = UINT32_MAX;  // gate: laatste verwerkte seconde-tellerwaarde
     
+    static uint32_t startupSeconds = 0;              // telt op, NOOIT resetten
+    heating_mode_data.visualStartupSeconds = startupSeconds;
+    
     uint32_t secCounter = getSecondCounterHeatpumpPowerRegulation();
     
     if (secCounter == UINT32_MAX) {
@@ -194,6 +197,7 @@ void powerControlHeatpump(void)
         I_Hz_x1000  = 0;
         
         lastSecCounter = 0;
+        startupSeconds = 0;
         
         return;
     }
@@ -203,15 +207,18 @@ void powerControlHeatpump(void)
     }
     lastSecCounter = secCounter; // nieuwe seconde: door met de regeling
     
-    if (secCounter < 180) {
+    startupSeconds++; // telt echte ?seconden sinds start? (zolang je functie blijft lopen)
+    heating_mode_data.visualStartupSeconds = startupSeconds;
+    
+    if (startupSeconds < 180) {
         // Eerste 3 minuten nog niks doen, warmtepomp blijft dan ook op 45 Hz draaien.
         return; // dezelfde seconde: niets doen
     }
     
-    if ((secCounter % 60) != 0) {
-        // Eens per minuut doorlopen
-        return; // dezelfde seconde: niets doen
-    }
+//    if ((secCounter % 60) != 0) {
+//        // Eens per minuut doorlopen
+//        return; // dezelfde seconde: niets doen
+//    }
     
     int32_t riseTemp_mC = (int32_t)ReadSmartEeprom16(SEEP_ADDR_HEATING_RISE_TEMP_IN_GIVEN_TIME) * 100;  // bv 1000 Standaard 10 (1.0 graden)
     int32_t riseTime_min = (int32_t)ReadSmartEeprom16(SEEP_ADDR_HEATING_TIME_CONSTANT_SEC) / 60; // bv 100 Standaard 6000 (100 minuten)
@@ -260,13 +267,14 @@ void powerControlHeatpump(void)
         heating_mode_data.visualU_Hz                 = 0;
         heating_mode_data.visualFreqBefore           = heating_mode_data.compressorTargetFrequency;
         heating_mode_data.visualFreqAfter            = heating_mode_data.compressorTargetFrequency;
+        heating_mode_data.visualStartupSeconds       = startupSeconds;
         
         return;
     }
     
     uint32_t dt_sec = getSecondCounterHeatpumpPowerRegulation();
     int32_t  previousTemp_mC = heating_mode_data.previousTemp_mC;
-    int32_t dT_mC = tempNow_mC - heating_mode_data.previousTemp_mC;
+    int32_t dT_mC = tempNow_mC - previousTemp_mC;
     
     // wacht tot tijd voorbij is, OF 0.2°C gehaald is, OF daling
     #define TEMP_DROP_mC          400    // 0.2°C daling => eerder bijsturen
@@ -310,7 +318,14 @@ void powerControlHeatpump(void)
         return;
     }
     
-     if (dt_sec == 0) return; // veiligheid
+    // beveiliging tegen dt=0 / hele kleine dt
+    if (dt_sec < 60) {  // aan te passen, maar dit voorkomt extreem grote slopes
+        return;
+    }
+    
+    //debugPI();
+    SYS_CONSOLE_PRINT("\n========== BIJSTUREN ==========\n");
+    
 
     // gemeten helling (mC/min)
     int32_t slopeMeas_mC_min = (int32_t)((int64_t)dT_mC * 60 / (int64_t)dt_sec);
@@ -360,6 +375,7 @@ void powerControlHeatpump(void)
     // reset interval
     heating_mode_data.previousTemp_mC = tempNow_mC;
     setSecondCounterHeatpumpPowerRegulation(0);
+    lastSecCounter = 0;
 }
 
 void resetPowerControlVariables() 
@@ -388,6 +404,8 @@ void resetPowerControlVariables()
 
     heating_mode_data.visualFreqBefore = heating_mode_data.compressorTargetFrequency;
     heating_mode_data.visualFreqAfter  = heating_mode_data.compressorTargetFrequency;
+    
+    heating_mode_data.visualStartupSeconds = 0;
 }
 
 void HEATING_MODE_Initialize ( void )

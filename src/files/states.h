@@ -114,7 +114,9 @@ uint16_t visualFreqAfter;
 // timing / events
 uint32_t visualUpdateInterval_sec;
 uint8_t  visualEventFlags; // bit0=time, bit1=step, bit2=drop
-    
+  
+uint32_t visualStartupSeconds;
+        
 } HEATING_MODE_DATA;
 
 

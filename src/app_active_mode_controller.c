@@ -68,6 +68,9 @@ void debugPI(void)
 
                 SYS_CONSOLE_PRINT(" Delta time:           %lu s\n",
                     getHeatingModeData().visualdt_sec);
+                
+                SYS_CONSOLE_PRINT(" Startup seconds:      %lu s\n",
+                    getHeatingModeData().visualStartupSeconds);
 
 
                 SYS_CONSOLE_PRINT("\n--- SLOPE ---\n");

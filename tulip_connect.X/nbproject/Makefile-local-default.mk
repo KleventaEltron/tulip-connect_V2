@@ -31,8 +31,8 @@ DEP_GEN=${MP_JAVA_PATH}java -jar "C:/Program Files/Microchip/MPLABX/v6.25/mplab_
 MP_CC_DIR="C:\Program Files\Microchip\xc32\v5.00\bin"
 MP_CPPC_DIR="C:\Program Files\Microchip\xc32\v5.00\bin"
 # MP_BC_DIR is not defined
-MP_AS_DIR="C:\Program Files\Microchip\xc32\v4.60\bin"
-MP_LD_DIR="C:\Program Files\Microchip\xc32\v4.60\bin"
-MP_AR_DIR="C:\Program Files\Microchip\xc32\v4.60\bin"
-DFP_DIR=C:/Program Files/Microchip/MPLABX/v6.25/packs/Microchip/SAME54_DFP/3.9.244
+MP_AS_DIR="C:\Program Files\Microchip\xc32\v5.00\bin"
+MP_LD_DIR="C:\Program Files\Microchip\xc32\v5.00\bin"
+MP_AR_DIR="C:\Program Files\Microchip\xc32\v5.00\bin"
 CMSIS_DIR=C:/Program Files/Microchip/MPLABX/v6.25/packs/arm/CMSIS/5.4.0
+DFP_DIR=C:/Program Files/Microchip/MPLABX/v6.25/packs/Microchip/SAME54_DFP/3.9.244
