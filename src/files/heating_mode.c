@@ -250,9 +250,12 @@ void powerControlHeatpump(void)
     // lees temperatuur
     int32_t tempNow_mC = GetNtcTemperature(NTC_HEATING_BUFFER) * 100;
     
-    int32_t setpoint_mC = getCorrectHeatingSetpoint() * 1000;
+    int32_t setpoint_mC = getCorrectHeatingSetpoint() * 100;
     
     int32_t deltaToSet_mC = setpoint_mC - tempNow_mC;
+    
+    // visuals voor setpoint
+    heating_mode_data.visualDeltaToSetpoint_mC   = deltaToSet_mC;
     
     if (heating_mode_data.previousTemp_mC == INT32_MAX) {
         heating_mode_data.previousTemp_mC = tempNow_mC;
@@ -358,27 +361,22 @@ void powerControlHeatpump(void)
 
     if (deltaToSet_mC > 10000) {          // >10°C onder setpoint
         maxUp_Hz = 5;
-        maxDown_Hz = 1;
-        //if (u_Hz < 0) u_Hz = 0;
+        maxDown_Hz = 0;
     } else if (deltaToSet_mC > 5000) {   // 5..10°C onder setpoint
         maxUp_Hz = 4;
-        maxDown_Hz = 2;
-        //if (u_Hz < 0) u_Hz = 0;
+        maxDown_Hz = 1;
     } else if (deltaToSet_mC > 2500) {   // 2,5..5°C onder setpoint
         maxUp_Hz = 3;
-        maxDown_Hz = 3;
-        //if (u_Hz < -1) u_Hz = -1;        // heel beperkt omlaag
+        maxDown_Hz = 1;
     } else if (deltaToSet_mC > 500) {    // 0.5..2,5°C onder setpoint
-        maxUp_Hz = 3;
-        maxDown_Hz = 3;
+        maxUp_Hz = 2;
+        maxDown_Hz = 1;
     } else if (deltaToSet_mC >= -500) {  // binnen +/-0.5°C rond setpoint
-        maxUp_Hz = 2;                    // bijna niet omhoog
-        maxDown_Hz = 4;                  // omlaag mag iets om overshoot te voorkomen
-        //if (u_Hz > 1) u_Hz = 1;
+        maxUp_Hz = 1;                    // bijna niet omhoog
+        maxDown_Hz = 3;                  // omlaag mag iets om overshoot te voorkomen
     } else {                             // >0.5°C boven setpoint
         maxUp_Hz = 0;                    // nooit omhoog
         maxDown_Hz = 5;                  // wel omlaag
-        //if (u_Hz > 0) u_Hz = 0;
     }
 
     // Hard caps
@@ -388,7 +386,9 @@ void powerControlHeatpump(void)
     if (u_Hz >  maxUp_Hz)   u_Hz =  maxUp_Hz;
     if (u_Hz < -maxDown_Hz) u_Hz = -maxDown_Hz;
 
-
+    heating_mode_data.visualMaxStepUp_Hz   = (int16_t)maxUp_Hz;
+    heating_mode_data.visualMaxStepDown_Hz = (int16_t)maxDown_Hz;
+    
     // frequentie toepassen + clamp
     uint16_t freqBefore = heating_mode_data.compressorTargetFrequency;
     int32_t newFreq = (int32_t)heating_mode_data.compressorTargetFrequency + u_Hz;

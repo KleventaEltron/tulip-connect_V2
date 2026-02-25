@@ -57,6 +57,10 @@ void debugPI(void)
                 SYS_CONSOLE_PRINT(" Temp now:             %ld mC (%.2f C)\n",
                     getHeatingModeData().visualTempNow_mC,
                     getHeatingModeData().visualTempNow_mC / 1000.0f);
+                
+                SYS_CONSOLE_PRINT(" Delta to Set:         %ld mC (%.2f C)\n",
+                    getHeatingModeData().visualDeltaToSetpoint_mC,
+                    getHeatingModeData().visualDeltaToSetpoint_mC / 1000.0f);
 
                 SYS_CONSOLE_PRINT(" Temp previous:        %ld mC (%.2f C)\n",
                     getHeatingModeData().visualTempPrev_mC,
@@ -95,6 +99,12 @@ void debugPI(void)
 
                 SYS_CONSOLE_PRINT(" Output:               %ld Hz\n",
                     getHeatingModeData().visualU_Hz);
+                
+                SYS_CONSOLE_PRINT(" MaxUp:                %ld Hz\n",
+                    getHeatingModeData().visualMaxStepUp_Hz);
+                
+                SYS_CONSOLE_PRINT(" MaxDown:              %ld Hz\n",
+                    getHeatingModeData().visualMaxStepDown_Hz);
 
 
                 SYS_CONSOLE_PRINT("\n--- FREQUENCY ---\n");

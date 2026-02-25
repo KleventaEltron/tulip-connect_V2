@@ -116,6 +116,11 @@ uint32_t visualUpdateInterval_sec;
 uint8_t  visualEventFlags; // bit0=time, bit1=step, bit2=drop
   
 uint32_t visualStartupSeconds;
+
+int32_t visualDeltaToSetpoint_mC;
+
+int16_t visualMaxStepUp_Hz;
+int16_t visualMaxStepDown_Hz;
         
 } HEATING_MODE_DATA;
 
