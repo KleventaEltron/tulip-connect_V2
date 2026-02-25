@@ -240,7 +240,7 @@ void powerControlHeatpump(void)
     // update-interval (sec) om 0.2°C te halen: dt = 60 * step / slope
     // Bereken hoelang nodig is met huidige instellingen om 0,2 graden te stijgen, in ons geval is dit:
     // 60 * 200 / 10 = 12000 / 10 = 1200 seconden (20 minuten)
-    #define TEMP_STEP_mC          200   // 0.2°C
+    #define TEMP_STEP_mC          300   // 0.2°C
     uint32_t updateInterval_sec = (uint32_t)((int64_t)60 * TEMP_STEP_mC / slopeTarget_mC_min);
     
     if (updateInterval_sec < 60) {
@@ -249,6 +249,10 @@ void powerControlHeatpump(void)
     
     // lees temperatuur
     int32_t tempNow_mC = GetNtcTemperature(NTC_HEATING_BUFFER) * 100;
+    
+    int32_t setpoint_mC = getCorrectHeatingSetpoint() * 1000;
+    
+    int32_t deltaToSet_mC = setpoint_mC - tempNow_mC;
     
     if (heating_mode_data.previousTemp_mC == INT32_MAX) {
         heating_mode_data.previousTemp_mC = tempNow_mC;
@@ -277,7 +281,7 @@ void powerControlHeatpump(void)
     int32_t dT_mC = tempNow_mC - previousTemp_mC;
     
     // wacht tot tijd voorbij is, OF 0.2°C gehaald is, OF daling
-    #define TEMP_DROP_mC          400    // 0.2°C daling => eerder bijsturen
+    #define TEMP_DROP_mC 600   // 0.6°C i.p.v. 0.4°C
     uint8_t timeReached = (dt_sec >= updateInterval_sec);
     uint8_t stepReached = (dT_mC >= TEMP_STEP_mC);
     uint8_t tempDropped = (dT_mC <= -(int32_t)TEMP_DROP_mC);
@@ -336,7 +340,7 @@ void powerControlHeatpump(void)
 //    int32_t Kp = (int32_t)ReadSmartEeprom16(SEEP_ADDR_PI_KP_X1000); // Hz x1000 per (mC/min)
 //    int32_t Ki = (int32_t)ReadSmartEeprom16(SEEP_ADDR_PI_KI_X1000); // Hz x1000 per (mC/min)/min
     int32_t Kp = 200; // Hz x1000 per (mC/min)
-    int32_t Ki = 0; // Hz x1000 per (mC/min)/min
+    int32_t Ki = 2; // Hz x1000 per (mC/min)/min
 
     int32_t P = (int32_t)((int64_t)Kp * error);
     I_Hz_x1000 += (int32_t)((int64_t)Ki * error * (int64_t)dt_sec / 60);
@@ -346,10 +350,44 @@ void powerControlHeatpump(void)
 
     int32_t u_Hz = (P + I_Hz_x1000) / 1000;
     
-    #define MAX_FREQ_STEP_HZ  3  // bv max 3 Hz per regelactie
+    // ---------------- SETPOINT-AFHANKELIJKE LIMITER ----------------
+    // Als we ver onder setpoint zitten: nooit omlaag (anders kom je nooit omhoog)
+    // Drempels zijn in mC: 2000=2°C, 4000=4°C, 8000=8°C
+    int32_t maxUp_Hz;
+    int32_t maxDown_Hz;
 
-    if (u_Hz >  MAX_FREQ_STEP_HZ) u_Hz =  MAX_FREQ_STEP_HZ;
-    if (u_Hz < -MAX_FREQ_STEP_HZ) u_Hz = -MAX_FREQ_STEP_HZ;
+    if (deltaToSet_mC > 10000) {          // >10°C onder setpoint
+        maxUp_Hz = 5;
+        maxDown_Hz = 1;
+        //if (u_Hz < 0) u_Hz = 0;
+    } else if (deltaToSet_mC > 5000) {   // 5..10°C onder setpoint
+        maxUp_Hz = 4;
+        maxDown_Hz = 2;
+        //if (u_Hz < 0) u_Hz = 0;
+    } else if (deltaToSet_mC > 2500) {   // 2,5..5°C onder setpoint
+        maxUp_Hz = 3;
+        maxDown_Hz = 3;
+        //if (u_Hz < -1) u_Hz = -1;        // heel beperkt omlaag
+    } else if (deltaToSet_mC > 500) {    // 0.5..2,5°C onder setpoint
+        maxUp_Hz = 3;
+        maxDown_Hz = 3;
+    } else if (deltaToSet_mC >= -500) {  // binnen +/-0.5°C rond setpoint
+        maxUp_Hz = 2;                    // bijna niet omhoog
+        maxDown_Hz = 4;                  // omlaag mag iets om overshoot te voorkomen
+        //if (u_Hz > 1) u_Hz = 1;
+    } else {                             // >0.5°C boven setpoint
+        maxUp_Hz = 0;                    // nooit omhoog
+        maxDown_Hz = 5;                  // wel omlaag
+        //if (u_Hz > 0) u_Hz = 0;
+    }
+
+    // Hard caps
+    if (maxUp_Hz > 5) maxUp_Hz = 5;
+    if (maxDown_Hz > 5) maxDown_Hz = 5;
+
+    if (u_Hz >  maxUp_Hz)   u_Hz =  maxUp_Hz;
+    if (u_Hz < -maxDown_Hz) u_Hz = -maxDown_Hz;
+
 
     // frequentie toepassen + clamp
     uint16_t freqBefore = heating_mode_data.compressorTargetFrequency;
