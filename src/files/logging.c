@@ -1580,8 +1580,15 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
             WriteSmartEeprom16(SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF, value);
             break;
         }
-         
-        
+        case ADDRESS_TULIP_CONNECT_ENABLE_FREQUENCY_CONTROLLER_FUNCTION: {
+            WriteSmartEeprom16(SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION, value);
+            break;
+        }
+        case ADDRESS_TULIP_CONNECT_RESET_EEPROM: {
+            restoreEepromValuesToDefault();
+            WriteSmartEeprom8(SEEP_ADDR_SOFTWARE_RESET, value);
+            break;
+        }
         
         default: {
             ChangeHeatpumpSetting(address, value);
@@ -1852,6 +1859,13 @@ bool sendUpdatedSettingsList ( void ) {
         SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_CIRCULATION_PUMP_OFF,
         SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF,
         SEEP_ADDR_HYBRID_SYSTEM_ENABLED,
+        SEEP_ADDR_HYBRID_SYSTEM_ENABLED_ON_HEATING_ELEMENT_RELAIS,
+        SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON,
+        SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_CIRCULATION_PUMP_OFF,
+        SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF,
+        SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY,
+        SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY,
+        SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION,
      };
     
     getSettingValuesByEepromList16Bit(eep_addrs_16_bit_3, sizeof(eep_addrs_16_bit_3)/sizeof(eep_addrs_16_bit_3[0]));    

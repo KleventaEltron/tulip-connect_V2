@@ -126,6 +126,8 @@
 #define SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY                       131 // 2 bytes V2-0-17
 #define SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY                       133 // 2 bytes V2-0-17
 
+#define SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION                     135 // 2 bytes V2-0-18
+
 #define SEEP_ADDR
 
 //.....

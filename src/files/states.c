@@ -14,7 +14,8 @@
 #include "ntc.h"
 #include "modbus/display.h"
 
-
+#include "pi_frequency_controller.h"
+#include "heatpump_pi_adapter.h"
 
 APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
 APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
@@ -107,6 +108,8 @@ void resetActiveModeStates() {
     hot_water_cooling_mode_data.state = HOT_WATER_COOLING_INITIALIZE_COOLING;
     hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HEATING;
     hot_water_floor_heating_mode_data.state = HOT_WATER_FLOOR_HEATING_INITIALIZE;
+    
+    HPPI_Clear();
     
     // Reset Heating mode data
     setSecondCounterHeatingTask(UINT32_MAX);

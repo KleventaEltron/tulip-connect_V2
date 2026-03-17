@@ -280,6 +280,8 @@ void restoreEepromValuesToDefault(void)
     
     WriteSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY, 30);
     WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY, 100);
+    
+    WriteSmartEeprom16(SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION, false);
 }
 
 
@@ -416,6 +418,7 @@ void SmartEepromInit(void)
     if (thisEepromVersion < 2000018) {
         WriteSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY, 30);
         WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY, 100);
+        WriteSmartEeprom16(SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION, false);
     }
     
     //if (thisEepromVersion < 1000013) // 1.0.13

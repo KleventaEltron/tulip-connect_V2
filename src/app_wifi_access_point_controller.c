@@ -29,6 +29,7 @@
 
 #include "app_wifi_access_point_controller.h"
 #include "wdrv_winc_client_api.h"
+#include "files/wincSoftAp.h"
 
 APP_WIFI_ACCESS_POINT_CONTROLLER_DATA app_wifi_access_point_controllerData;
 
