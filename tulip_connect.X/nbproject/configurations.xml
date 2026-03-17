@@ -429,7 +429,9 @@
         <itemPath>../src/files/defrosting.h</itemPath>
         <itemPath>../src/files/cJSON.h</itemPath>
         <itemPath>../src/files/emergency_mode.h</itemPath>
-        <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/wincSoftAp.h</itemPath>
+        <itemPath>../src/files/wincSoftAp.h</itemPath>
+        <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/pi_frequency_controller.h</itemPath>
+        <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/heatpump_pi_adapter.h</itemPath>
       </logicalFolder>
       <logicalFolder name="packs" displayName="packs" projectFiles="true">
         <logicalFolder name="ATSAME54P20A_DFP"
@@ -1034,7 +1036,9 @@
         <itemPath>../src/files/defrosting.c</itemPath>
         <itemPath>../src/files/cJSON.c</itemPath>
         <itemPath>../src/files/emergency_mode.c</itemPath>
-        <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/wincSoftAp.c</itemPath>
+        <itemPath>../src/files/wincSoftAp.c</itemPath>
+        <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/pi_frequency_controller.c</itemPath>
+        <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/heatpump_pi_adapter.c</itemPath>
       </logicalFolder>
       <logicalFolder name="wolfcrypt" displayName="wolfcrypt" projectFiles="true">
         <logicalFolder name="port" displayName="port" projectFiles="true">
@@ -1400,7 +1404,8 @@
         <property key="oXC16ld-stackguard" value="16"/>
         <property key="oXC32ld-extra-opts" value=""/>
         <property key="optimization-level" value=""/>
-        <property key="preprocessor-macros" value="ROM_LENGTH=0x100000;ROM_ORIGIN=0x0"/>
+        <property key="preprocessor-macros"
+                  value="ROM_LENGTH=0xc0000;ROM_ORIGIN=0x40000"/>
         <property key="remove-unused-sections" value="true"/>
         <property key="report-memory-usage" value="false"/>
         <property key="serial-length" value=""/>
