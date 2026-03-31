@@ -1,6 +1,8 @@
 #ifndef _NTC_H    /* Guard against multiple inclusion */
 #define _NTC_H
 
+#include "../config/default/peripheral/dmac/plib_dmac.h"
+
 #define ADC_VREF                (3.3f)
 
 // NTC temperature inputs

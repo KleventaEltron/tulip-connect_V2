@@ -16,6 +16,9 @@
 #include "modbus\heatpump_parameters.h"
 #include "modbus/display.h"
 
+#include "heatpump_pi_adapter.h"
+#include "pi_frequency_controller.h"
+
 extern HOT_WATER_HEATING_MODE_DATA hot_water_heating_mode_data;
 bool regulateOnTempSensorInBufferHotWaterHeating = false;
 
@@ -181,7 +184,7 @@ void setTemperatureOperatingCycleHotWaterHeating() {
         return;
     }  
 
-    if (heatingBufferTemperature >= heatingSetpoint
+    if (heatingBufferTemperature >= (heatingSetpoint + 10)
             // && getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 240
             && !getActiveModeControllerPumpOffDueToDipSwitch1()
             && changeSettingHotWaterHeating) {
@@ -218,14 +221,14 @@ int16_t determineCorrectSetpoint() {
             }
 
             if (getActiveCompressorsMask() == 0){
-                return heatingSetpoint; 
+                return heatingSetpoint;
             }
 
-            if (heatingBufferTemperature >= heatingSetpoint) {
+            if (heatingBufferTemperature >= (heatingSetpoint + 10)) {
                 return heatingSetpoint;
             }
             
-            if((heatingSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) < 20  && changeCompensationsHotWaterHeating) {
+            if((heatingSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) < 30  && changeCompensationsHotWaterHeating) {
                 ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, MASTER_HEATPUMP_IN_CASCADE) - 1));
                 ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, MASTER_HEATPUMP_IN_CASCADE) - 1));            
                 changeCompensationsHotWaterHeating = false;
@@ -247,7 +250,7 @@ int16_t determineCorrectSetpoint() {
             return heatingSetpoint;
         }    
 
-        if (heatingBufferTemperature >= heatingSetpoint) {
+        if (heatingBufferTemperature >= (heatingSetpoint + 10)) {
             // Hot water buffer tempereature is equal or higher than actual setpoint, so reset offset to 0
             hot_water_heating_mode_data.stepperSetpoint = heatingSetpoint;
             return heatingSetpoint;
@@ -339,6 +342,8 @@ void HOT_WATER_HEATING_MODE_Initialize ( void )
     hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = false;
     hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
     setSecondCounterBlockCirculationPumpAtHeatingStart(UINT32_MAX);
+    
+    HPPI_Clear();
     
     hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HEATING;
     return;
@@ -447,7 +452,8 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             //TurnOffHeatingElementHeatingBuffer();
             hot_water_heating_mode_data.HeatingElementOn = false;
             setSecondCounterHeatingTask(UINT32_MAX);
-            
+            HPPI_Clear();
+                        
             if (regulateOnTempSensorInBufferHotWaterHeating && !checkIfDefrostingActive()) {
                 // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                 setActiveModeControllerPumpOffDueToDipSwitch1(true);
@@ -479,6 +485,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                 // Compressor is running
                 setSecondCounterHeatingTask(0);
                 hot_water_heating_mode_data.initialHeatingBufferTemp = heatingBufferTemperature;
+                HPPI_Reset();
                 
                 if (regulateOnTempSensorInBufferHotWaterHeating) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 1);
@@ -523,12 +530,15 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         // 2
         case HOT_WATER_HEATING_RUNNING_ON_HEATING:{
             
+            HPPI_UpdateAndGetTargetHz();   
+            
             if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
                 //TurnOffHeatingElementHeatingBuffer();
                 hot_water_heating_mode_data.HeatingElementOn = false;
                 hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
+                HPPI_Clear();
                 
                 if (regulateOnTempSensorInBufferHotWaterHeating && !checkIfDefrostingActive()) {
                     // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
@@ -593,13 +603,14 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         
         // 3
         case HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON:{
-            
+            HPPI_UpdateAndGetTargetHz();   
             if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
                 //TurnOffHeatingElementHeatingBuffer();
                 hot_water_heating_mode_data.HeatingElementOn = false;
                 hot_water_heating_mode_data.initialHeatingBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
+                HPPI_Clear();
                 
                 if (regulateOnTempSensorInBufferHotWaterHeating && !checkIfDefrostingActive()) {
                     // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
@@ -665,7 +676,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         
         // 4
         case HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_CIRCULATION_PUMP_OFF:{
-            
+            HPPI_UpdateAndGetTargetHz();   
             if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
                 hot_water_heating_mode_data.HeatingElementOn = false;
@@ -736,7 +747,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
         
         // 5
         case HOT_WATER_HEATING_RUNNING_ON_HEATING_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF:{
-            
+            HPPI_UpdateAndGetTargetHz();   
             if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
                 hot_water_heating_mode_data.HeatingElementOn = false;
@@ -814,6 +825,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
             hot_water_heating_mode_data.blockCirculationPumpAtHeatingStart = false;
             hot_water_heating_mode_data.blockCirculationPumpLongerBecauseTempTooLow = false;
             setSecondCounterBlockCirculationPumpAtHeatingStart(UINT32_MAX);
+            HPPI_Clear();
             
             //TurnOffHeatingElementHeatingBuffer();
             //TurnOffHeatingElementHotWaterBuffer();
@@ -873,6 +885,7 @@ void HOT_WATER_HEATING_MODE_Tasks ( void )
                 //TurnOffHeatingElementHotWaterBuffer();
                 hot_water_heating_mode_data.HotwaterElementOn = false;
                 setSecondCounterHotwaterTask(UINT32_MAX);
+                HPPI_Clear();
                 
                 hot_water_heating_mode_data.hotwaterPassive = false;
                 hot_water_heating_mode_data.setpointHotWaterOffset = TEMPERATURE_ALARM_VALUE;

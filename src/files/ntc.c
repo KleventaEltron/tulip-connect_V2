@@ -4,6 +4,7 @@
 #include <stdbool.h>                    // Defines true
 #include "definitions.h"
 #include "ntc.h"
+#include "../config/default/peripheral/dmac/plib_dmac.h"
 
 static int16_t ntc_10k_tabel[2][30] =
 {

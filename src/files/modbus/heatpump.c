@@ -264,13 +264,22 @@ static void parseReadRegs(uint8_t * txBuffer, uint8_t * rxBuffer)
         j += 2;
         //checkWhatData(i);
         saveDataToMemory(i, data, deviceAddress);
+          
     }
+    
+//    if (GetDigitalInput2()){
+//        RealTimeData1[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE] = 50;
+//    }
+//    else {
+//        RealTimeData1[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE] = 0;
+//    }
 }
 
 void ParseHeatpumpData(uint8_t * txBuffer, uint8_t * rxBuffer)
 {
     if (rxBuffer[MODBUS_ADDRESS_INDEX] == txBuffer[MODBUS_ADDRESS_INDEX])
-    {   // voor mij
+    {   
+        // voor mij
         if (rxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_WRITE_REG)
         {
             parseWriteReg(rxBuffer);

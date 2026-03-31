@@ -14,7 +14,8 @@
 #include "ntc.h"
 #include "modbus/display.h"
 
-
+#include "pi_frequency_controller.h"
+#include "heatpump_pi_adapter.h"
 
 APP_ACTIVE_MODE_CONTROLLER_STATES app_active_mode_controllerState;
 APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
@@ -107,6 +108,8 @@ void resetActiveModeStates() {
     hot_water_cooling_mode_data.state = HOT_WATER_COOLING_INITIALIZE_COOLING;
     hot_water_heating_mode_data.state = HOT_WATER_HEATING_INITIALIZE_HEATING;
     hot_water_floor_heating_mode_data.state = HOT_WATER_FLOOR_HEATING_INITIALIZE;
+    
+    HPPI_Clear();
     
     // Reset Heating mode data
     setSecondCounterHeatingTask(UINT32_MAX);
@@ -470,6 +473,16 @@ bool blockHotWaterBasedOnTimers(void)
 uint16_t getCascadeSlaveStatus()
 {
     return RealTimeData1[ADDRESS_CASCADE_SLAVES_ONLINE_1 - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE];
+}
+
+int16_t getHeatpumpTargetFrequency()
+{
+    return (int16_t)UnitSystemParameters[ADDRESS_HEATING_TARGET_FREQUENCY_CONSTANT_B - START_ADDRESS_UNIT_SYSTEM_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+}
+
+int16_t getHeatpumpMinimumFrequency()
+{
+    return (int16_t)UnitSystemParameters[ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT - START_ADDRESS_UNIT_SYSTEM_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
 }
 
 int16_t getCorrectHeatingSetpoint(bool heatingCurveSet)

@@ -123,6 +123,14 @@
 #define SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_CIRCULATION_PUMP_OFF                   127 // 2 bytes V2-0-15
 #define SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF    129 // 2 bytes V2-0-15
 
+#define SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY                       131 // 2 bytes V2-0-17
+#define SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY                       133 // 2 bytes V2-0-17
+
+#define SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION                     135 // 2 bytes V2-0-18
+
+#define SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY_CONSTANT_B           137 // 2 bytes V2-0-19
+#define SEEP_ADDR_INITIAL_FAN_SPEED                                        139 // 2 bytes V2-0-19
+
 #define SEEP_ADDR
 
 //.....

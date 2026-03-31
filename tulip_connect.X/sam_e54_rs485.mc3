@@ -4563,7 +4563,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="!@#harmonyUserData"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;UserData&gt;
   &lt;UserData dnOrder=&quot;0&quot;&gt;
-    &lt;GraphSettings canvasHeight=&quot;628&quot; canvasWidth=&quot;1182&quot; dnOrder=&quot;0&quot;/&gt;
+    &lt;GraphSettings canvasHeight=&quot;658&quot; canvasWidth=&quot;1182&quot; dnOrder=&quot;0&quot;/&gt;
     &lt;PowerProfiles dnOrder=&quot;1&quot;&gt;
       &lt;Profile dnOrder=&quot;0&quot; id=&quot;profile0&quot; name=&quot;Main&quot;/&gt;
     &lt;/PowerProfiles&gt;
@@ -4653,7 +4653,7 @@
         &lt;ElementPosition dnOrder=&quot;5&quot; id=&quot;HarmonyCore&quot; x=&quot;250&quot; y=&quot;32&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;6&quot; id=&quot;TCP/IP STACK&quot; x=&quot;752&quot; y=&quot;293&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;7&quot; id=&quot;cmsis&quot; x=&quot;7&quot; y=&quot;153&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;8&quot; id=&quot;core&quot; x=&quot;7&quot; y=&quot;98&quot;/&gt;
+        &lt;ElementPosition dnOrder=&quot;8&quot; id=&quot;core&quot; x=&quot;8&quot; y=&quot;98&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;9&quot; id=&quot;dfp&quot; x=&quot;7&quot; y=&quot;127&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;10&quot; id=&quot;drvWifiWinc&quot; x=&quot;1022&quot; y=&quot;496&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;11&quot; id=&quot;drv_sdmmc&quot; x=&quot;467&quot; y=&quot;448&quot;/&gt;
@@ -4662,7 +4662,7 @@
         &lt;ElementPosition dnOrder=&quot;14&quot; id=&quot;lib_crypto&quot; x=&quot;472&quot; y=&quot;343&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;15&quot; id=&quot;lib_wolfcrypt&quot; x=&quot;289&quot; y=&quot;233&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;16&quot; id=&quot;lib_wolfssl&quot; x=&quot;466&quot; y=&quot;237&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;17&quot; id=&quot;lib_zlib&quot; x=&quot;162&quot; y=&quot;284&quot;/&gt;
+        &lt;ElementPosition dnOrder=&quot;17&quot; id=&quot;lib_zlib&quot; x=&quot;163&quot; y=&quot;287&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;18&quot; id=&quot;nvmctrl&quot; x=&quot;6&quot; y=&quot;19&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;19&quot; id=&quot;sdhc1&quot; x=&quot;281&quot; y=&quot;516&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;20&quot; id=&quot;sercom2&quot; x=&quot;832&quot; y=&quot;562&quot;/&gt;
@@ -4753,7 +4753,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;APP_START_ADDRESS&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;0&quot;/&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;60000&quot;/&gt;
     &lt;/Values&gt;
   &lt;/core&gt;
 &lt;/core&gt;
@@ -39725,7 +39725,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\definitions.h</file>
-         <hash>0584b1b69b31ac76a0359b417a3c8ca6971d7d0280717163a986df259f046ccd</hash>
+         <hash>62967f37fcaa2735209d18d22854c740281ab4ddfbaa96822e94b21065a4f276</hash>
       </entry>
       <entry>
          <file>..\src\config\default\device.h</file>

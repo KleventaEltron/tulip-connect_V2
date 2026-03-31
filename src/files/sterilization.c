@@ -12,6 +12,9 @@
 #include "eeprom.h"
 #include "states.h"
 
+#include "pi_frequency_controller.h"
+#include "heatpump_pi_adapter.h"
+
 uint32_t sterilizationReachedTemperatureTimeStamp = UINT32_MAX;
 uint16_t sterilizationTemperatureOffset = TEMPERATURE_ALARM_VALUE;
 bool sterilizationHotwaterElementOn = false;
@@ -45,6 +48,7 @@ void setSterilisationMode(STERILIZATION_MODE newMode) {
 void checkNeedForSterilization() {
     
     if(sterilisationMode != ACTIVE && goToActiveSterilization()){
+        HPPI_Clear();
         // Sterilization is off and must go to active
         
         if (ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED) == true) {

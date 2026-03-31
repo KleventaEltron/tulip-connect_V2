@@ -1,4 +1,4 @@
-   #include <stddef.h>                    
+#include <stddef.h>                    
 #include <stdbool.h>                   
 #include <stdlib.h>                   
 #include <string.h>
@@ -15,6 +15,11 @@
 #include "modbus\heatpump_parameters.h"
 #include "modbus/display.h"
 
+#include "heatpump_pi_adapter.h"
+#include "pi_frequency_controller.h"
+
+
+// #define FREQ_CONTROLLER_TEMPERATURE_MARGIN 5
 
 extern HEATING_MODE_DATA heating_mode_data;
 bool regulateOnTempSensorInBufferHeating = false;
@@ -69,7 +74,7 @@ void setTemperatureOperatingCycleHeating() {
         return;
     }  
     
-    if (heatingBufferTemperature >= heatingSetpoint
+    if (heatingBufferTemperature >= (heatingSetpoint + 10)
             //&& getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE) != 240
             && !getActiveModeControllerPumpOffDueToDipSwitch1()
             && changeSetting) {
@@ -106,11 +111,11 @@ int16_t determineCorrectHeatingSetpoint() {
             return heatingSetpoint;
         }             
         
-        if (heatingBufferTemperature >= heatingSetpoint) {
+        if (heatingBufferTemperature >= (heatingSetpoint + 10)) {
             return heatingSetpoint;
         }
         
-        if((heatingSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) < 20  && changeCompensationsHeating) {
+        if((heatingSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) < 30  && changeCompensationsHeating) {
             ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, MASTER_HEATPUMP_IN_CASCADE) - 1));
             ChangeHeatpumpSetting(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_OUTLET_WATER_TEMPERATURE_COMPENSATION_VALUE, MASTER_HEATPUMP_IN_CASCADE) - 1));            
             changeCompensationsHeating = false;
@@ -132,7 +137,7 @@ int16_t determineCorrectHeatingSetpoint() {
         return heatingSetpoint;
     }    
     
-    if (heatingBufferTemperature >= heatingSetpoint) {   
+    if (heatingBufferTemperature >= (heatingSetpoint + 10)) {   
         // Hot water buffer tempereature is equal or higher than actual setpoint, so reset offset to 0
         heating_mode_data.stepperSetpoint = heatingSetpoint;
         return heatingSetpoint;
@@ -149,21 +154,17 @@ int16_t determineCorrectHeatingSetpoint() {
         }
     }
     
-//    if ((heatingSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) > 50) {
-//        heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20;
-//        return heating_mode_data.stepperSetpoint;
-//    }
-
-    
-//    if (getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) >= (heating_mode_data.stepperSetpoint - 20) && (heating_mode_data.stepperSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) <= 20) {
-//        //heating_mode_data.stepperSetpoint = getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20;
-//        heating_mode_data.stepperSetpoint += 20;
-//        return heating_mode_data.stepperSetpoint;
-//        //heatingSetpoint += 20;
-//    }
-    
     return heating_mode_data.stepperSetpoint;
 }
+
+
+static int32_t clamp32(int32_t v, int32_t lo, int32_t hi)
+{
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
+}
+
 
 
 
@@ -176,6 +177,8 @@ void HEATING_MODE_Initialize ( void )
     heating_mode_data.stepperSetpoint = TEMPERATURE_ALARM_VALUE;
     
     heating_mode_data.heatingCurveSet = false;
+    
+    HPPI_Clear();
     
     heating_mode_data.state = HEATING_INITIALIZE;
     return;
@@ -277,12 +280,12 @@ void HEATING_MODE_Tasks ( void )
     {
         // 0
         case HEATING_INITIALIZE:{
-            
             //TurnOffHeatingElementHeatingBuffer();
             heating_mode_data.HeatingElementOn = false;
             heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE; 
             heating_mode_data.stepperSetpoint = TEMPERATURE_ALARM_VALUE;
             setSecondCounterHeatingTask(UINT32_MAX);
+            HPPI_Clear();
             
             if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
                 // ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
@@ -295,7 +298,7 @@ void HEATING_MODE_Tasks ( void )
             ChangeHeatpumpSetting(ADDRESS_HEATING_CURVE_SETTING, ReadSmartEeprom16(SEEP_ADDR_HEATING_CURVE));
             ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, ReadSmartEeprom16(SEEP_ADDR_COOLING_CURVE));
             WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP, UINT16_MAX);
-            WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP, UINT16_MAX);
+            WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP, UINT16_MAX);           
             
             heating_mode_data.state = HEATING_IDLE;
             break;
@@ -306,6 +309,7 @@ void HEATING_MODE_Tasks ( void )
             if (getActiveCompressorsMask() != 0){
                 // Compressor is running
                 setSecondCounterHeatingTask(0);
+                HPPI_Reset();
                 heating_mode_data.initialBufferTemp = heatingBufferTemperature;
                 heating_mode_data.stepperSetpoint = getHeatingSetpoint();
                 //heating_mode_data.stepperSetpoint = (getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) + 20);
@@ -331,6 +335,7 @@ void HEATING_MODE_Tasks ( void )
                 heating_mode_data.HeatingElementOn = false;
                 heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
+                HPPI_Clear();
                 
                 if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
@@ -372,17 +377,22 @@ void HEATING_MODE_Tasks ( void )
                 break;
             }
             
+            HPPI_UpdateAndGetTargetHz();          
+            
             break;
         }
         
         // 3
         case HEATING_RUNNING_WITH_ELEMENT_ON:{
             
+            HPPI_UpdateAndGetTargetHz();   
+            
             if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
                 heating_mode_data.HeatingElementOn = false;
                 heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
+                HPPI_Clear();
 
                 if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
@@ -449,11 +459,14 @@ void HEATING_MODE_Tasks ( void )
         // 4
         case HEATING_RUNNING_WITH_CIRCULATION_PUMP_OFF:{
             
+            HPPI_UpdateAndGetTargetHz();   
+            
             if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
                 heating_mode_data.HeatingElementOn = false;
                 heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
+                HPPI_Clear();
 
                 if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
@@ -520,12 +533,15 @@ void HEATING_MODE_Tasks ( void )
         // 5
         case HEATING_RUNNING_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF:{
             
+            HPPI_UpdateAndGetTargetHz();   
+            
             if ((getActiveCompressorsMask() == 0) && (getDefrostingActiveMask() == 0)){
                 // Compressor is not running and is also not in defrosting
                 heating_mode_data.HeatingElementOn = false;
                 heating_mode_data.initialBufferTemp = TEMPERATURE_ALARM_VALUE;
                 setSecondCounterHeatingTask(UINT32_MAX);
-
+                HPPI_Clear();
+                
                 if(regulateOnTempSensorInBufferHeating && !checkIfDefrostingActive()) {
                     //ChangeHeatpumpSetting(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, 240);
                     setActiveModeControllerPumpOffDueToDipSwitch1(true);
