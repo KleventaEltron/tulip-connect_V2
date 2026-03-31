@@ -1581,6 +1581,11 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
             break;
         }
         case ADDRESS_TULIP_CONNECT_ENABLE_FREQUENCY_CONTROLLER_FUNCTION: {
+            // if (value == true) {
+            //    WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY_CONSTANT_B, getDataFromMemoryCallable(ADDRESS_HEATING_TARGET_FREQUENCY_CONSTANT_B, MASTER_HEATPUMP_IN_CASCADE));
+            //    WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY, getDataFromMemoryCallable(ADDRESS_HEATING_TARGET_FREQUENCY_UPPER_LIMIT, MASTER_HEATPUMP_IN_CASCADE));
+            //    WriteSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY, getDataFromMemoryCallable(ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT, MASTER_HEATPUMP_IN_CASCADE));
+            //}   
             WriteSmartEeprom16(SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION, value);
             break;
         }
@@ -1588,6 +1593,24 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
             restoreEepromValuesToDefault();
             WriteSmartEeprom8(SEEP_ADDR_SOFTWARE_RESET, value);
             break;
+        }
+        
+        case ADDRESS_HEATING_TARGET_FREQUENCY_CONSTANT_B: {
+            WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY_CONSTANT_B, value);
+            break;
+        }
+        case ADDRESS_HEATING_TARGET_FREQUENCY_UPPER_LIMIT: {
+            WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY, value);
+            break;
+        }
+        case ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT: {
+            WriteSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY, value);
+            break;
+        }  
+        case ADDRESS_DC_FAN_INITIAL_FREQUENCY: {
+            WriteSmartEeprom16(SEEP_ADDR_INITIAL_FAN_SPEED, value);
+            ChangeHeatpumpSetting(address, value);
+            break;            
         }
         
         default: {
@@ -1866,6 +1889,7 @@ bool sendUpdatedSettingsList ( void ) {
         SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY,
         SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY,
         SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION,
+        SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY_CONSTANT_B,
      };
     
     getSettingValuesByEepromList16Bit(eep_addrs_16_bit_3, sizeof(eep_addrs_16_bit_3)/sizeof(eep_addrs_16_bit_3[0]));    

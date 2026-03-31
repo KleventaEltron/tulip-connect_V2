@@ -89,8 +89,8 @@ static int32_t hp_read_setpoint_mC(void)
 uint8_t s_nearMinActive = 0;
 static uint16_t hp_read_min_freq_hz(void)
 {
-    uint16_t eepromMin =
-        (uint16_t)ReadSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY);
+    uint16_t eepromMin = 30;
+        //(uint16_t)ReadSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY);
     return eepromMin;
 
 //    int32_t temp_mC = hp_read_temp_mC();
@@ -114,7 +114,8 @@ static uint16_t hp_read_min_freq_hz(void)
 
 static uint16_t hp_read_max_freq_hz(void)
 {
-    return (uint16_t)ReadSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY);
+    uint16_t eepromMax = 100;
+    return eepromMax;//(uint16_t)ReadSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY);
 }
 
 static bool hp_read_ramp_settings(int32_t *riseTemp_mC, int32_t *riseTime_min)
@@ -166,10 +167,15 @@ void HPPI_Reset(void)
     HPPI_InitOnce();
     HeatpumpPI_Reset(&g_pi);
     
+    if (getDataFromMemoryCallable(FREQ_INCREASE_CURVE_SELECTION, MASTER_HEATPUMP_IN_CASCADE) == 1) {
+        return;
+    }
+    
     if (ReadSmartEeprom16(SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION) == false) {
         return;
     }
     
+    ChangeHeatpumpSetting(ADDRESS_DC_FAN_INITIAL_FREQUENCY, 25);
     ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_CONSTANT_B, 30);
     ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_UPPER_LIMIT, 50);
     ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT, 30);     
@@ -183,9 +189,10 @@ void HPPI_Clear(void)
     HPPI_InitOnce();
     HeatpumpPI_Reset(&g_pi);
     
-    ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_CONSTANT_B, 85);
-    ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_UPPER_LIMIT, 85);
-    ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT, 50);  
+    ChangeHeatpumpSetting(ADDRESS_DC_FAN_INITIAL_FREQUENCY, ReadSmartEeprom16(SEEP_ADDR_INITIAL_FAN_SPEED));
+    ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_CONSTANT_B, ReadSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY_CONSTANT_B));
+    ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_UPPER_LIMIT, ReadSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY));
+    ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT, ReadSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY));
     
     SYS_CONSOLE_PRINT("[HPPI] Cleared.\n");
 }
@@ -193,6 +200,10 @@ void HPPI_Clear(void)
 
 void HPPI_UpdateAndGetTargetHz(void)
 {
+    if (getDataFromMemoryCallable(FREQ_INCREASE_CURVE_SELECTION, MASTER_HEATPUMP_IN_CASCADE) == 1) {
+        return;
+    }
+    
     if (ReadSmartEeprom16(SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION) == false) {
         return;
     }

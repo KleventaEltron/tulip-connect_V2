@@ -143,7 +143,30 @@ void ParseDisplayData(uint8_t * rxBuffer)
                 ChangeHeatpumpSetting(regAddress, data);
                 break;
             }
-                
+            case ADDRESS_HEATING_TARGET_FREQUENCY_CONSTANT_B: {
+                WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY_CONSTANT_B, data);
+                SetDataInArrays(regAddress, data);
+                ChangeHeatpumpSetting(regAddress, data);
+                break;
+            }
+            case ADDRESS_HEATING_TARGET_FREQUENCY_UPPER_LIMIT: {
+                WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY, data);
+                SetDataInArrays(regAddress, data);
+                ChangeHeatpumpSetting(regAddress, data);
+                break;
+            }
+            case ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT: {
+                WriteSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY, data);
+                SetDataInArrays(regAddress, data);
+                ChangeHeatpumpSetting(regAddress, data);
+                break;
+            }     
+            case ADDRESS_DC_FAN_INITIAL_FREQUENCY: {
+                WriteSmartEeprom16(SEEP_ADDR_INITIAL_FAN_SPEED, data);
+                SetDataInArrays(regAddress, data);
+                ChangeHeatpumpSetting(regAddress, data);
+            }
+
             default: {
                 ChangeHeatpumpSetting(regAddress, data);
                 SetDataInArrays(regAddress, data);

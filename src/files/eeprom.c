@@ -278,10 +278,12 @@ void restoreEepromValuesToDefault(void)
     WriteSmartEeprom16(SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_CIRCULATION_PUMP_OFF, 1800);
     WriteSmartEeprom16(SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON_AND_CIRCULATION_PUMP_OFF, 1800);
     
-    WriteSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY, 30);
-    WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY, 100);
+    WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY_CONSTANT_B, 85); 
+    WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY, 85);
+    WriteSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY, 50);    
     
     WriteSmartEeprom16(SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION, false);
+    WriteSmartEeprom16(SEEP_ADDR_INITIAL_FAN_SPEED, 35);
 }
 
 
@@ -416,9 +418,18 @@ void SmartEepromInit(void)
     }    
     
     if (thisEepromVersion < 2000018) {
-        WriteSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY, 30);
-        WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY, 100);
+        WriteSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY, 50);
+        WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY, 85);
         WriteSmartEeprom16(SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION, false);
+    }
+    
+    if (thisEepromVersion < 2000019) {
+        WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY_CONSTANT_B, 85);
+        WriteSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY, 85);
+        WriteSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY, 50);
+        
+        WriteSmartEeprom16(SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION, false);
+        WriteSmartEeprom16(SEEP_ADDR_INITIAL_FAN_SPEED, 35);
     }
     
     //if (thisEepromVersion < 1000013) // 1.0.13
@@ -439,189 +450,4 @@ void SmartEepromInit(void)
     uint32_t resetCounter = ReadSmartEeprom32(SEEP_ADDR_RESET_COUNTER);
     resetCounter++;
     WriteSmartEeprom32(SEEP_ADDR_RESET_COUNTER, resetCounter);
-    
-    /*
-    if (verify_seep_signature() == 0)
-    {   // Eeprom already initialized
-        if (GetDip4() == true)
-        {
-            //printf("\r\nSmartEEPROM contains valid data \r\n");
-            SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "SmartEEPROM contains valid data");
-        }
-    }
-    else
-    {   // Eeprom not initialized or some fault
-        if (GetDip4() == true)
-        {
-            //printf("\r\nStoring signature to SmartEEPROM address 0x00 to 0x03\r\n");
-            SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "Storing signature to SmartEEPROM address 0x00 to 0x03");
-        }
-    }
-    */
-    /*
-    if (GetDip4() == true)
-    {
-        for (uint32_t  i = 0; i < MAX_BUFF_SIZE; i++)
-        {
-            eeprom_data_buffer[i]   = SmartEEPROM8[i];
-        }
-
-        //print_hex_array(eeprom_data_buffer, MAX_BUFF_SIZE);
-    }
-    */
-    
-    /*
-    if (GetDip4() == true)
-    {
-        printf("\r\nFuse values for SBLK = %d, PSZ = %d. See the table 'SmartEEPROM Virtual \
-        Size in Bytes' in the Datasheet to calculate total available bytes \r\n",
-       (int)NVMCTRL_SEESBLK_FuseConfig,
-       (int)NVMCTRL_SEEPSZ_FuseConfig);
-    }
-    */    
-    /*
-    // Toggle a SmartEEPROM byte and give indication with LED0 on SAM E54 Xpro 
-    invert_seep_byte(SEEP_ADDR_TEST);
-
-    // Check the data at test address and show indication on LED0 
-    if (SmartEEPROM8[SEEP_ADDR_TEST])
-    {
-        LedStatus_Set();
-    }
-    else
-    {
-        LedStatus_Clear();
-    }
-    */    
 }
-
-/*
-void SmartEepromInit(void)
-{
-    uint8_t buffer[MAX_BUFF_SIZE] = {0};
-    
-    uint32_t    NVMCTRL_SEESBLK_FuseConfig  = ((*(uint32_t *)(USER_PAGE_ADDR + 4)) >> 0) & NVMCTRL_SEESBLK_MASK_BITS;
-    uint32_t    NVMCTRL_SEEPSZ_FuseConfig   = ((*(uint32_t *)(USER_PAGE_ADDR + 4)) >> 4) & NVMCTRL_SEEPSZ_MASK_BITS;
-    
-    printf("\r\nFuse values for SBLK = %d, PSZ = %d. See the table 'SmartEEPROM Virtual \
-	Size in Bytes' in the Datasheet to calculate total available bytes \r\n",
-	       (int)NVMCTRL_SEESBLK_FuseConfig,
-	       (int)NVMCTRL_SEEPSZ_FuseConfig);
-    
-    if (verify_seep_signature() == 0)
-    {
-		printf("\r\nSmartEEPROM contains valid data \r\n");
-	}
-    else
-    {
-		printf("\r\nStoring signature to SmartEEPROM address 0x00 to 0x03\r\n");
-        // Wait till the SmartEEPROM is free 
-        while (NVMCTRL_SmartEEPROM_IsBusy())
-        {
-            ;
-        }
-
-		SmartEEPROM32[0] = SMEE_CUSTOM_SIG;
-	}
-    
-    uint8_t data = invert_seep_byte(SEEP_ADDR_TEST);
-    
-    if (data)
-    {
-        LedStatus_Set();
-	}
-    else
-    {
-        LedStatus_Clear();
-	}
-    
-    if (GetDip4() == true)
-    {   // Print debug eeprom data
-        for (uint32_t  i = 0; i < MAX_BUFF_SIZE; i++)
-        {
-            buffer[i]   = SmartEEPROM8[i];
-        }
-
-        print_hex_array(buffer, MAX_BUFF_SIZE);
-    }
-}
-*/
-        
-/*
-void WriteSmartEeprom16(uint32_t address, uint16_t data)
-{
-    if ((address + 1) > SEEP_FINAL_BYTE_INDEX) 
-    {
-        if (GetDip4() == true)
-            printf("\r\nERROR: Address invalid. Try again \r\n");
-    }
-    else
-    {
-        WriteSmartEeprom8(address, (uint8_t)(data >> 0));
-        WriteSmartEeprom8((address+1), (uint8_t)(data >> 8));
-    }
-}
-*/
-
-
-/**
- * \brief Invert a byte in SmartEEPROM
- *
- * To invert the data at the given index in SmartEEPROM
- */
-/*
-void invert_seep_byte(uint8_t index)
-{
-	// Wait till the SmartEEPROM is free 
-	while (NVMCTRL_SmartEEPROM_IsBusy());
-
-	// Read the data, invert it, and write it back 
-	data_8              = SmartEEPROM8[index];
-    
-    if (GetDip4() == true)
-    {
-        printf("\r\nData at test address %d is = %d\r\n", index, (int)data_8);
-    }
-        
-    
-	SmartEEPROM8[index] = !data_8;
-    
-    if (GetDip4() == true)
-    {
-        printf("\r\nInverted the data at test address and written\r\n");
-    }
-        
-}
-*/
-/*
-void ReadSmartEeprom(uint16_t address, uint16_t length)
-{
-    if (address > SEEP_FINAL_BYTE_INDEX) 
-    {   
-        printf("\r\nERROR: Address invalid. Try again \r\n");
-        //return UINT32_MAX;
-    }
-    
-    if (length > MAX_BUFF_SIZE)
-    {
-        printf("\r\nERROR: In this Demo, at a time demo can able to print 256 bytes. Try again \r\n");
-        //return UINT32_MAX;
-    }
-
-    
-    if((address + length) > SEEP_FINAL_BYTE_INDEX)
-    {
-        length    = (SEEP_FINAL_BYTE_INDEX + 1 - address);
-    }
-    
-    for (uint32_t  i = 0; i < length; i++)
-    {
-        eeprom_data_buffer[i]   = SmartEEPROM8[address + i];
-    }
-    
-    printf("\r\nEEPROM Data from location: %d to location: %d: \r\n", (int)address, (int)(address + length - 1));
-    print_hex_array(eeprom_data_buffer, length);
-
-}
-*/
-

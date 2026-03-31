@@ -59,6 +59,8 @@ void debugPI(void)
     
     SYS_CONSOLE_PRINT(" Enable frequency controller:      %s\n",
         ReadSmartEeprom16(SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION) ? "YES" : "NO");
+    SYS_CONSOLE_PRINT(" Enable frequency controller P283:      %s\n",
+        getDataFromMemoryCallable(FREQ_INCREASE_CURVE_SELECTION, MASTER_HEATPUMP_IN_CASCADE) ? "YES" : "NO");    
     
 
     // --------------------------------------------------
@@ -74,7 +76,12 @@ void debugPI(void)
 
     SYS_CONSOLE_PRINT(" Window dt:            %lu s\n",
         v->dt_sec);
-
+  
+    SYS_CONSOLE_PRINT(" P54.:          %i\n", getDataFromMemoryCallable(ADDRESS_HEATING_TARGET_FREQUENCY_CONSTANT_B, MASTER_HEATPUMP_IN_CASCADE));
+    SYS_CONSOLE_PRINT(" P55.:          %i\n", getDataFromMemoryCallable(ADDRESS_HEATING_TARGET_FREQUENCY_UPPER_LIMIT, MASTER_HEATPUMP_IN_CASCADE));
+    SYS_CONSOLE_PRINT(" P56.:          %i\n", getDataFromMemoryCallable(ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT, MASTER_HEATPUMP_IN_CASCADE));
+    SYS_CONSOLE_PRINT(" P66.:          %i\n", getDataFromMemoryCallable(ADDRESS_DC_FAN_INITIAL_FREQUENCY, MASTER_HEATPUMP_IN_CASCADE));
+    
     // --------------------------------------------------
     // TEMPERATURE
     // --------------------------------------------------
@@ -140,98 +147,6 @@ void debugPI(void)
 }
 
 
-
-//void debugPI(void)
-//{
-//                    SYS_CONSOLE_PRINT("\n=== HEATPUMP PI DEBUG ===\n");
-//                
-//                SYS_CONSOLE_PRINT(" Time counter:         %lu s\n", getSecondCounterHeatpumpPowerRegulation());
-//                SYS_CONSOLE_PRINT(" Update interval:      %lu s\n", getHeatingModeData().visualUpdateInterval_sec);
-//                
-//                SYS_CONSOLE_PRINT("\n--- TEMPERATURE ---\n");
-//                
-//                SYS_CONSOLE_PRINT(" Heatpump Setpoint:    %u C\n",
-//                    getHeatpumpHeatingSetpoint());
-//                
-//                SYS_CONSOLE_PRINT(" Temp now:             %ld mC (%.2f C)\n",
-//                    getHeatingModeData().visualTempNow_mC,
-//                    getHeatingModeData().visualTempNow_mC / 1000.0f);
-//                
-//                SYS_CONSOLE_PRINT(" Delta to Set:         %ld mC (%.2f C)\n",
-//                    getHeatingModeData().visualDeltaToSetpoint_mC,
-//                    getHeatingModeData().visualDeltaToSetpoint_mC / 1000.0f);
-//
-//                SYS_CONSOLE_PRINT(" Temp previous:        %ld mC (%.2f C)\n",
-//                    getHeatingModeData().visualTempPrev_mC,
-//                    getHeatingModeData().visualTempPrev_mC / 1000.0f);
-//
-//                SYS_CONSOLE_PRINT(" Delta T:              %ld mC (%.3f C)\n",
-//                    getHeatingModeData().visualdT_mC,
-//                    getHeatingModeData().visualdT_mC / 1000.0f);
-//
-//                SYS_CONSOLE_PRINT(" Delta time:           %lu s\n",
-//                    getHeatingModeData().visualdt_sec);
-//                
-//                SYS_CONSOLE_PRINT(" Startup seconds:      %lu s\n",
-//                    getHeatingModeData().visualStartupSeconds);
-//
-//
-//                SYS_CONSOLE_PRINT("\n--- SLOPE ---\n");
-//                SYS_CONSOLE_PRINT(" Target slope:         %ld mC/min (%.3f C/100min)\n",
-//                    getHeatingModeData().visualSlopeTarget_mC_min,
-//                    getHeatingModeData().visualSlopeTarget_mC_min * 100 / 1000.0f);
-//
-//                SYS_CONSOLE_PRINT(" Measured slope:       %ld mC/min (%.3f C/100min)\n",
-//                    getHeatingModeData().visualSlopeMeas_mC_min,
-//                    getHeatingModeData().visualSlopeMeas_mC_min * 100 / 1000.0f);
-//
-//                SYS_CONSOLE_PRINT(" Error:                %ld mC/min\n",
-//                    getHeatingModeData().visualError_mC_min);
-//
-//
-//                SYS_CONSOLE_PRINT("\n--- PI OUTPUT ---\n");
-//                SYS_CONSOLE_PRINT(" P term:               %ld (x1000 Hz)\n",
-//                    getHeatingModeData().visualP_Hz_x1000);
-//
-//                SYS_CONSOLE_PRINT(" I term:               %ld (x1000 Hz)\n",
-//                    getHeatingModeData().visualI_Hz_x1000);
-//
-//                SYS_CONSOLE_PRINT(" Output:               %ld Hz\n",
-//                    getHeatingModeData().visualU_Hz);
-//                
-//                SYS_CONSOLE_PRINT(" MaxUp:                %ld Hz\n",
-//                    getHeatingModeData().visualMaxStepUp_Hz);
-//                
-//                SYS_CONSOLE_PRINT(" MaxDown:              %ld Hz\n",
-//                    getHeatingModeData().visualMaxStepDown_Hz);
-//
-//
-//                SYS_CONSOLE_PRINT("\n--- FREQUENCY ---\n");
-//                SYS_CONSOLE_PRINT(" Frequency before:     %u Hz\n",
-//                    getHeatingModeData().visualFreqBefore);
-//
-//                SYS_CONSOLE_PRINT(" Frequency after:      %u Hz\n",
-//                    getHeatingModeData().visualFreqAfter);
-//                
-//                SYS_CONSOLE_PRINT(" Target frequency:     %u Hz\n",
-//                    getHeatpumpTargetFrequency());
-//                
-//                SYS_CONSOLE_PRINT(" Running frequency:    %u Hz\n",
-//                    getHeatpumpCompressorFrequency(0));
-//
-//                SYS_CONSOLE_PRINT("\n--- EVENTS ---\n");
-//                SYS_CONSOLE_PRINT(" Flags raw:            0x%02X\n",
-//                    getHeatingModeData().visualEventFlags);
-//
-//                SYS_CONSOLE_PRINT("  Time reached:        %s\n",
-//                    (getHeatingModeData().visualEventFlags & 0x01) ? "YES" : "NO");
-//
-//                SYS_CONSOLE_PRINT("  Step reached (0.2C): %s\n",
-//                    (getHeatingModeData().visualEventFlags & 0x02) ? "YES" : "NO");
-//
-//                SYS_CONSOLE_PRINT("  Temp dropped:        %s\n",
-//                    (getHeatingModeData().visualEventFlags & 0x04) ? "YES" : "NO");
-//}
  
  void printDebugInfo() {
     //printCustomEepromParameters();
@@ -561,19 +476,37 @@ void checkHeatpumpTargetFrequency() {
         return;
     }
     
-    if (HPPI_GetCompressorTargetFrequency() != getHeatpumpTargetFrequency() && HPPI_GetCompressorTargetFrequency() != UINT8_MAX) {   
-        // Target frequency is not correct
-        ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_CONSTANT_B, HPPI_GetCompressorTargetFrequency());
-    }    
-
-    if (HPPI_GetCompressorTargetFrequency() != getHeatpumpTargetFrequency() && HPPI_GetCompressorTargetFrequency() != UINT8_MAX) {   
-        // Target frequency is not correct
-        ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_UPPER_LIMIT, HPPI_GetCompressorTargetFrequency());
-    }
-    
-    if (HPPI_GetCompressorTargetFrequency() != getHeatpumpMinimumFrequency() && HPPI_GetCompressorTargetFrequency() != UINT8_MAX) {   
-        // Minimum frequency is not correct
-        ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT, HPPI_GetCompressorTargetFrequency());
+    if ((ReadSmartEeprom16(SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION) == true) 
+            && ((getDataFromMemoryCallable(FREQ_INCREASE_CURVE_SELECTION, MASTER_HEATPUMP_IN_CASCADE) == 0) || (getDataFromMemoryCallable(FREQ_INCREASE_CURVE_SELECTION, MASTER_HEATPUMP_IN_CASCADE) == UINT16_MAX))
+            && ((ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE) == HEATING) || ((ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE) == HOT_WATER_HEATING) && (getHotWaterHeatingModeData().state <= 5)))) {
+        if (HPPI_GetCompressorTargetFrequency() != getHeatpumpTargetFrequency() && HPPI_GetCompressorTargetFrequency() != UINT8_MAX) {   
+            
+            if (getDataFromMemoryCallable(ADDRESS_DC_FAN_INITIAL_FREQUENCY, MASTER_HEATPUMP_IN_CASCADE) != 25) {
+                ChangeHeatpumpSetting(ADDRESS_DC_FAN_INITIAL_FREQUENCY, 25);
+            }
+            // Target frequency is not correct
+            if (HPPI_GetCompressorTargetFrequency() <= 50) {
+                ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_UPPER_LIMIT, 50);
+            } else {
+                ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_UPPER_LIMIT, HPPI_GetCompressorTargetFrequency());
+            }
+            
+            ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_CONSTANT_B, HPPI_GetCompressorTargetFrequency());
+            ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT, HPPI_GetCompressorTargetFrequency());
+        }    
+    } else {
+        if (getDataFromMemoryCallable(ADDRESS_DC_FAN_INITIAL_FREQUENCY, MASTER_HEATPUMP_IN_CASCADE) != ReadSmartEeprom16(SEEP_ADDR_INITIAL_FAN_SPEED)) {
+            ChangeHeatpumpSetting(ADDRESS_DC_FAN_INITIAL_FREQUENCY, ReadSmartEeprom16(SEEP_ADDR_INITIAL_FAN_SPEED));
+        }
+        if (getDataFromMemoryCallable(ADDRESS_HEATING_TARGET_FREQUENCY_CONSTANT_B, MASTER_HEATPUMP_IN_CASCADE) != ReadSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY_CONSTANT_B)) {
+            ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_CONSTANT_B, ReadSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY_CONSTANT_B));
+        }
+        if (getDataFromMemoryCallable(ADDRESS_HEATING_TARGET_FREQUENCY_UPPER_LIMIT, MASTER_HEATPUMP_IN_CASCADE) != ReadSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY)) {
+            ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_UPPER_LIMIT, ReadSmartEeprom16(SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY));
+        }
+        if (getDataFromMemoryCallable(ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT, MASTER_HEATPUMP_IN_CASCADE) != ReadSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY)) {
+            ChangeHeatpumpSetting(ADDRESS_HEATING_TARGET_FREQUENCY_LOWER_LIMIT, ReadSmartEeprom16(SEEP_ADDR_MINIMUM_TARGET_COMPRESSOR_FREQUENCY));
+        }
     }
 
     setWriteHeatpumpTargetFrequencyCounter(0); 
