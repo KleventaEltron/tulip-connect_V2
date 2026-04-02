@@ -42,6 +42,9 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
 
 bool factorySettingResetInProgress = false;
 
+bool HeatingElementOnTestMode = false;
+bool HotWaterElementOnTestMode = false;
+
 
 void debugPI(void)
 {
@@ -405,12 +408,177 @@ void debugPI(void)
     }
  }
  
+bool getHeatingElementOnTestMode() {
+    return HeatingElementOnTestMode;
+}
+
+bool getHotWaterElementOnTestMode() {
+    return HotWaterElementOnTestMode;
+}
+ 
+void checkIfTestModeDoSomething(void)
+{
+    // Wat doet de warmtepomp als je deze functie bedient? Moeten we hier rekening mee houden?
+    // Stel je zet hem aan om het verwarmings relay te testen, en tijd (30 minuten) verstrijkt, moet deze bit dan ook weer op false geschreven worden?
+    
+    // Werking:
+    // - Inlezen van de bit via getManualElectricHeaterMode();
+    // - Als de bit ineens hoog is en de timer >= 10 seconden, vewarmings element aan zetten.
+    // - Als de bit nu laag wordt ingelezen, vewarmingselement uit zetten en timer resetten.
+    // - Als actieve modus ook tapwater bevat en de bit wordt nogmaal hoog, binnen 20 seconden van dat de eerste keer de bit hoog werd, mag nu de tapwater elmeent aan. 
+    // - Als de bit nu laag wordt ingelezen, tapwater element uit zetten en timer resetten.
+    
+    // Timer functies:
+    // uint32_t getSecondCounterLegionella();
+    // void setSecondCounterLegionella(uint32_t value);
+    
+    static bool previousBit = false;
+    static bool firstHighDetected = false;
+    static bool secondHighDetected = false;
+    static uint32_t firstHighTime = 0;
+    
+    // 30 minuten beveiliging
+    static bool elementOnTimerRunning = false;
+    static uint32_t elementOnStartTime = 0U;
+    
+    bool currentBit = getManualElectricHeaterMode();
+    uint32_t now = getRelaysTestModeCounter();
+    
+    bool risingEdge  = (currentBit == true)  && (previousBit == false);
+    bool fallingEdge = (currentBit == false) && (previousBit == true);
+    
+    bool anyElementOn = (HeatingElementOnTestMode == true) || (HotWaterElementOnTestMode == true);
+    
+    /* =========================================================
+     * 30 minuten timeout:
+     * als 1 van beide elementen aan staat, mag dat max 1800s
+     * ========================================================= */
+    if (elementOnTimerRunning && ((now - elementOnStartTime) >= 60))
+    {
+        HeatingElementOnTestMode = false;
+        HotWaterElementOnTestMode = false;
+
+        firstHighTime = 0;
+        firstHighDetected = false;
+        secondHighDetected = false;
+
+        elementOnTimerRunning = false;
+        elementOnStartTime = 0;
+
+        previousBit = currentBit;
+        return;
+    }
+
+    
+    /* =========================================================
+     * 20s venster verlopen -> volledige reset
+     * ========================================================= */
+    if (firstHighDetected && !secondHighDetected && ((now - firstHighTime) > 20U))
+    {
+        firstHighDetected = false;
+        secondHighDetected = true; /* blokkeer verdere "tweede hoog" acties */
+    }
+    
+    /* =========================================================
+     * Eerste keer hoog -> heating aan
+     * ========================================================= */
+    if (risingEdge && !firstHighDetected)
+    {
+        HeatingElementOnTestMode = true;
+        HotWaterElementOnTestMode = false;
+
+        firstHighTime = now;
+        firstHighDetected = true;
+        secondHighDetected = false;
+        
+        // Start max 30 min timer zodra een element aan gaat 
+        elementOnTimerRunning = true;
+        elementOnStartTime = now;
+    }
+    /* =========================================================
+     * Tweede keer hoog binnen 20s
+     * - met tapwatermodus -> hot water aan
+     * - zonder tapwatermodus -> heating opnieuw aan
+     * ========================================================= */
+    else if (risingEdge && firstHighDetected && !secondHighDetected)
+    {
+        if ((now - firstHighTime) <= 20){
+            // Within 20 seconds
+            if (app_active_mode_controllerData.currentRunningMode == HOT_WATER
+                || app_active_mode_controllerData.currentRunningMode == HOT_WATER_COOLING
+                || app_active_mode_controllerData.currentRunningMode == HOT_WATER_HEATING)
+            {
+                // Tapwater mode active
+                HotWaterElementOnTestMode = true;
+            }
+            else
+            {
+                // Geen tapwatermodus: heating opnieuw aanzetten 
+                HeatingElementOnTestMode = true;
+            }
+            
+            secondHighDetected = true;
+            
+            // Als er nu een element aan gaat en timer liep nog niet, start hem
+            if (!elementOnTimerRunning)
+            {
+                elementOnTimerRunning = true;
+                elementOnStartTime = now;
+            }
+        }
+    }
+    
+    /* =========================================================
+     * Bij laag: uitgangen laag
+     * ========================================================= */
+    if (fallingEdge || !currentBit)
+    {
+        HeatingElementOnTestMode = false;
+        HotWaterElementOnTestMode = false;
+    }
+    
+    /* =========================================================
+     * Na tweede activatie en daarna laag -> volledige reset
+     * ========================================================= */
+    if ((!currentBit) && secondHighDetected)
+    {
+        firstHighTime = 0;
+        firstHighDetected = false;
+        secondHighDetected = false;
+        
+        elementOnTimerRunning = false;
+        elementOnStartTime = 0U;
+    }
+    
+    /* =========================================================
+     * Bewaak de 30 min timer op basis van actuele uitgangen
+     * ========================================================= */
+    anyElementOn = (HeatingElementOnTestMode == true) || (HotWaterElementOnTestMode == true);
+
+    if (anyElementOn)
+    {
+        if (!elementOnTimerRunning)
+        {
+            elementOnTimerRunning = true;
+            elementOnStartTime = now;
+        }
+    }
+    else
+    {
+        elementOnTimerRunning = false;
+        elementOnStartTime = 0U;
+    }
+    
+    previousBit = currentBit;
+}
+
  void checkHeatingElementOrHybridStates() {
     
      // Heating element
     if ((getHeatingElementBoolFromHotwaterHeatingMode() == true) || 
             (getHeatingElementBoolFromHeatingMode() == true)     || 
-            (getHeatingElementBoolFromEmergencyMode() == true)) {
+            (getHeatingElementBoolFromEmergencyMode() == true)   ||
+            (getHeatingElementOnTestMode() == true)) {
         //TurnOnHeatingElementHeatingBuffer();
         TurnOnAuxiliaryHeatingSource();
     }
@@ -425,6 +593,7 @@ void debugPI(void)
             (getHotwaterElementBoolFromHotwaterMode() == true) ||
             (getDefrostingElementOnState() == true) ||
             (getSterilizationElementOnState() == true) ||
+            (getHotWaterElementOnTestMode() == true) ||
             (getHotWaterElementBoolFromEmergencyMode() == true)) {
         TurnOnHeatingElementHotWaterBuffer();
     } else {
@@ -984,6 +1153,7 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
      * 
      *
      */
+    checkIfTestModeDoSomething();
     checkHeatingElementOrHybridStates();
     
     

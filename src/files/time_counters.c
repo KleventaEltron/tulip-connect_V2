@@ -28,6 +28,7 @@ uint32_t writeHeatpumpRunningModeCounter = UINT32_MAX;
 uint32_t writeHeatpumpForcedOffCounter = UINT32_MAX;
 uint32_t WaitingTurningHeatpumpOnCounter = UINT32_MAX;
 uint32_t checkHeatpumpStaticSettingsCounter = UINT32_MAX;
+uint32_t RelaysTestModeCounter = UINT32_MAX;
 
 //static uint32_t SecondCounterFtp = UINT32_MAX;
 //static uint32_t SecondCounterResetSoftware = UINT32_MAX;
@@ -61,6 +62,7 @@ void InitTimerCounters ( void )
     SecondCounterLoggingSDCard = 150;
     //SecondCounterFtp = 0;
     //SecondCounterResetSoftware = 0;
+    RelaysTestModeCounter = 0;
     
     TC1_TimerCallbackRegister(TC1_Callback_InterruptHandler, (uintptr_t)NULL);
     TC1_TimerStart();
@@ -214,6 +216,10 @@ void UpdateCounters ( void )
             if (SecondCounterHeatpumpPowerRegulation >= 0 && SecondCounterHeatpumpPowerRegulation < UINT32_MAX) {
                 SecondCounterHeatpumpPowerRegulation++;
             }
+            
+            if (RelaysTestModeCounter >= 0 && RelaysTestModeCounter < UINT32_MAX) {
+                RelaysTestModeCounter++;
+            }
         }   
         if (SecondCounterDelayAfterChangingSettings >= 0 && SecondCounterDelayAfterChangingSettings < UINT32_MAX) {
             SecondCounterDelayAfterChangingSettings++;
@@ -334,6 +340,14 @@ uint32_t getWriteHeatpumpTargetFrequencyCounter() {
 
 void setWriteHeatpumpTargetFrequencyCounter(uint32_t value) {
     writeHeatpumpTargetFrequencyCounter = value;
+}
+
+uint32_t getRelaysTestModeCounter() {
+    return RelaysTestModeCounter;
+}
+
+void setRelaysTestModeCounter(uint32_t value) {
+    RelaysTestModeCounter = value;
 }
 
 bool LedsTimerExpired ( void )
