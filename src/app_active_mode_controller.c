@@ -418,20 +418,6 @@ bool getHotWaterElementOnTestMode() {
  
 void checkIfTestModeDoSomething(void)
 {
-    // Wat doet de warmtepomp als je deze functie bedient? Moeten we hier rekening mee houden?
-    // Stel je zet hem aan om het verwarmings relay te testen, en tijd (30 minuten) verstrijkt, moet deze bit dan ook weer op false geschreven worden?
-    
-    // Werking:
-    // - Inlezen van de bit via getManualElectricHeaterMode();
-    // - Als de bit ineens hoog is en de timer >= 10 seconden, vewarmings element aan zetten.
-    // - Als de bit nu laag wordt ingelezen, vewarmingselement uit zetten en timer resetten.
-    // - Als actieve modus ook tapwater bevat en de bit wordt nogmaal hoog, binnen 20 seconden van dat de eerste keer de bit hoog werd, mag nu de tapwater elmeent aan. 
-    // - Als de bit nu laag wordt ingelezen, tapwater element uit zetten en timer resetten.
-    
-    // Timer functies:
-    // uint32_t getSecondCounterLegionella();
-    // void setSecondCounterLegionella(uint32_t value);
-    
     static bool previousBit = false;
     static bool firstHighDetected = false;
     static bool secondHighDetected = false;
@@ -473,10 +459,10 @@ void checkIfTestModeDoSomething(void)
     /* =========================================================
      * 20s venster verlopen -> volledige reset
      * ========================================================= */
-    if (firstHighDetected && !secondHighDetected && ((now - firstHighTime) > 20U))
+    if (firstHighDetected && !secondHighDetected && ((now - firstHighTime) > 20))
     {
         firstHighDetected = false;
-        secondHighDetected = true; /* blokkeer verdere "tweede hoog" acties */
+        secondHighDetected = false;
     }
     
     /* =========================================================
