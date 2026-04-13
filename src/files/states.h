@@ -326,6 +326,8 @@ typedef struct{
 
 bool getDoFirstTimeHeatpumpCommunicationSettings(void);
 void setDoFirstTimeHeatpumpCommunicationSettings(bool value);
+bool getManualElectricHeaterDisplaySelected();
+void setManualElectricHeaterDisplaySelected(bool value);
 void resetActiveModeStates();
 uint16_t getActiveStateFromActiveMode(RUNNING_MODES state);
 const char * getActiveModeToString(RUNNING_MODES state);
