@@ -43,6 +43,19 @@ extern APP_ACTIVE_MODE_CONTROLLER_DATA app_active_mode_controllerData;
 bool factorySettingResetInProgress = false;
 
 
+void debugPowerConsumption(void) {
+    for (int i = START_ADDRESS_POWER_CONSUMPTION; i < (START_ADDRESS_POWER_CONSUMPTION + REGISTERS_AMOUNT_POWER_CONSUMPTION); i++) {
+        SYS_CONSOLE_PRINT(" P:      %i\n", getDataFromMemoryCallable(i, MASTER_HEATPUMP_IN_CASCADE));    
+    }
+    
+    SYS_CONSOLE_PRINT("END\n\n");
+//    SYS_CONSOLE_PRINT(" PICH:      %i\n", getDataFromMemoryCallable(ADDRESS_HIGH_CUMULATIVE_ELECTRICITY_CONSUMPTION_OF_INDOOR_UNIT, MASTER_HEATPUMP_IN_CASCADE));    
+//    SYS_CONSOLE_PRINT(" PICL:      %i\n", getDataFromMemoryCallable(ADDRESS_LOW_CUMULATIVE_ELECTRICITY_CONSUMPTION_OF_INDOOR_UNIT, MASTER_HEATPUMP_IN_CASCADE));    
+//    SYS_CONSOLE_PRINT(" POCH:      %i\n", getDataFromMemoryCallable(ADDRESS_OUTDOOR_UNIT_HIGH_CUMULATIVE_ELECTRICITY_CONSUMPTION, MASTER_HEATPUMP_IN_CASCADE));    
+//    SYS_CONSOLE_PRINT(" POCL:      %i\n\n", getDataFromMemoryCallable(ADDRESS_OUTDOOR_UNIT_LOW_CUMULATIVE_ELECTRICITY_CONSUMPTION, MASTER_HEATPUMP_IN_CASCADE));    
+}
+
+
 void debugPI(void)
 {
     const HeatpumpPI_Visuals *v = HPPI_GetVisuals();
@@ -151,6 +164,7 @@ void debugPI(void)
  void printDebugInfo() {
     //printCustomEepromParameters();
     if (DebugDipSwitch() == true) {
+        debugPowerConsumption();
         /*
         SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
         SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
@@ -312,7 +326,8 @@ void debugPI(void)
 //                SYS_CONSOLE_PRINT(" Setpoint in HP:       %i\n", getHeatpumpHeatingSetpoint() * 10);
 //                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, MASTER_HEATPUMP_IN_CASCADE));
 //                SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getSecondCounterHeatingTask());
-                debugPI();
+                //debugPI();
+                //debugPowerConsumption();
                 //SYS_CONSOLE_PRINT(" comp cummulative HIGH:          %i\n\n", getDataFromMemoryCallable(COMPRESSOR_CUMMULATIVE_RUNNING_TIME_HIGH_BIT, MASTER_HEATPUMP_IN_CASCADE));
                 //SYS_CONSOLE_PRINT(" comp cummulative LOW:          %i\n\n", getDataFromMemoryCallable(COMPRESSOR_CUMMULATIVE_RUNNING_TIME_LOW_BIT, MASTER_HEATPUMP_IN_CASCADE));
                 //SYS_CONSOLE_PRINT(" WATER_PUMP_OUTPUT_PERCENTAGE:      %i\n\n", getDataFromMemoryCallable(WATER_PUMP_OUTPUT_PERCENTAGE, MASTER_HEATPUMP_IN_CASCADE));
@@ -343,7 +358,8 @@ void debugPI(void)
 
             if (heatpumpMode == HOT_WATER_HEATING) {
                 SYS_CONSOLE_PRINT("\r\nHOTWATER AND HEATING:\n");
-                debugPI();
+                //debugPI();
+                //debugPowerConsumption();
 //                SYS_CONSOLE_PRINT(" State:                %s\n\n", getHotwaterHeatingStateToString());
 //                
 //                SYS_CONSOLE_PRINT(" Heating setpoint:     %i\n", getHeatingSetpoint());

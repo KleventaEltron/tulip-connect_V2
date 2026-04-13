@@ -238,6 +238,11 @@ static uint16_t getDataFromMemory(uint16_t address, uint8_t whichHeatpump)
         address -= START_ADDRESS_VERSION_INFORMATION;
         returnData = VersionInformation[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY];
     }
+    else if ((address >= START_ADDRESS_POWER_CONSUMPTION) && (address < START_ADDRESS_POWER_CONSUMPTION + REGISTERS_AMOUNT_POWER_CONSUMPTION))
+    {
+        address -= START_ADDRESS_POWER_CONSUMPTION;
+        returnData = PowerConsumption[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY];
+    }    
     else if ((address >= START_ADDRESS_UNIT_SYSTEM_PARAMETER_L) && (address < START_ADDRESS_UNIT_SYSTEM_PARAMETER_L + REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETER_L))
     {
         address -= START_ADDRESS_UNIT_SYSTEM_PARAMETER_L;
@@ -309,73 +314,99 @@ uint16_t getDataFromMemoryCallable(uint16_t address, uint16_t heatpumpId){
 }
 
 
+#define DLT645_START_BYTE         0x68
+#define DLT645_END_BYTE           0x16
+#define DLT645_MIN_FRAME_SIZE     12
+
 uint8_t FillTransmitBuffer(uint8_t* txBuffer, uint8_t* rxBuffer)
 {
     uint8_t size = 0;
-    //uint8_t i = 0;
     uint16_t checksum;
+    const DLT645_FRAME_DATA *pDlt645Frame = DLT645_FrameGet();
     
+    
+    
+        uint8_t modbusAddress = rxBuffer[MODBUS_ADDRESS_INDEX];
+        uint16_t amountOfRegisters = ((uint16_t)rxBuffer[MODBUS_REG_AMOUNT_MSB_INDEX] << 8) +
+                                      rxBuffer[MODBUS_REG_AMOUNT_LSB_INDEX];
+        uint16_t readRegisterAddress = ((uint16_t)rxBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] << 8) +
+                                        rxBuffer[MODBUS_REG_ADDRESS_LSB_INDEX];
+        
+    
+    
+    if ((pDlt645Frame != NULL) &&
+        POWER_CONSUMPTION_RESPONSE_TO_DISPLAY &&
+        (pDlt645Frame->length > 0U))
+    {
+        SYS_CONSOLE_PRINT("DLT FRAME (%d bytes):\r\n", pDlt645Frame->length);
+
+        for (uint16_t i = 0; i < pDlt645Frame->length; i++)
+        {
+            SYS_CONSOLE_PRINT("%02X ", pDlt645Frame->frame[i]);
+        }
+
+        SYS_CONSOLE_PRINT("\r\n");
+
+        memcpy(txBuffer, pDlt645Frame->frame, pDlt645Frame->length);
+        size = (uint8_t)pDlt645Frame->length;
+
+        POWER_CONSUMPTION_RESPONSE_TO_DISPLAY = false;
+        return size;
+    }
+
     if (rxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_WRITE_REG)
     {
-         
-        /*
-        if (Setting.settingStatus == SETTING_SEND_STATUS_IDLE)
-        {
-            Setting.modbusDeviceAddress = rxBuffer[MODBUS_ADDRESS_INDEX];
-            Setting.modbusCommand = rxBuffer[MODBUS_COMMAND_INDEX];
-            Setting.modbusWriteRegister = ((uint16_t)rxBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] << 8) + rxBuffer[MODBUS_REG_ADDRESS_LSB_INDEX];
-            Setting.modbusWriteData = ((uint16_t)rxBuffer[MODBUS_MOD_DATA_MSB_INDEX] << 8) + rxBuffer[MODBUS_MOD_DATA_LSB_INDEX];
-            Setting.settingStatus = SETTING_SEND_STATUS_SETTING_FILLED;
-
-            memcpy(&txBuffer[0], &rxBuffer[0], 8);
-            size = 8;
-        }
-        */
-        
+        SYS_CONSOLE_PRINT("WRITE (address %d, amount %d)\r\n", readRegisterAddress, amountOfRegisters);
         memcpy(&txBuffer[0], &rxBuffer[0], 8);
         size = 8;
     }
     else if (rxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_READ_REGS)
     {
+        SYS_CONSOLE_PRINT("READING (address %d, amount %d)\r\n", readRegisterAddress, amountOfRegisters);
         uint16_t data;
         uint8_t j = 3;
-        uint8_t modbusAddress = rxBuffer[MODBUS_ADDRESS_INDEX];
-        uint16_t amountOfRegisters = ((uint16_t)rxBuffer[MODBUS_REG_AMOUNT_MSB_INDEX] << 8) + rxBuffer[MODBUS_REG_AMOUNT_LSB_INDEX]; 
-        uint16_t readRegisterAddress = ((uint16_t)rxBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] << 8) + rxBuffer[MODBUS_REG_ADDRESS_LSB_INDEX];
-        
-        // Wait for cascade to be configured before starting to send
-        if (getCascadeSlaveStatus() == UINT16_MAX) {
+//        uint8_t modbusAddress = rxBuffer[MODBUS_ADDRESS_INDEX];
+//        uint16_t amountOfRegisters = ((uint16_t)rxBuffer[MODBUS_REG_AMOUNT_MSB_INDEX] << 8) +
+//                                      rxBuffer[MODBUS_REG_AMOUNT_LSB_INDEX];
+//        uint16_t readRegisterAddress = ((uint16_t)rxBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] << 8) +
+//                                        rxBuffer[MODBUS_REG_ADDRESS_LSB_INDEX];
+
+        if (getCascadeSlaveStatus() == UINT16_MAX)
+        {
             return size;
         }
-        
-        // Check if slave requested is a valid adress
+
         uint16_t cascadeMask = getCascadeSlaveStatus();
-        if (!CASCADE_BIT_IS_SET(cascadeMask, (modbusAddress-1)) && modbusAddress != 1) {
+        if ((!CASCADE_BIT_IS_SET(cascadeMask, (modbusAddress - 1))) && (modbusAddress != 1U))
+        {
             return size;
-        }           
-        
-        //txBuffer[MODBUS_ADDRESS_INDEX]          = 0x01;
-        txBuffer[MODBUS_ADDRESS_INDEX]          = modbusAddress;
-        txBuffer[MODBUS_COMMAND_INDEX]          = MB_FC_READ_REGS;
-        txBuffer[MODBUS_BYTES_RETURNED_INDEX]   = (amountOfRegisters << 1);
-        
+        }
+
+        txBuffer[MODBUS_ADDRESS_INDEX]        = modbusAddress;
+        txBuffer[MODBUS_COMMAND_INDEX]        = MB_FC_READ_REGS;
+        txBuffer[MODBUS_BYTES_RETURNED_INDEX] = (uint8_t)(amountOfRegisters << 1);
+
         for (uint16_t i = readRegisterAddress; i < (readRegisterAddress + amountOfRegisters); i++)
         {
             data = getDataFromMemory(i, (modbusAddress - 1));
             txBuffer[j++] = (uint8_t)(data >> 8);
             txBuffer[j++] = (uint8_t)(data >> 0);
-        }               
-        
-        checksum = calculateCRC16(txBuffer, (txBuffer[MODBUS_BYTES_RETURNED_INDEX] + 3));
-        txBuffer[txBuffer[MODBUS_BYTES_RETURNED_INDEX]+3] = (uint8_t)(checksum >> 0);
-        txBuffer[txBuffer[MODBUS_BYTES_RETURNED_INDEX]+4] = (uint8_t)(checksum >> 8);
-        
-        size = (txBuffer[MODBUS_BYTES_RETURNED_INDEX] + 5);
+        }
+
+        checksum = calculateCRC16(txBuffer, (uint16_t)(txBuffer[MODBUS_BYTES_RETURNED_INDEX] + 3U));
+        txBuffer[txBuffer[MODBUS_BYTES_RETURNED_INDEX] + 3U] = (uint8_t)(checksum >> 0);
+        txBuffer[txBuffer[MODBUS_BYTES_RETURNED_INDEX] + 4U] = (uint8_t)(checksum >> 8);
+
+        size = (uint8_t)(txBuffer[MODBUS_BYTES_RETURNED_INDEX] + 5U);
     }
-    else{}
-    
-    return (size);
+    else
+    {
+    }
+
+    return size;
 }
+
+
 
 void GetDataFromHeatpump(void)
 {    
@@ -402,13 +433,16 @@ void GetDataFromHeatpump(void)
     
     for (uint16_t i = 0; i < REGISTERS_AMOUNT_VERSION_INFORMATION; i++)
         VersionInformation[i][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = VersionInformation[i][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+
+    for (uint16_t i = 0; i < REGISTERS_AMOUNT_POWER_CONSUMPTION; i++)
+        PowerConsumption[i][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = PowerConsumption[i][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
     
     for (uint16_t i = 0; i < REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETER_L; i++)
         UnitSystemParameterL[i][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = UnitSystemParameterL[i][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
     
     for (uint16_t i = 0; i < REGISTERS_AMOUNT_COIL_ADDRESSES; i++)
         CoilAddresses[i][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = CoilAddresses[i][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
-    
+  
     // Unknown parameters
     for (uint16_t i = 0; i < REGISTERS_AMOUNT_UNKNOWN_PARAMTERS_1; i++)
         UnknownParameters1[i][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = UnknownParameters1[i][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];

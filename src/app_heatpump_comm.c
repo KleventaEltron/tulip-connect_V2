@@ -74,11 +74,15 @@ void StartReceivingDataFromHeatpump(void) {
 void StartTransmittingDataToHeatpump(uint8_t * txBufferHeatpump) {
     SetOutput(LED_TX_HEATPUMP, true);
     app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_SENDING_DATA_TO_HEATPUMP;
-    if (txBufferHeatpump[0] == 104) {
+
+    if (txBufferHeatpump[0] == 0x68) {
+        //SYS_CONSOLE_PRINT("SENDING DLT645 FRAME TO PUMP\r\n"); 
         SERCOM7_USART_Write(&TxBuffer[0], 16);
-    } else {
-        SERCOM7_USART_Write(&TxBuffer[0], 8);
-    }
+        return;
+    }  
+
+    SERCOM7_USART_Write(&TxBuffer[0], 8);
+    return;
 }
 
 
@@ -95,52 +99,128 @@ void APP_WriteCallback(uintptr_t context) {
 
 void APP_ReadCallback(uintptr_t context)
 {
-    if(SERCOM7_USART_ErrorGet() != USART_ERROR_NONE)
+    if (SERCOM7_USART_ErrorGet() != USART_ERROR_NONE)
     {
         /* ErrorGet clears errors, set error flag to notify console */
+        return;
     }
-    else
+
+    switch (app_heatpump_commData.commStatus)
     {
-        switch (app_heatpump_commData.commStatus)
+        case HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP:
+        {
+            /* Detect protocol from first byte */
+            if (RxBuffer[0] == 0x68U)
             {
-                case HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP:
-                {   // Eerste byte ontvangen, kijken wat dit is
-                    if (RxBuffer[MODBUS_ADDRESS_INDEX] == LastSentModbusAddress)
-                    {   // Als het het address is van de slave, vraag om de 7 andere bytes die hierna komen.
-                        app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DEVICE_ADDRESS_RECEIVED;
-                        SERCOM7_USART_Read(&RxBuffer[MODBUS_COMMAND_INDEX], 7);
-                    }
-                    else
-                    {   // Wacht op volgende eerste byte
-                        SERCOM7_USART_Read(&RxBuffer[MODBUS_ADDRESS_INDEX], 1);
-                    }
-                    break;
-                }
-                case HEATPUMP_COMM_STATUS_DEVICE_ADDRESS_RECEIVED:
-                {
-                    if (RxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_WRITE_REG)
-                    {   // Alle data ontvangen
-                        app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DATA_RECEIVED_FROM_HEATPUMP;
-                    }
-                    else if (RxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_READ_REGS)
-                    {   // Vraag wat nog komt
-                        app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_FIRST_8_BYTES_RECEIVED;
-                        SERCOM7_USART_Read(&RxBuffer[8], (RxBuffer[MODBUS_BYTES_RETURNED_INDEX] - 3)); 
-                    }
-                    else{}
-                    
-                    break;
-                }
-                case HEATPUMP_COMM_STATUS_FIRST_8_BYTES_RECEIVED:
+                //SYS_CONSOLE_PRINT("RECEIVED POSSIBLE DLT645 FRAME FROM PUMP\r\n");
+
+                /* We already have byte 0, now read bytes 1..9
+                   so we can inspect second 0x68 and length byte */
+                app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DLT645_HEADER_RECEIVED;
+                SERCOM7_USART_Read(&RxBuffer[1], 9);
+            }
+            else if (RxBuffer[MODBUS_ADDRESS_INDEX] == LastSentModbusAddress)
+            {
+                /* Modbus slave address matched */
+                app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DEVICE_ADDRESS_RECEIVED;
+                SERCOM7_USART_Read(&RxBuffer[MODBUS_COMMAND_INDEX], 7);
+            }
+            else
+            {
+                /* Wait for next first byte */
+                SERCOM7_USART_Read(&RxBuffer[MODBUS_ADDRESS_INDEX], 1);
+            }
+            break;
+        }
+
+        case HEATPUMP_COMM_STATUS_DEVICE_ADDRESS_RECEIVED:
+        {
+            if (RxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_WRITE_REG)
+            {
+                app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DATA_RECEIVED_FROM_HEATPUMP;
+            }
+            else if (RxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_READ_REGS)
+            {
+                app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_FIRST_8_BYTES_RECEIVED;
+
+                /* For Modbus read response:
+                   total is addr + fc + bytecount + data + crc(2)
+                   here first 8 bytes are already partly read */
+                SERCOM7_USART_Read(&RxBuffer[8], (RxBuffer[MODBUS_BYTES_RETURNED_INDEX] - 3));
+            }
+            else
+            {
+                /* Unknown Modbus function, restart */
+                app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
+                SERCOM7_USART_Read(&RxBuffer[0], 1);
+            }
+            break;
+        }
+
+        case HEATPUMP_COMM_STATUS_FIRST_8_BYTES_RECEIVED:
+        {
+            app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DATA_RECEIVED_FROM_HEATPUMP;
+            break;
+        }
+
+        case HEATPUMP_COMM_STATUS_DLT645_HEADER_RECEIVED:
+        {
+            /* We now have bytes 0..9 */
+            if (RxBuffer[0] == 0x68U && RxBuffer[7] == 0x68U)
+            {
+                uint8_t dataLen = RxBuffer[9];
+                uint8_t remainingLen;
+
+                /* Remaining bytes after first 10 bytes:
+                   data[dataLen] + checksum + end byte */
+                remainingLen = (uint8_t)(dataLen + 2U);
+
+                app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DLT645_REST_RECEIVED;
+                SERCOM7_USART_Read(&RxBuffer[10], remainingLen);
+            }
+            else
+            {
+                SYS_CONSOLE_PRINT("INVALID DLT645 HEADER\r\n");
+                app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
+                SERCOM7_USART_Read(&RxBuffer[0], 1);
+            }
+            break;
+        }
+
+        case HEATPUMP_COMM_STATUS_DLT645_REST_RECEIVED:
+        {
+            uint8_t dataLen  = RxBuffer[9];
+            uint8_t frameLen = (uint8_t)(12U + dataLen);
+
+            if (RxBuffer[frameLen - 1] == 0x16U)
+            {
+                //SYS_CONSOLE_PRINT("VALID DLT645 RESPONSE RECEIVED (%d bytes)\r\n", frameLen);
+
+                if (DLT645_FrameStore(RxBuffer, frameLen) == true)
                 {
                     app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DATA_RECEIVED_FROM_HEATPUMP;
-                    break;
                 }
-                default:
+                else
                 {
-                    break;
-                }   
-            }        
+                    //SYS_CONSOLE_PRINT("FAILED TO STORE DLT645 RESPONSE\r\n");
+                    app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
+                    SERCOM7_USART_Read(&RxBuffer[0], 1);
+                }
+            }
+            else
+            {
+                //SYS_CONSOLE_PRINT("INVALID DLT645 END BYTE\r\n");
+                DLT645_FrameClear();
+                app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
+                SERCOM7_USART_Read(&RxBuffer[0], 1);
+            }
+            break;
+        }
+
+        default:
+        {
+            break;
+        }
     }
 }
 

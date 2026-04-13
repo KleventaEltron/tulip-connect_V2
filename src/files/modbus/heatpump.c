@@ -11,7 +11,7 @@
 #include "../time_counters.h"
 #include "../states.h"
 
-#define COMMUNICATION_ARRAY_NORMAL_ROWS 17
+#define COMMUNICATION_ARRAY_NORMAL_ROWS 18
 #define COMMUNICATION_ARRAY_EXTRA_ROWS_FOR_CASCADE 15
 #define COMMUNICATION_ARRAY_MAX_ROWS (COMMUNICATION_ARRAY_NORMAL_ROWS + COMMUNICATION_ARRAY_EXTRA_ROWS_FOR_CASCADE)
 #define COMMUNICATION_ARRAY_BYTES_PER_MESSAGE 8
@@ -26,6 +26,7 @@ static uint8_t CommunicationArray[COMMUNICATION_ARRAY_MAX_ROWS][COMMUNICATION_AR
     {0x01, 0x03, 0x01, 0x64, 0x00, 0x64, 0x04, 0x02},   // 01 03 01 64 00 64 04 02
     {0x01, 0x03, 0x01, 0xC8, 0x00, 0x64, 0xC4, 0x23},   // 01 03 01 C8 00 64 C4 23
     {0x01, 0x03, 0x03, 0x00, 0x00, 0x69, 0x85, 0xA0},   // 01 03 03 00 00 69 85 A0
+    {0x01, 0x03, 0x03, 0xA0, 0x00, 0x30, 0x45, 0xB8},   // 0x03A0 ? 0x03CF
     // 01 03 08 00 00 10: 0x0800 tm 0x080F  (Unit System Parameter L)   // Zelfde
     // 01 03 00 00 00 5A: 0x0000 tm 0x0059  (Real-time data)            // Zelfde
     // 01 03 00 5A 00 22: 0x005A tm 0x007B  (Real-time data)            // Zelfde
@@ -169,6 +170,11 @@ void saveDataToMemory(uint16_t address, uint16_t data, uint8_t deviceAddress)
         address -= START_ADDRESS_VERSION_INFORMATION;
         VersionInformation[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] = data;
     }
+    else if ((address >= START_ADDRESS_POWER_CONSUMPTION) && (address < START_ADDRESS_POWER_CONSUMPTION + REGISTERS_AMOUNT_POWER_CONSUMPTION))
+    {
+        address -= START_ADDRESS_POWER_CONSUMPTION;
+        PowerConsumption[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] = data;
+    }    
     else if ((address >= START_ADDRESS_UNIT_SYSTEM_PARAMETER_L) && (address < START_ADDRESS_UNIT_SYSTEM_PARAMETER_L + REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETER_L))
     {
         address -= START_ADDRESS_UNIT_SYSTEM_PARAMETER_L;
@@ -286,6 +292,7 @@ void ParseHeatpumpData(uint8_t * txBuffer, uint8_t * rxBuffer)
         }
         else if (rxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_READ_REGS)
         {
+            
             parseReadRegs(txBuffer, rxBuffer);
         }
     }
@@ -295,7 +302,7 @@ void ParseHeatpumpData(uint8_t * txBuffer, uint8_t * rxBuffer)
 void FillTxBuffer(uint8_t * txBuffer)
 {
     static uint8_t i = 0;
-    
+       
     //if (setting.settingStatus == SETTING_SEND_STATUS_SETTING_FILLED)
     if(getSettingsQueuedAmount() > 0)
     {
@@ -313,6 +320,17 @@ void FillTxBuffer(uint8_t * txBuffer)
         
         ChangeFirstSettingStatus(SETTING_SEND_STATUS_SETTING_IS_SENT);
         setWaitForSettingEchoProtection(0);
+    } 
+    else if (POWER_CONSUMPTION_TO_HEATPUMP) {
+        
+        uint8_t powerFrame[] = {
+            0x68, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0x68, 0x11, 0x04, 0x33, 0x34, 0x42, 0x35, 0xBF, 0x16
+        };
+
+        memcpy(txBuffer, powerFrame, sizeof(powerFrame));        
+
+        //SYS_CONSOLE_PRINT("SETTING POWER CONSUMPTION FRAME TO HEATPUMP TX BUFFER\r\n");   
+        POWER_CONSUMPTION_TO_HEATPUMP = false;
     }
     else
     {
@@ -404,6 +422,11 @@ uint16_t getHeatpumpData(uint16_t address)
         address -= START_ADDRESS_VERSION_INFORMATION;
         returnData = VersionInformation[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
     }
+    else if ((address >= START_ADDRESS_POWER_CONSUMPTION) && (address < START_ADDRESS_POWER_CONSUMPTION + REGISTERS_AMOUNT_POWER_CONSUMPTION))
+    {
+        address -= START_ADDRESS_POWER_CONSUMPTION;
+        returnData = PowerConsumption[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }    
     else if ((address >= START_ADDRESS_UNIT_SYSTEM_PARAMETER_L) && (address < START_ADDRESS_UNIT_SYSTEM_PARAMETER_L + REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETER_L))
     {
         address -= START_ADDRESS_UNIT_SYSTEM_PARAMETER_L;

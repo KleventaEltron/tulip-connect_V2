@@ -39,6 +39,11 @@
 #define MODBUS_DATA_START_INDEX         3
 
 
+extern bool POWER_CONSUMPTION_RESPONSE_TO_DISPLAY;
+extern bool POWER_CONSUMPTION_TO_HEATPUMP;
+
+extern bool PAUSE_FRAME_TRIGGERED;
+
 //Function Codes
 enum {
     MB_FC_READ_COILS       = 0x01, // Read Coils (Output) Status 0xxxx
@@ -50,6 +55,25 @@ enum {
     MB_FC_WRITE_COILS      = 0x0F, // Write Multiple Coils (Outputs) 0xxxx
     MB_FC_WRITE_REGS       = 0x10, // Write block of contiguous registers 4xxxx
 };
+
+
+#define DLT645_MAX_FRAME_SIZE    255U
+
+typedef struct
+{
+    uint8_t  frame[DLT645_MAX_FRAME_SIZE];
+    uint16_t length;
+    bool     pending;
+} DLT645_FRAME_DATA;
+
+/* Global shared frame storage */
+extern DLT645_FRAME_DATA g_dlt645FrameData;
+
+/* Helper API */
+void DLT645_FrameInit(void);
+bool DLT645_FrameStore(const uint8_t *src, uint16_t len);
+void DLT645_FrameClear(void);
+const DLT645_FRAME_DATA *DLT645_FrameGet(void);
 
 /*
 struct CommFromDisplay 

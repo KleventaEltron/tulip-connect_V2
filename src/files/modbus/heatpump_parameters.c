@@ -17,6 +17,7 @@ uint16_t UnitSystemParameters   [REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETERS]   [PAR
 uint16_t UserParameters         [REGISTERS_AMOUNT_USER_PARAMETERS]          [PARAMETERS_ARRAY_LENGTH]; 
 uint16_t UserOrder              [REGISTERS_AMOUNT_USER_ORDER]               [PARAMETERS_ARRAY_LENGTH]; 
 uint16_t VersionInformation     [REGISTERS_AMOUNT_VERSION_INFORMATION]      [PARAMETERS_ARRAY_LENGTH]; 
+uint16_t PowerConsumption       [REGISTERS_AMOUNT_POWER_CONSUMPTION]        [PARAMETERS_ARRAY_LENGTH];
 uint16_t UnitSystemParameterL   [REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETER_L]  [PARAMETERS_ARRAY_LENGTH]; 
 uint16_t CoilAddresses          [REGISTERS_AMOUNT_COIL_ADDRESSES]           [PARAMETERS_ARRAY_LENGTH]; 
 
@@ -246,6 +247,12 @@ void SetDataInArrays(uint16_t address, uint16_t data)
         VersionInformation[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] = data;
         VersionInformation[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = data;
     }
+    else if ((address >= START_ADDRESS_POWER_CONSUMPTION) && (address < START_ADDRESS_POWER_CONSUMPTION + REGISTERS_AMOUNT_POWER_CONSUMPTION))
+    {
+        address -= START_ADDRESS_POWER_CONSUMPTION;
+        PowerConsumption[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] = data;
+        PowerConsumption[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = data;
+    }    
     else if ((address >= START_ADDRESS_UNIT_SYSTEM_PARAMETER_L) && (address < START_ADDRESS_UNIT_SYSTEM_PARAMETER_L + REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETER_L))
     {
         address -= START_ADDRESS_UNIT_SYSTEM_PARAMETER_L;

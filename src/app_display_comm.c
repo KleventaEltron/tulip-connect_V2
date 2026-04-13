@@ -57,6 +57,7 @@ static volatile uint32_t ResponseDelay = 0;
 static volatile uint32_t CommunicationWindowSecondCounter = 0;
 static volatile uint32_t CommunicationTimeOutCounter = 0;
 
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Callback Functions
@@ -72,6 +73,20 @@ void APP_WriteCallbackDisplay(uintptr_t context)
     //}
 }
 
+
+static bool IsExactFFFrame(const uint8_t *buf)
+{
+    static const uint8_t frame[8] = {0xFF, 0x03, 0x00, 0x00, 0x00, 0x1E, 0xD0, 0x1C};
+
+    if (buf == NULL)
+    {
+        return false;
+    }
+
+    return (memcmp(buf, frame, 8) == 0);
+}
+
+
 //static void APP_ReadCallbackDisplay(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
 void APP_ReadCallbackDisplay(uintptr_t context)
 {
@@ -80,6 +95,7 @@ void APP_ReadCallbackDisplay(uintptr_t context)
         if(SERCOM1_USART_ErrorGet() == USART_ERROR_NONE)
         {   // ErrorGet clears errors, set error flag to notify console
             //errorStatus = true;
+            
             switch (app_display_commData.commStatus)
             {
                 case DISPLAY_COMM_STATUS_WAITING_FOR_DATA_FROM_DISPLAY:
@@ -92,31 +108,24 @@ void APP_ReadCallbackDisplay(uintptr_t context)
                             (const void *)&SERCOM1_REGS->USART_INT.SERCOM_DATA, \
                             &RxBuffer[1], 7);*/
                     }
-                    else if (RxBuffer[0] == 104)
-                    {   // Soms stuurt display 104, wat het betekend weet ik niet, maar wacht op de volgende 15 bytes en stuurd het door
+                    else if (RxBuffer[0] == POWER_CONSUMPTION_FRAME)
+                    {
+                        POWER_CONSUMPTION_RESPONSE_TO_DISPLAY = true;
+                        POWER_CONSUMPTION_TO_HEATPUMP = true;
                         app_display_commData.commStatus = DISPLAY_COMM_STATUS_104_RECEIVED;
                         SERCOM1_USART_Read(&RxBuffer[1], 15);
-                        /*DMAC_ChannelTransfer(DMAC_CHANNEL_2, \
-                            (const void *)&SERCOM1_REGS->USART_INT.SERCOM_DATA, \
-                            &RxBuffer[1], 15);*/
+
+                        //SYS_CONSOLE_PRINT("RECEIVED DLT645 FRAME FROM DISPLAY\r\n");
                     }
-                    else if (RxBuffer[0] == 255)
-                    {   // Soms stuurt display 255, wat het betekend weet ik niet, maar stuur het door
+                    else if (RxBuffer[0] == 0xFF)
+                    {   
                         app_display_commData.commStatus = DISPLAY_COMM_STATUS_255_RECEIVED;
                         
                         SERCOM1_USART_Read(&RxBuffer[1], 7);
-                        /*DMAC_ChannelTransfer(DMAC_CHANNEL_2, \
-                            (const void *)&SERCOM1_REGS->USART_INT.SERCOM_DATA, \
-                            &RxBuffer[1], 7);*/
                     }
                     else
                     {   
                         SERCOM1_USART_Read(&RxBuffer[0], 1);
-                        //SERCOM1_USART_Write(&TxBuffer[0], sizeOfBuffer);
-                        // Wacht op volgende eerste byte
-                        /*DMAC_ChannelTransfer(DMAC_CHANNEL_2, \
-                            (const void *)&SERCOM1_REGS->USART_INT.SERCOM_DATA, \
-                            &RxBuffer[0], 1);*/
                     }
                     break;
                 }
@@ -127,13 +136,33 @@ void APP_ReadCallbackDisplay(uintptr_t context)
                 }
                 case DISPLAY_COMM_STATUS_104_RECEIVED:
                 {
-                    app_display_commData.commStatus = DISPLAY_COMM_STATUS_UNKNOWN_DATA_RECEIVED_FROM_DISPLAY;
+                    app_display_commData.commStatus = DISPLAY_COMM_STATUS_DATA_RECEIVED_FROM_DISPLAY;
+                                            // Print full frame (16 bytes total)
+//                    SYS_CONSOLE_PRINT("DLT645 RX: ");
+//                    for (uint8_t i = 0; i < 16; i++)
+//                    {
+//                        SYS_CONSOLE_PRINT("%02X ", RxBuffer[i]);
+//                     }
+//                     SYS_CONSOLE_PRINT("\r\n");
                     break;
                 }
                 case DISPLAY_COMM_STATUS_255_RECEIVED:
                 {
                     app_display_commData.commStatus = DISPLAY_COMM_STATUS_UNKNOWN_DATA_RECEIVED_FROM_DISPLAY;
-                    break;
+//                    if (IsExactFFFrame(RxBuffer) == true)
+//                    {
+//                        //SYS_CONSOLE_PRINT("VALID FF FRAME RECEIVED\r\n");
+//                        //PAUSE_FRAME_TRIGGERED = true;
+//                        app_display_commData.commStatus = DISPLAY_COMM_STATUS_DATA_RECEIVED_FROM_DISPLAY;
+//                    }
+//                    else
+//                    {
+//                        //SYS_CONSOLE_PRINT("INVALID FF FRAME\r\n");
+//                        app_display_commData.commStatus =  DISPLAY_COMM_STATUS_WAITING_FOR_DATA_FROM_DISPLAY;
+//                        SERCOM1_USART_Read(&RxBuffer[0], 1);
+//                    }
+                    break;                    
+
                 }
                 default:
                 {
@@ -183,14 +212,45 @@ void StartReceivingDataFromDisplay(void)
 void StartTransmittingDataToDisplay(uint8_t sizeOfBuffer)
 {
     SetOutput(LED_TX_DISPLAY, true);
-    
+
     app_display_commData.commStatus = DISPLAY_COMM_STATUS_SENDING_DATA_TO_DISPLAY;
-    
+
+//        if (POWER_CONSUMPTION_FRAME_TRIGGERED)
+//        {
+//            uint8_t powerResponse[] = {
+//                0xFE, 0xFE, 0xFE, 0xFE,
+//                0x68,
+//                0x11, 0x11, 0x11, 0x11, 0x11, 0x11,
+//                0x68,
+//                0x91,
+//                0x23,
+//                0x33, 0x34, 0x42, 0x35,
+//                0x3B, 0x56, 0x67, 0x56, 0x73, 0x56, 0xA7, 0x55,
+//                0x33, 0xA7, 0x53, 0x33, 0x83, 0x5C, 0x33, 0x57,
+//                0x64, 0x34, 0x4A, 0x74, 0x33, 0x8A, 0x68, 0x33,
+//                0x7C, 0x87, 0x33, 0x93, 0x78, 0x33, 0x33,
+//                0xF9,
+//                0x16
+//            };
+//    
+//            SERCOM1_USART_Write(powerResponse, sizeof(powerResponse));
+//    
+//            POWER_CONSUMPTION_FRAME_TRIGGERED = false; // reset flag
+//    
+//            return;
+//        }
+
+    // Default behavior (Modbus etc.)
     SERCOM1_USART_Write(&TxBuffer[0], sizeOfBuffer);
-    /*
-    DMAC_ChannelTransfer(DMAC_CHANNEL_1, &TxBuffer[0], \
-        (const void *)&SERCOM1_REGS->USART_INT.SERCOM_DATA, sizeOfBuffer);*/
 }
+//void StartTransmittingDataToDisplay(uint8_t sizeOfBuffer)
+//{
+//    SetOutput(LED_TX_DISPLAY, true);
+//    
+//    app_display_commData.commStatus = DISPLAY_COMM_STATUS_SENDING_DATA_TO_DISPLAY;
+//    
+//    SERCOM1_USART_Write(&TxBuffer[0], sizeOfBuffer);
+//}
 
 // *****************************************************************************
 // *****************************************************************************
@@ -312,11 +372,17 @@ void APP_DISPLAY_COMM_Tasks ( void )
         }
         // 4: State check checksum
         case APP_DISPLAY_COMM_STATE_CHECKSUM_CHECK:
-        {
+        { 
+        //            if (RxBuffer[0] == 0x68) 
+        //            {
+        //                //SYS_CONSOLE_PRINT("DLT645 RX: CHECKSUM \r\n");
+        //                POWER_CONSUMPTION_FRAME_TRIGGERED = true;
+        //                app_display_commData.state = APP_DISPLAY_COMM_STATE_PARSE_DATA;
+        //            } 
             if (ChecksumCheck(&RxBuffer[0], 8) == true)
             {
                 app_display_commData.state = APP_DISPLAY_COMM_STATE_PARSE_DATA;
-            }
+            } 
             else
             {
                 app_display_commData.state = APP_DISPLAY_COMM_STATE_INIT;
@@ -326,12 +392,13 @@ void APP_DISPLAY_COMM_Tasks ( void )
         // 5: State parse data
         case APP_DISPLAY_COMM_STATE_PARSE_DATA:
         {
-            //if(setLoggingLock()){
+            if (RxBuffer[0] != 0x68) {
                 ParseDisplayData(&RxBuffer[0]);
-                //while(!releaseLoggingLock());
-                ResponseDelay = 0;
-                app_display_commData.state = APP_DISPLAY_COMM_STATE_DELAY;
-            //}
+            }  
+
+            ResponseDelay = 0;
+            app_display_commData.state = APP_DISPLAY_COMM_STATE_DELAY;
+
             break;
         }
         // 6: State delay
@@ -346,11 +413,9 @@ void APP_DISPLAY_COMM_Tasks ( void )
         // 7: State Preparing data to be sent
         case APP_DISPLAY_COMM_STATE_PREPARING_DATA_TO_SENT:
         {
-            //if(setLoggingLock()){
-                GetDataFromHeatpump();
-                //while(!releaseLoggingLock());
-                app_display_commData.state = APP_DISPLAY_COMM_STATE_SEND_DATA;
-            //}
+
+            GetDataFromHeatpump();
+            app_display_commData.state = APP_DISPLAY_COMM_STATE_SEND_DATA;
             break;
         }
         // 8: Start sending data to display
