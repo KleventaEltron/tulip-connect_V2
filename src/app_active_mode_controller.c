@@ -439,7 +439,7 @@ void checkIfTestModeDoSomething(void)
      * 30 minuten timeout:
      * als 1 van beide elementen aan staat, mag dat max 1800s
      * ========================================================= */
-    if (elementOnTimerRunning && ((now - elementOnStartTime) >= 60))
+    if (elementOnTimerRunning && ((now - elementOnStartTime) >= 1800))
     {
         HeatingElementOnTestMode = false;
         HotWaterElementOnTestMode = false;
