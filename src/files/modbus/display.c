@@ -135,6 +135,22 @@ void ParseDisplayData(uint8_t * rxBuffer)
            
             // RESET NAAR FABRIEKS PARAMETERS
             case ADDRESS_CREW_CONTROL:{
+                bool newStateManualElectricHeaterDisplaySelected = ((data & (1 << 2)) != 0); 
+                bool currentStateManualElectricHeaterDisplaySelected = getManualElectricHeaterDisplaySelected();
+                
+                SYS_CONSOLE_PRINT("new:     %i\r\n", newStateManualElectricHeaterDisplaySelected);
+                SYS_CONSOLE_PRINT("current: %i\r\n", currentStateManualElectricHeaterDisplaySelected);
+                
+                if (newStateManualElectricHeaterDisplaySelected != currentStateManualElectricHeaterDisplaySelected) {
+                    //
+                    setManualElectricHeaterDisplaySelected(newStateManualElectricHeaterDisplaySelected);
+                    SYS_CONSOLE_PRINT("BIEM\r\n");
+                    break;
+                }
+                
+                data &= ~ (1 << 2);
+                
+                // 
                 if (data & (1 << 13)) {
                     SYS_CONSOLE_PRINT("Resetting\r\n");                
                     setResetFactorySettings();       
@@ -532,6 +548,18 @@ void GetDataFromHeatpump(void)
         
         UserParameters[ADDRESS_HOT_WATER_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = hotWaterSetpoint;
     }
+    
+    if (getManualElectricHeaterDisplaySelected() == true){
+        // set
+        UserOrder[ADDRESS_CREW_CONTROL - START_ADDRESS_USER_ORDER][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] |= (1 << 2);
+        //SYS_CONSOLE_PRINT("AAN\r\n");
+    }
+    else {
+        // clear
+        UserOrder[ADDRESS_CREW_CONTROL - START_ADDRESS_USER_ORDER][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] &= ~(1 << 2);
+        //SYS_CONSOLE_PRINT("UIT\r\n");
+    }
+    SYS_CONSOLE_PRINT("%i\r\n", UserOrder[ADDRESS_CREW_CONTROL - START_ADDRESS_USER_ORDER][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY]);
     
     // For displaying the NTC's on the display:
     RealTimeData1[ADDRESS_WATER_TANK_TEMPERATURE - START_ADDRESS_REAL_TIME_DATA_1][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY][MASTER_HEATPUMP_IN_CASCADE] = (GetNtcTemperature(NTC_HOT_WATER_BUFFER) / 10); 
