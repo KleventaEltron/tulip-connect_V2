@@ -529,16 +529,3 @@ bool checkIfBufferIsWithinSetpointMinusDelta(int16_t heatingBufferTemperature)
         return false;
     }
 }
-
-bool getManualElectricHeaterMode()
-{
-    if (UserOrder[ADDRESS_CREW_CONTROL - START_ADDRESS_USER_ORDER][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] & (1 << 2)){
-        // is true
-        return true;
-    }
-    else {
-        // is false
-        return false;
-    }
-    
-}

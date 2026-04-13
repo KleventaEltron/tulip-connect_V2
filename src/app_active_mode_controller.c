@@ -427,7 +427,7 @@ void checkIfTestModeDoSomething(void)
     static bool elementOnTimerRunning = false;
     static uint32_t elementOnStartTime = 0U;
     
-    bool currentBit = getManualElectricHeaterMode();
+    bool currentBit = getManualElectricHeaterDisplaySelected();
     uint32_t now = getRelaysTestModeCounter();
     
     bool risingEdge  = (currentBit == true)  && (previousBit == false);
@@ -553,6 +553,7 @@ void checkIfTestModeDoSomething(void)
     {
         elementOnTimerRunning = false;
         elementOnStartTime = 0U;
+        setManualElectricHeaterDisplaySelected(false);
     }
     
     previousBit = currentBit;
