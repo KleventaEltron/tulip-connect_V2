@@ -18,6 +18,7 @@
 
 static uint8_t CommunicationArray[COMMUNICATION_ARRAY_MAX_ROWS][COMMUNICATION_ARRAY_BYTES_PER_MESSAGE] = 
 {
+    {0x01, 0x03, 0x03, 0xA0, 0x00, 0x30, 0x45, 0xB8}, 
     {0x01, 0x03, 0x08, 0x00, 0x00, 0x10, 0x46, 0x66},   // Zelfde
     {0x01, 0x03, 0x00, 0x00, 0x00, 0x5A, 0xC5, 0xF1},   // Zelfde
     {0x01, 0x03, 0x00, 0x5A, 0x00, 0x22, 0xE5, 0xC0},   // Zelfde
@@ -26,7 +27,7 @@ static uint8_t CommunicationArray[COMMUNICATION_ARRAY_MAX_ROWS][COMMUNICATION_AR
     {0x01, 0x03, 0x01, 0x64, 0x00, 0x64, 0x04, 0x02},   // 01 03 01 64 00 64 04 02
     {0x01, 0x03, 0x01, 0xC8, 0x00, 0x64, 0xC4, 0x23},   // 01 03 01 C8 00 64 C4 23
     {0x01, 0x03, 0x03, 0x00, 0x00, 0x69, 0x85, 0xA0},   // 01 03 03 00 00 69 85 A0
-    {0x01, 0x03, 0x03, 0xA0, 0x00, 0x30, 0x45, 0xB8},   // 0x03A0 ? 0x03CF
+    //{0x01, 0x03, 0x03, 0xA0, 0x00, 0x30, 0x45, 0xB8},   // 0x03A0 ? 0x03CF
     // 01 03 08 00 00 10: 0x0800 tm 0x080F  (Unit System Parameter L)   // Zelfde
     // 01 03 00 00 00 5A: 0x0000 tm 0x0059  (Real-time data)            // Zelfde
     // 01 03 00 5A 00 22: 0x005A tm 0x007B  (Real-time data)            // Zelfde
@@ -521,6 +522,8 @@ void FillBufferWithStartupSettings(bool doFirstTimeHeatpumpCommunicationSettings
     
     if (doFirstTimeHeatpumpCommunicationSettings == true)
     {
+        ChangeHeatpumpSetting(ADDRESS_FUNCTIONAL_MODE, 96);
+        ChangeHeatpumpSetting(ADDRESS_CREW_CONTROL, 1024);
         ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, 5); 
         ChangeHeatpumpSetting(ADDRESS_STERILIZATION_INTERVAL_DAYS, 7); 
         ChangeHeatpumpSetting(ADDRESS_STERILIZATION_START_TIME, 14); 
@@ -536,7 +539,7 @@ void CheckHeatpumpStaticSettings() {
     }
     
     setCheckHeatpumpStaticSettingsCounter(0);
-
+    
     if (getHeatpumpData(ADDRESS_PARAMETER_PASSWORD_SETTING) != 255) { 
         ChangeHeatpumpSetting(ADDRESS_PARAMETER_PASSWORD_SETTING, 255);
     }

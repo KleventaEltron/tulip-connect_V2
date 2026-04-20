@@ -471,10 +471,8 @@ bool setLoggingDataPerDeviceType(char* requestBuilder, size_t requestBuilderSize
             if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL22", (int16_t)getDataFromMemoryCallable(ADDRESS_FAN_OPERATING_FREQUENCY_ROTATIONAL_SPEED, index))) return false;
             if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL23", (int16_t)getDataFromMemoryCallable(ADDRESS_ELECTRONIC_EXPANSION_VALVE_STEPS_COUNT, index))) return false;
             if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL24", (int16_t)getDataFromMemoryCallable(ADDRESS_NUMBER_OF_EVI_VALVE_STEPS, index))) return false;
-            
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL25", (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_2_TARGET_FREQUENCY, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL26", (int16_t)getDataFromMemoryCallable(ADDRESS_SYSTEM_2_COMPRESSOR_RUNNING, index))) return false;
-            
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL25", (int16_t)getDataFromMemoryCallable(ADDRESS_AC_INPUT_VOLTAGE, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL26", (int16_t)getDataFromMemoryCallable(ADDRESS_AC_INPUT_CURRENT, index))) return false;
             if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL27", (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_PHASE_CURRENT, index))) return false;
             if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL28", (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_IPM_TEMPERATURE, index))) return false;
             if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL29", (int16_t)getDataFromMemoryCallable(ADDRESS_HIGH_PRESSURE_SATURATION_TEMPERATURE, index))) return false;
@@ -493,35 +491,30 @@ bool setLoggingDataPerDeviceType(char* requestBuilder, size_t requestBuilderSize
 
             if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL41", (int16_t)getDataFromMemoryCallable(ADDRESS_FLUORINE_OUTLET_TEMPERATURE_OF_PLATE_HEAT_EXCHANGER, index))) return false;
             if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL42", (int16_t)getDataFromMemoryCallable(ADDRESS_DRIVE_MANUFACTURER, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL43", (int16_t)getDataFromMemoryCallable(ADDRESS_INDOOR_UNIT_PHASE_A_VOLTAGE, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL44", (int16_t)getDataFromMemoryCallable(ADDRESS_INDOOR_UNIT_PHASE_B_VOLTAGE, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL45", (int16_t)getDataFromMemoryCallable(ADDRESS_INDOOR_UNIT_PHASE_C_VOLTAGE, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL43", (int16_t)getDataFromMemoryCallable(ADDRESS_PUMP_SPEED_PWM, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL44", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_FLOW, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL45", (int16_t)getDataFromMemoryCallable(ADDRESS_USER_RETURN_WATER_TEMPERATURE, index))) return false;
 
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL46", (int16_t)getDataFromMemoryCallable(ADDRESS_INDOOR_UNIT_PHASE_A_CURRENT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL47", (int16_t)getDataFromMemoryCallable(ADDRESS_INDOOR_UNIT_PHASE_B_CURRENT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL48", (int16_t)getDataFromMemoryCallable(ADDRESS_INDOOR_UNIT_PHASE_C_CURRENT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL49", (int16_t)getDataFromMemoryCallable(ADDRESS_HIGH_INPUT_POWER_OF_INDOOR_UNIT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL50", (int16_t)getDataFromMemoryCallable(ADDRESS_LOW_INPUT_POWER_OF_INDOOR_UNIT, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL46", (int16_t)getDataFromMemoryCallable(ADDRESS_DEVICE_INPUT_VOLTAGE, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL47", (int16_t)getDataFromMemoryCallable(ADDRESS_DEVICE_INPUT_CURRENT, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL48", (int16_t)getDataFromMemoryCallable(ADDRESS_DEVICE_INPUT_POWER_KW, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL49", (int16_t)getDataFromMemoryCallable(ADDRESS_TOTAL_UNIT_ELECTRICITY_CONSUMPTION_KWH, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL50", (int16_t)getDataFromMemoryCallable(ADDRESS_AUXILIARY_HEATING_SOURCE_HOT_WATER_TEMPERATURE_VALUE, index))) return false;
 
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL51", (int16_t)getDataFromMemoryCallable(ADDRESS_HIGH_CUMULATIVE_ELECTRICITY_CONSUMPTION_OF_INDOOR_UNIT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL52", (int16_t)getDataFromMemoryCallable(ADDRESS_LOW_CUMULATIVE_ELECTRICITY_CONSUMPTION_OF_INDOOR_UNIT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL53", (int16_t)getDataFromMemoryCallable(CURRENT_COP, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL54", (int16_t)getDataFromMemoryCallable(OUTPUT_POWER_HEATING_HIGH_16BIT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL55", (int16_t)getDataFromMemoryCallable(OUTPUT_POWER_HEATING_LOW_16BIT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL56", (int16_t)getDataFromMemoryCallable(CURRENT_EER, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL57", (int16_t)getDataFromMemoryCallable(OUTPUT_POWER_COOLING_HIGH_16BIT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL58", (int16_t)getDataFromMemoryCallable(OUTPUT_POWER_COOLING_LOW_16BIT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL59", (int16_t)getDataFromMemoryCallable(COMPRESSOR_CUMMULATIVE_RUNNING_TIME_HIGH_BIT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL60", (int16_t)getDataFromMemoryCallable(COMPRESSOR_CUMMULATIVE_RUNNING_TIME_LOW_BIT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL61", (int16_t)getDataFromMemoryCallable(ADDRESS_CASCADE_SLAVES_ONLINE_1, index))) return false;
-            
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL62", (int16_t)getActiveStateFromActiveMode(getActiveStateValue()))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL63", (int16_t)getActiveStateValue())) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL64", (int16_t)getDataFromMemoryCallable(ADDRESS_HEATING_SET_TEMPERATURE, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL65", UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL66", ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL67", UnitSystemParameterL[ADDRESS_STERILIZATION_TEMPERATURE_SETTING - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL68", UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL51", (int16_t)getDataFromMemoryCallable(ADDRESS_AUXILIARY_HEATING_SOURCE_HEATING_TEMPERATURE_VALUE, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL52", (int16_t)getDataFromMemoryCallable(ADDRESS_BUFFER_TANK_FOR_HEATING_TEMPERATURE_VALUE, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL53", (int16_t)getDataFromMemoryCallable(ADDRESS_MAIN_OUTLET_WATER_TEMPERATURE_VALUE, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL54", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_INLET_TEMPERATURE, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL55", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_OUTLET_TEMPERATURE, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL56", (int16_t)getDataFromMemoryCallable(ADDRESS_EXTERNAL_ENVIRONMENT_TEMPERATURE, index))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL57", (int16_t)getActiveStateFromActiveMode(getActiveStateValue()))) return false;
+
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL58", (int16_t)getActiveStateValue())) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL59", UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL60", ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL61", ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT))) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL62", UnitSystemParameterL[ADDRESS_STERILIZATION_TEMPERATURE_SETTING - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
+            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL63", UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
             
             /*
              * Vervangen waardes

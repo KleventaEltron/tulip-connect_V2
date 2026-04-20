@@ -347,8 +347,17 @@ uint8_t FillTransmitBuffer(uint8_t* txBuffer, uint8_t* rxBuffer)
 
         SYS_CONSOLE_PRINT("\r\n");
 
-        memcpy(txBuffer, pDlt645Frame->frame, pDlt645Frame->length);
-        size = (uint8_t)pDlt645Frame->length;
+        // Add FE FE FE FE prefix
+        txBuffer[0] = 0xFE;
+        txBuffer[1] = 0xFE;
+        txBuffer[2] = 0xFE;
+        txBuffer[3] = 0xFE;
+
+        // Copy original frame after prefix
+        memcpy(&txBuffer[4], pDlt645Frame->frame, pDlt645Frame->length);
+
+        // Update total size
+        size = (uint8_t)(pDlt645Frame->length + 4);
 
         POWER_CONSUMPTION_RESPONSE_TO_DISPLAY = false;
         return size;

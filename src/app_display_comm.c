@@ -112,6 +112,7 @@ void APP_ReadCallbackDisplay(uintptr_t context)
                     {
                         POWER_CONSUMPTION_RESPONSE_TO_DISPLAY = true;
                         POWER_CONSUMPTION_TO_HEATPUMP = true;
+                        
                         app_display_commData.commStatus = DISPLAY_COMM_STATUS_104_RECEIVED;
                         SERCOM1_USART_Read(&RxBuffer[1], 15);
 
@@ -137,6 +138,7 @@ void APP_ReadCallbackDisplay(uintptr_t context)
                 case DISPLAY_COMM_STATUS_104_RECEIVED:
                 {
                     app_display_commData.commStatus = DISPLAY_COMM_STATUS_DATA_RECEIVED_FROM_DISPLAY;
+                    //app_display_commData.commStatus = APP_DISPLAY_COMM_STATE_SEND_DATA;
                                             // Print full frame (16 bytes total)
 //                    SYS_CONSOLE_PRINT("DLT645 RX: ");
 //                    for (uint8_t i = 0; i < 16; i++)
@@ -373,13 +375,13 @@ void APP_DISPLAY_COMM_Tasks ( void )
         // 4: State check checksum
         case APP_DISPLAY_COMM_STATE_CHECKSUM_CHECK:
         { 
-        //            if (RxBuffer[0] == 0x68) 
-        //            {
-        //                //SYS_CONSOLE_PRINT("DLT645 RX: CHECKSUM \r\n");
-        //                POWER_CONSUMPTION_FRAME_TRIGGERED = true;
-        //                app_display_commData.state = APP_DISPLAY_COMM_STATE_PARSE_DATA;
-        //            } 
-            if (ChecksumCheck(&RxBuffer[0], 8) == true)
+            if (RxBuffer[0] == 0x68) 
+            {
+            //                //SYS_CONSOLE_PRINT("DLT645 RX: CHECKSUM \r\n");
+                //POWER_CONSUMPTION_FRAME_TRIGGERED = true;
+                app_display_commData.state = APP_DISPLAY_COMM_STATE_PARSE_DATA;
+            } 
+            else if (ChecksumCheck(&RxBuffer[0], 8) == true)
             {
                 app_display_commData.state = APP_DISPLAY_COMM_STATE_PARSE_DATA;
             } 
@@ -392,9 +394,9 @@ void APP_DISPLAY_COMM_Tasks ( void )
         // 5: State parse data
         case APP_DISPLAY_COMM_STATE_PARSE_DATA:
         {
-            if (RxBuffer[0] != 0x68) {
-                ParseDisplayData(&RxBuffer[0]);
-            }  
+            //if (RxBuffer[0] != 0x68) {
+            ParseDisplayData(&RxBuffer[0]);
+            //}  
 
             ResponseDelay = 0;
             app_display_commData.state = APP_DISPLAY_COMM_STATE_DELAY;
@@ -404,7 +406,7 @@ void APP_DISPLAY_COMM_Tasks ( void )
         // 6: State delay
         case APP_DISPLAY_COMM_STATE_DELAY:
         {
-            if (ResponseDelay >= 3)
+            if (ResponseDelay >= 1)//if (ResponseDelay >= 3)
             {   // Wacht 500 ms
                 app_display_commData.state = APP_DISPLAY_COMM_STATE_PREPARING_DATA_TO_SENT;
             }
