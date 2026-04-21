@@ -32,12 +32,22 @@ HOT_WATER_FLOOR_HEATING_MODE_DATA hot_water_floor_heating_mode_data;
 CIRCULATION_PUMP_DATA circulation_pump_data;
 static volatile bool doFirstTimeHeatpumpCommunicationSettings = false;
 
+static bool manualElectricHeaterDisplaySelected = false;
+
 bool getDoFirstTimeHeatpumpCommunicationSettings() {
     return doFirstTimeHeatpumpCommunicationSettings;
 }
 
 void setDoFirstTimeHeatpumpCommunicationSettings(bool value) {
     doFirstTimeHeatpumpCommunicationSettings = value;
+}
+
+bool getManualElectricHeaterDisplaySelected() {
+    return manualElectricHeaterDisplaySelected;
+}
+
+void setManualElectricHeaterDisplaySelected(bool value) {
+    manualElectricHeaterDisplaySelected = value;
 }
 
 

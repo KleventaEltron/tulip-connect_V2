@@ -135,6 +135,18 @@ void ParseDisplayData(uint8_t * rxBuffer)
            
             // RESET NAAR FABRIEKS PARAMETERS
             case ADDRESS_CREW_CONTROL:{
+                bool newStateManualElectricHeaterDisplaySelected = ((data & (1 << 2)) != 0); 
+                bool currentStateManualElectricHeaterDisplaySelected = getManualElectricHeaterDisplaySelected();
+                
+                if (newStateManualElectricHeaterDisplaySelected != currentStateManualElectricHeaterDisplaySelected) {
+                    // Is pressed on display
+                    setManualElectricHeaterDisplaySelected(newStateManualElectricHeaterDisplaySelected);
+                    break;
+                }
+                
+                data &= ~ (1 << 2);
+                
+                // 
                 if (data & (1 << 13)) {
                     SYS_CONSOLE_PRINT("Resetting\r\n");                
                     setResetFactorySettings();       
@@ -554,6 +566,15 @@ void GetDataFromHeatpump(void)
     {
         
         UserParameters[ADDRESS_HOT_WATER_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = hotWaterSetpoint;
+    }
+    
+    if (getManualElectricHeaterDisplaySelected() == true){
+        // Set bit
+        UserOrder[ADDRESS_CREW_CONTROL - START_ADDRESS_USER_ORDER][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] |= (1 << 2);
+    }
+    else {
+        // Clear bit
+        UserOrder[ADDRESS_CREW_CONTROL - START_ADDRESS_USER_ORDER][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] &= ~(1 << 2);
     }
     
     // For displaying the NTC's on the display:
