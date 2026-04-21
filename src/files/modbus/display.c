@@ -323,30 +323,17 @@ uint8_t FillTransmitBuffer(uint8_t* txBuffer, uint8_t* rxBuffer)
     uint8_t size = 0;
     uint16_t checksum;
     const DLT645_FRAME_DATA *pDlt645Frame = DLT645_FrameGet();
-    
-    
-    
-        uint8_t modbusAddress = rxBuffer[MODBUS_ADDRESS_INDEX];
-        uint16_t amountOfRegisters = ((uint16_t)rxBuffer[MODBUS_REG_AMOUNT_MSB_INDEX] << 8) +
+      
+    uint8_t modbusAddress = rxBuffer[MODBUS_ADDRESS_INDEX];
+    uint16_t amountOfRegisters = ((uint16_t)rxBuffer[MODBUS_REG_AMOUNT_MSB_INDEX] << 8) +
                                       rxBuffer[MODBUS_REG_AMOUNT_LSB_INDEX];
-        uint16_t readRegisterAddress = ((uint16_t)rxBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] << 8) +
+    uint16_t readRegisterAddress = ((uint16_t)rxBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] << 8) +
                                         rxBuffer[MODBUS_REG_ADDRESS_LSB_INDEX];
         
-    
-    
     if ((pDlt645Frame != NULL) &&
         POWER_CONSUMPTION_RESPONSE_TO_DISPLAY &&
         (pDlt645Frame->length > 0U))
     {
-        SYS_CONSOLE_PRINT("DLT FRAME (%d bytes):\r\n", pDlt645Frame->length);
-
-        for (uint16_t i = 0; i < pDlt645Frame->length; i++)
-        {
-            SYS_CONSOLE_PRINT("%02X ", pDlt645Frame->frame[i]);
-        }
-
-        SYS_CONSOLE_PRINT("\r\n");
-
         // Add FE FE FE FE prefix
         txBuffer[0] = 0xFE;
         txBuffer[1] = 0xFE;
@@ -365,20 +352,13 @@ uint8_t FillTransmitBuffer(uint8_t* txBuffer, uint8_t* rxBuffer)
 
     if (rxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_WRITE_REG)
     {
-        SYS_CONSOLE_PRINT("WRITE (address %d, amount %d)\r\n", readRegisterAddress, amountOfRegisters);
         memcpy(&txBuffer[0], &rxBuffer[0], 8);
         size = 8;
     }
     else if (rxBuffer[MODBUS_COMMAND_INDEX] == MB_FC_READ_REGS)
     {
-        SYS_CONSOLE_PRINT("READING (address %d, amount %d)\r\n", readRegisterAddress, amountOfRegisters);
         uint16_t data;
         uint8_t j = 3;
-//        uint8_t modbusAddress = rxBuffer[MODBUS_ADDRESS_INDEX];
-//        uint16_t amountOfRegisters = ((uint16_t)rxBuffer[MODBUS_REG_AMOUNT_MSB_INDEX] << 8) +
-//                                      rxBuffer[MODBUS_REG_AMOUNT_LSB_INDEX];
-//        uint16_t readRegisterAddress = ((uint16_t)rxBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] << 8) +
-//                                        rxBuffer[MODBUS_REG_ADDRESS_LSB_INDEX];
 
         if (getCascadeSlaveStatus() == UINT16_MAX)
         {

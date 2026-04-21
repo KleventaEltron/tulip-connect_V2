@@ -164,7 +164,7 @@ void debugPI(void)
  void printDebugInfo() {
     //printCustomEepromParameters();
     if (DebugDipSwitch() == true) {
-        debugPowerConsumption();
+        //debugPowerConsumption();
         /*
         SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
         SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
