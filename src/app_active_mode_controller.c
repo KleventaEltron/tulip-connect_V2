@@ -894,9 +894,34 @@ void checkHeatpumpTargetFrequency() {
 RUNNING_MODES determineRunningMode()
 {
     //app_active_mode_controllerData.currentRunningMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
+    static bool previousChangeOverEnabled = false;
+    static bool initialized = false;
     
     bool changeOverSettingEnabled = (bool)ReadSmartEeprom16(SEEP_ADDR_CHANGEOVER_CONTACT_ENABLE);
     RUNNING_MODES runningMode = (RUNNING_MODES)ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
+    
+    if (initialized == false) {
+        previousChangeOverEnabled = changeOverSettingEnabled;
+        initialized = true;
+    }
+    
+    // Alleen op het moment dat changeover van AAN naar UIT gaat
+    if (previousChangeOverEnabled == true && changeOverSettingEnabled == false) {
+        // One time when the settings gets disabled
+        if (runningMode == COOLING) {
+            runningMode = HEATING;
+            WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, runningMode);
+        }
+        else if (runningMode == HOT_WATER_COOLING) {
+            runningMode = HOT_WATER_HEATING;
+            WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, runningMode);
+        }
+
+        previousChangeOverEnabled = changeOverSettingEnabled;
+        return runningMode;
+    }
+    
+    previousChangeOverEnabled = changeOverSettingEnabled;
     
     if (changeOverSettingEnabled == false || runningMode == HOT_WATER) {
         return runningMode;
