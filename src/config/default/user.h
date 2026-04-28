@@ -37,7 +37,7 @@ extern "C" {
 #define TEMPERATURE_ALARM_VALUE -9999    
     
 //     
-#define THIS_FIRMWARE_VERSION 2000020 // 2.0.20
+#define THIS_FIRMWARE_VERSION 2000021 // 2.0.21
     
 //#define SECONDS_IN_DAY 86400 // 1 day
 //#define SECONDS_IN_DAY 60 // 1 minute
@@ -75,6 +75,7 @@ extern "C" {
 #define GetDigitalInput3()  InputExt3_Get() 
     
 #define GetThermostatContact()  GetDigitalInput1()
+#define GetChangeOverContact()  GetDigitalInput2()
 #define GetEvuContact()         GetDigitalInput3() 
 
 // Dip switches:
