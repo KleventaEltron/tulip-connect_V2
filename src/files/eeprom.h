@@ -131,6 +131,8 @@
 #define SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY_CONSTANT_B           137 // 2 bytes V2-0-19
 #define SEEP_ADDR_INITIAL_FAN_SPEED                                        139 // 2 bytes V2-0-19
 
+#define SEEP_ADDR_CHANGEOVER_CONTACT_ENABLE                                141 // 2 bytes V2-0-21
+
 #define SEEP_ADDR
 
 //.....
