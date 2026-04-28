@@ -300,7 +300,12 @@ void debugPI(void)
         }
         else {
             int16_t heatpumpMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
-
+            
+            SYS_CONSOLE_PRINT("\r\nCHANGEOVER TEST:\n");
+            SYS_CONSOLE_PRINT(" Active mode:          %s\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
+            SYS_CONSOLE_PRINT(" ChangeOver Setting:   %s\n", (ReadSmartEeprom16(SEEP_ADDR_CHANGEOVER_CONTACT_ENABLE) ? "True" : "False"));
+            SYS_CONSOLE_PRINT(" ChangeOver Contact:   %s\n\n", GetChangeOverContact()  ? "True" : "False");
+            /*
             if (heatpumpMode == HEATING) {
 
 //                SYS_CONSOLE_PRINT("\r\nHEATING:\n");
@@ -382,6 +387,7 @@ void debugPI(void)
                 SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
                 SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, MASTER_HEATPUMP_IN_CASCADE));
             }
+             */
         }
         
     }

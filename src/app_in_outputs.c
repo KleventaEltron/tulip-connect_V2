@@ -127,6 +127,21 @@ void APP_IN_OUTPUTS_Tasks ( void )
                 
                 SetOrClearAlarmLed();
                 
+                if (GetDigitalInput3() == true) {
+                    // Input 3 hoog
+                    if (ReadSmartEeprom16(SEEP_ADDR_CHANGEOVER_CONTACT_ENABLE) == false) {
+                        // hoog maken
+                        WriteSmartEeprom16(SEEP_ADDR_CHANGEOVER_CONTACT_ENABLE, true);
+                    }
+                }
+                else {
+                    // Input 3 laag
+                    if (ReadSmartEeprom16(SEEP_ADDR_CHANGEOVER_CONTACT_ENABLE) == true) {
+                        // laag maken
+                        WriteSmartEeprom16(SEEP_ADDR_CHANGEOVER_CONTACT_ENABLE, false);
+                    }
+                }
+                
             }   // End timer 1 sec    
             
             break;
