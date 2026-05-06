@@ -138,7 +138,7 @@ void APP_ReadCallbackDisplay(uintptr_t context)
                 case DISPLAY_COMM_STATUS_104_RECEIVED:
                 {
                     app_display_commData.commStatus = DISPLAY_COMM_STATUS_DATA_RECEIVED_FROM_DISPLAY;
-                    //app_display_commData.commStatus = APP_DISPLAY_COMM_STATE_SEND_DATA;
+                    //app_display_commData.commStatus = DISPLAY_COMM_STATUS_UNKNOWN_DATA_RECEIVED_FROM_DISPLAY;
                                             // Print full frame (16 bytes total)
 //                    SYS_CONSOLE_PRINT("DLT645 RX: ");
 //                    for (uint8_t i = 0; i < 16; i++)
@@ -394,9 +394,9 @@ void APP_DISPLAY_COMM_Tasks ( void )
         // 5: State parse data
         case APP_DISPLAY_COMM_STATE_PARSE_DATA:
         {
-            //if (RxBuffer[0] != 0x68) {
-            ParseDisplayData(&RxBuffer[0]);
-            //}  
+            if (RxBuffer[0] != 0x68) {
+                ParseDisplayData(&RxBuffer[0]);
+            }  
 
             ResponseDelay = 0;
             app_display_commData.state = APP_DISPLAY_COMM_STATE_DELAY;

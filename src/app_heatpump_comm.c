@@ -46,8 +46,10 @@
 
 APP_HEATPUMP_COMM_DATA app_heatpump_commData;
 
-static uint8_t TxBuffer[TX_BUFFER_DISPLAY_SIZE];
-static uint8_t RxBuffer[RX_BUFFER_DISPLAY_SIZE];
+//static uint8_t TxBuffer[TX_BUFFER_DISPLAY_SIZE];
+//static uint8_t RxBuffer[RX_BUFFER_DISPLAY_SIZE];
+static uint8_t TxBuffer[TX_BUFFER_HEATPUMP_SIZE];
+static uint8_t RxBuffer[RX_BUFFER_HEATPUMP_SIZE];
 
 static volatile uint32_t ResponseDelay = 0;
 static volatile uint32_t CommunicationWindowSecondCounter = 0;
@@ -101,7 +103,12 @@ void APP_ReadCallback(uintptr_t context)
 {
     if (SERCOM7_USART_ErrorGet() != USART_ERROR_NONE)
     {
-        /* ErrorGet clears errors, set error flag to notify console */
+        DLT645_FrameClear();
+
+        app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_INIT;
+        app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_IDLE;
+        LastSentModbusAddress = UINT8_MAX;
+
         return;
     }
 
@@ -146,7 +153,16 @@ void APP_ReadCallback(uintptr_t context)
                 /* For Modbus read response:
                    total is addr + fc + bytecount + data + crc(2)
                    here first 8 bytes are already partly read */
-                SERCOM7_USART_Read(&RxBuffer[8], (RxBuffer[MODBUS_BYTES_RETURNED_INDEX] - 3));
+                //SERCOM7_USART_Read(&RxBuffer[8], (RxBuffer[MODBUS_BYTES_RETURNED_INDEX] - 3));
+                uint8_t byteCount = RxBuffer[MODBUS_BYTES_RETURNED_INDEX];
+
+                if (byteCount < 3 || byteCount > (RX_BUFFER_HEATPUMP_SIZE - 5)) {
+                    app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
+                    SERCOM7_USART_Read(&RxBuffer[0], 1);
+                    break;
+                }
+
+                SERCOM7_USART_Read(&RxBuffer[8], byteCount - 3);
             }
             else
             {
@@ -169,51 +185,100 @@ void APP_ReadCallback(uintptr_t context)
             if (RxBuffer[0] == 0x68U && RxBuffer[7] == 0x68U)
             {
                 uint8_t dataLen = RxBuffer[9];
-                uint8_t remainingLen;
 
-                /* Remaining bytes after first 10 bytes:
-                   data[dataLen] + checksum + end byte */
-                remainingLen = (uint8_t)(dataLen + 2U);
+                /*
+                 * Full DLT645 frame length:
+                 * bytes 0..7  = address/header
+                 * byte 8      = control
+                 * byte 9      = data length
+                 * dataLen     = data bytes
+                 * byte        = checksum
+                 * byte        = 0x16 end
+                 *
+                 * Total = 12 + dataLen
+                 */
+                uint16_t frameLen = 12U + dataLen;
 
-                app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DLT645_REST_RECEIVED;
+                if (frameLen > RX_BUFFER_HEATPUMP_SIZE)
+                {
+                    SYS_CONSOLE_PRINT("DLT645 frame too large: %u\r\n", frameLen);
+
+                    DLT645_FrameClear();
+                    app_heatpump_commData.commStatus =
+                        HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
+
+                    SERCOM7_USART_Read(&RxBuffer[0], 1);
+                    break;
+                }
+
+                /*
+                 * We already received bytes 0..9.
+                 * Remaining bytes are:
+                 * dataLen data bytes + checksum + end byte = dataLen + 2
+                 */
+                uint16_t remainingLen = dataLen + 2U;
+
+                app_heatpump_commData.commStatus =
+                    HEATPUMP_COMM_STATUS_DLT645_REST_RECEIVED;
+
                 SERCOM7_USART_Read(&RxBuffer[10], remainingLen);
             }
             else
             {
                 SYS_CONSOLE_PRINT("INVALID DLT645 HEADER\r\n");
-                app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
+
+                DLT645_FrameClear();
+                app_heatpump_commData.commStatus =
+                    HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
+
                 SERCOM7_USART_Read(&RxBuffer[0], 1);
             }
+
             break;
         }
 
         case HEATPUMP_COMM_STATUS_DLT645_REST_RECEIVED:
         {
-            uint8_t dataLen  = RxBuffer[9];
-            uint8_t frameLen = (uint8_t)(12U + dataLen);
+            uint8_t dataLen = RxBuffer[9];
+            uint16_t frameLen = 12U + dataLen;
 
-            if (RxBuffer[frameLen - 1] == 0x16U)
+            if (frameLen > RX_BUFFER_HEATPUMP_SIZE)
             {
-                //SYS_CONSOLE_PRINT("VALID DLT645 RESPONSE RECEIVED (%d bytes)\r\n", frameLen);
+                SYS_CONSOLE_PRINT("DLT645 frame length invalid after receive: %u\r\n", frameLen);
 
+                DLT645_FrameClear();
+                app_heatpump_commData.commStatus =
+                    HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
+
+                SERCOM7_USART_Read(&RxBuffer[0], 1);
+                break;
+            }
+
+            if (RxBuffer[frameLen - 1U] == 0x16U)
+            {
                 if (DLT645_FrameStore(RxBuffer, frameLen) == true)
                 {
-                    app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_DATA_RECEIVED_FROM_HEATPUMP;
+                    app_heatpump_commData.commStatus =
+                        HEATPUMP_COMM_STATUS_DATA_RECEIVED_FROM_HEATPUMP;
                 }
                 else
                 {
-                    //SYS_CONSOLE_PRINT("FAILED TO STORE DLT645 RESPONSE\r\n");
-                    app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
+                    DLT645_FrameClear();
+                    app_heatpump_commData.commStatus =
+                        HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
+
                     SERCOM7_USART_Read(&RxBuffer[0], 1);
                 }
             }
             else
             {
-                //SYS_CONSOLE_PRINT("INVALID DLT645 END BYTE\r\n");
                 DLT645_FrameClear();
-                app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
+                app_heatpump_commData.commStatus =
+                    HEATPUMP_COMM_STATUS_WAITING_FOR_DATA_FROM_HEATPUMP;
+
                 SERCOM7_USART_Read(&RxBuffer[0], 1);
             }
+
             break;
         }
 
@@ -281,10 +346,18 @@ void APP_HEATPUMP_COMM_Tasks ( void )
         //ManualToInitCounter++;
         
         //while(true); // Laatste redmiddel, zorg ervoor dat watchdog ingaat en print gereset wordt
+        memset(TxBuffer, 0, TX_BUFFER_HEATPUMP_SIZE);
+        memset(RxBuffer, 0, RX_BUFFER_HEATPUMP_SIZE);
+
         app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_INIT;
-        
+        app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_IDLE;
+        LastSentModbusAddress = UINT8_MAX;
+        //activeProtocol = HEATPUMP_PROTOCOL_NONE;
+
+        DLT645_FrameClear();
+
         SERCOM7_USART_Initialize();
-            
+
         SERCOM7_USART_WriteCallbackRegister(APP_WriteCallback, 0);
         SERCOM7_USART_ReadCallbackRegister(APP_ReadCallback, 0);
     } 
@@ -345,49 +418,60 @@ void APP_HEATPUMP_COMM_Tasks ( void )
         // 2: State start sending data
         case APP_HEATPUMP_COMM_STATE_SEND_DATA:
         {            
-            //memcpy(&TxBuffer[0], testArray, 8);
-            
-            //if(setLoggingLock()){
-            // Fill buffer with setting to send or with reading data request
-                FillTxBuffer(&TxBuffer[0]);
-                
-                LastSentModbusAddress = TxBuffer[MODBUS_ADDRESS_INDEX];
-                
-                StartTransmittingDataToHeatpump(&TxBuffer[0]);
-                //while(!releaseLoggingLock());
-                app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_SENT;
-            //}
-            
+            ResponseDelay = 0;
+            FillTxBuffer(&TxBuffer[0]);    
+            LastSentModbusAddress = TxBuffer[MODBUS_ADDRESS_INDEX];
+            StartTransmittingDataToHeatpump(&TxBuffer[0]);
+            app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_SENT;
             break;
         }
         // 3: State wachten tot data verzonden is
         case APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_SENT:
-        {          
+        {
             if (app_heatpump_commData.commStatus == HEATPUMP_COMM_STATUS_DATA_SENT_TO_HEATPUMP)
             {
                 SetOutput(LED_TX_HEATPUMP, false);
                 app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_RECEIVE_DATA;
             }
-            else{}
+            else if (ResponseDelay >= 3)
+            {
+                SetOutput(LED_TX_HEATPUMP, false);
+
+                app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_INIT;
+                app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_IDLE;
+                LastSentModbusAddress = UINT8_MAX;
+                //activeProtocol = HEATPUMP_PROTOCOL_NONE;
+            }
+
             break;
         }
         // 4: Start met ontvangen data
         case APP_HEATPUMP_COMM_STATE_RECEIVE_DATA:
         {            
+            ResponseDelay = 0;
             StartReceivingDataFromHeatpump();
             app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_RECEIVED;
             break;
         }
         // 5: Wachten tot data ontvangen is
         case APP_HEATPUMP_COMM_STATE_WAIT_FOR_DATA_RECEIVED:
-        {            
+        {
             if (app_heatpump_commData.commStatus == HEATPUMP_COMM_STATUS_DATA_RECEIVED_FROM_HEATPUMP)
             {
                 SetOutput(LED_RX_HEATPUMP, false);
-                
                 app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_CHECKSUM_CHECK;
             }
-            else{}
+            else if (ResponseDelay >= 3)
+            {
+                SetOutput(LED_RX_HEATPUMP, false);
+                DLT645_FrameClear();
+
+                app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_INIT;
+                app_heatpump_commData.commStatus = HEATPUMP_COMM_STATUS_IDLE;
+                LastSentModbusAddress = UINT8_MAX;
+                //activeProtocol = HEATPUMP_PROTOCOL_NONE;
+            }
+
             break;
         }
         // 6: Checksum check
@@ -433,7 +517,8 @@ void APP_HEATPUMP_COMM_Tasks ( void )
         // 8: Delay
         case APP_HEATPUMP_COMM_STATE_DELAY:
         {            
-            if (ResponseDelay >= 5)
+            if (ResponseDelay >= 3)
+            //if (ResponseDelay >= 2)
             {
                 app_heatpump_commData.state = APP_HEATPUMP_COMM_STATE_INIT;
             }

@@ -163,10 +163,26 @@ void debugPI(void)
 }
 
 
+
+void PrintResetCause(void)
+{
+    uint8_t cause = RSTC_REGS->RSTC_RCAUSE;
+
+    SYS_CONSOLE_PRINT("Reset cause: 0x%02X\r\n", cause);
+
+    if (cause & RSTC_RCAUSE_POR_Msk) SYS_CONSOLE_PRINT("POR reset\r\n");
+    if (cause & RSTC_RCAUSE_BODCORE_Msk) SYS_CONSOLE_PRINT("BODCORE reset\r\n");
+    if (cause & RSTC_RCAUSE_BODVDD_Msk) SYS_CONSOLE_PRINT("BODVDD reset\r\n");
+    if (cause & RSTC_RCAUSE_EXT_Msk) SYS_CONSOLE_PRINT("External reset\r\n");
+    if (cause & RSTC_RCAUSE_WDT_Msk) SYS_CONSOLE_PRINT("Watchdog reset\r\n");
+    if (cause & RSTC_RCAUSE_SYST_Msk) SYS_CONSOLE_PRINT("System reset\r\n");
+}
+
  
  void printDebugInfo() {
     //printCustomEepromParameters();
     if (DebugDipSwitch() == true) {
+        PrintResetCause();
         //debugPowerConsumption();
         /*
         SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
@@ -314,7 +330,8 @@ void debugPI(void)
         }
         else {
             int16_t heatpumpMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
-
+            //debugPI();
+            
             if (heatpumpMode == HEATING) {
 
 //                SYS_CONSOLE_PRINT("\r\nHEATING:\n");
@@ -644,7 +661,7 @@ void checkIfTestModeDoSomething(void)
  }
  
 void checkHeatpumpTargetFrequency() {
-    if (getWriteHeatpumpTargetFrequencyCounter() < 10) {
+    if ((getWriteHeatpumpTargetFrequencyCounter() < 10) || (getsystemOnCounter() < 30)) {
         return;
     }
     

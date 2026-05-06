@@ -16,6 +16,15 @@
 #define COMMUNICATION_ARRAY_MAX_ROWS (COMMUNICATION_ARRAY_NORMAL_ROWS + COMMUNICATION_ARRAY_EXTRA_ROWS_FOR_CASCADE)
 #define COMMUNICATION_ARRAY_BYTES_PER_MESSAGE 8
 
+#define MAX_SETTING_RETRIES 3
+
+static uint8_t settingRetryCounter = 0;
+
+void ResetHeatpumpSettingRetryCounter(void)
+{
+    settingRetryCounter = 0;
+}
+
 static uint8_t CommunicationArray[COMMUNICATION_ARRAY_MAX_ROWS][COMMUNICATION_ARRAY_BYTES_PER_MESSAGE] = 
 {
     {0x01, 0x03, 0x03, 0xA0, 0x00, 0x30, 0x45, 0xB8}, 
@@ -139,6 +148,10 @@ static void parseWriteReg(uint8_t * rxBuffer)
 
 void saveDataToMemory(uint16_t address, uint16_t data, uint8_t deviceAddress)
 {
+    if (deviceAddress == 0 || deviceAddress > MAX_AMOUNT_HEATPUMPS_IN_CASCADE) {
+        return;
+    }
+        
     deviceAddress -= 1; // Decrease deviceAddress with 1, because pointer in array is always 1 lower than device address in modbus protocol
     
     if ((address >= START_ADDRESS_REAL_TIME_DATA_1) && (address < START_ADDRESS_REAL_TIME_DATA_1 + REGISTERS_AMOUNT_REAL_TIME_DATA_1))
@@ -254,33 +267,42 @@ char * getHeatpumpStateToString(APP_HEATPUMP_COMM_STATES logState) {
 
 static void parseReadRegs(uint8_t * txBuffer, uint8_t * rxBuffer)
 {
-    //uint8_t i;
-   
-    //uint16_t checksum;
-    //uint16_t currentAddress;
     uint16_t data;
     uint16_t j = 3;
-    uint8_t  deviceAddress = rxBuffer[MODBUS_ADDRESS_INDEX];
-    uint16_t registerAddress = ((uint16_t)txBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] << 8) + txBuffer[MODBUS_REG_ADDRESS_LSB_INDEX];
-    uint16_t amountOfRegisters = ((uint16_t)txBuffer[MODBUS_REG_AMOUNT_MSB_INDEX] << 8) + txBuffer[MODBUS_REG_AMOUNT_LSB_INDEX]; 
-    //uint8_t  amountOfBytes = rxBuffer[MODBUS_BYTES_RETURNED_INDEX]; 
-     
+
+    uint8_t deviceAddress = rxBuffer[MODBUS_ADDRESS_INDEX];
+
+    uint16_t registerAddress =
+        ((uint16_t)txBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] << 8) +
+        txBuffer[MODBUS_REG_ADDRESS_LSB_INDEX];
+
+    uint16_t amountOfRegisters =
+        ((uint16_t)txBuffer[MODBUS_REG_AMOUNT_MSB_INDEX] << 8) +
+        txBuffer[MODBUS_REG_AMOUNT_LSB_INDEX];
+
+    uint8_t byteCount = rxBuffer[MODBUS_BYTES_RETURNED_INDEX];
+
+    if (deviceAddress == 0 || deviceAddress > MAX_AMOUNT_HEATPUMPS_IN_CASCADE) {
+        return;
+    }
+
+    if (byteCount != (amountOfRegisters * 2U)) {
+        return;
+    }
+
+    if ((3U + byteCount + 2U) > RX_BUFFER_HEATPUMP_SIZE) {
+        return;
+    }
+
     for (uint16_t i = registerAddress; i < (registerAddress + amountOfRegisters); i++)
     {
-        data = ((uint16_t)rxBuffer[j] << 8) + rxBuffer[j + 1];
-        j += 2;
-        //checkWhatData(i);
+        data = ((uint16_t)rxBuffer[j] << 8) + rxBuffer[j + 1U];
+        j += 2U;
+
         saveDataToMemory(i, data, deviceAddress);
-          
     }
-    
-//    if (GetDigitalInput2()){
-//        RealTimeData1[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE] = 50;
-//    }
-//    else {
-//        RealTimeData1[ADDRESS_COMPRESSOR_OPERATING_FREQUENCY][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP][MASTER_HEATPUMP_IN_CASCADE] = 0;
-//    }
 }
+
 
 void ParseHeatpumpData(uint8_t * txBuffer, uint8_t * rxBuffer)
 {
@@ -305,25 +327,45 @@ void FillTxBuffer(uint8_t * txBuffer)
     static uint8_t i = 0;
        
     //if (setting.settingStatus == SETTING_SEND_STATUS_SETTING_FILLED)
-    if(getSettingsQueuedAmount() > 0)
+    if (getSettingsQueuedAmount() > 0)
     {
         MANUAL_SETTING setting = (MANUAL_SETTING)PopFirstSetting();
-        txBuffer[MODBUS_ADDRESS_INDEX] =            setting.modbusDeviceAddress;
-        txBuffer[MODBUS_COMMAND_INDEX] =            setting.modbusCommand;
-        txBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] =    (uint8_t)(setting.modbusWriteRegister >> 8);
-        txBuffer[MODBUS_REG_ADDRESS_LSB_INDEX] =    (uint8_t)(setting.modbusWriteRegister >> 0);
-        txBuffer[MODBUS_MOD_DATA_MSB_INDEX] =       (uint8_t)(setting.modbusWriteData >> 8);
-        txBuffer[MODBUS_MOD_DATA_LSB_INDEX] =       (uint8_t)(setting.modbusWriteData >> 0);
 
-        uint16_t checksum = calculateCRC16(txBuffer, 6);
-        txBuffer[MODBUS_CHECKSUM_LSB_INDEX] = (uint8_t)(checksum >> 0);
-        txBuffer[MODBUS_CHECKSUM_MSB_INDEX] = (uint8_t)(checksum >> 8);
-        
-        ChangeFirstSettingStatus(SETTING_SEND_STATUS_SETTING_IS_SENT);
-        setWaitForSettingEchoProtection(0);
-    } 
-    else if (POWER_CONSUMPTION_TO_HEATPUMP) {
-        
+        settingRetryCounter++;
+
+        if (settingRetryCounter > MAX_SETTING_RETRIES)
+        {
+            SYS_CONSOLE_PRINT("Heatpump setting retry limit reached. Dropping setting.\r\n");
+
+            removeSetting();
+            settingRetryCounter = 0;
+
+            /*
+             * Continue with normal communication in this same FillTxBuffer() call.
+             * Do not return here, otherwise TxBuffer may contain old data.
+             */
+        }
+        else
+        {
+            txBuffer[MODBUS_ADDRESS_INDEX] =            setting.modbusDeviceAddress;
+            txBuffer[MODBUS_COMMAND_INDEX] =            setting.modbusCommand;
+            txBuffer[MODBUS_REG_ADDRESS_MSB_INDEX] =    (uint8_t)(setting.modbusWriteRegister >> 8);
+            txBuffer[MODBUS_REG_ADDRESS_LSB_INDEX] =    (uint8_t)(setting.modbusWriteRegister >> 0);
+            txBuffer[MODBUS_MOD_DATA_MSB_INDEX] =       (uint8_t)(setting.modbusWriteData >> 8);
+            txBuffer[MODBUS_MOD_DATA_LSB_INDEX] =       (uint8_t)(setting.modbusWriteData >> 0);
+
+            uint16_t checksum = calculateCRC16(txBuffer, 6);
+            txBuffer[MODBUS_CHECKSUM_LSB_INDEX] = (uint8_t)(checksum >> 0);
+            txBuffer[MODBUS_CHECKSUM_MSB_INDEX] = (uint8_t)(checksum >> 8);
+
+            ChangeFirstSettingStatus(SETTING_SEND_STATUS_SETTING_IS_SENT);
+            setWaitForSettingEchoProtection(0);
+            return;
+        }
+    }
+    
+    if (POWER_CONSUMPTION_TO_HEATPUMP && (getsystemOnCounter() > 30))
+    {
         uint8_t powerFrame[] = {
             0x68, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0x68, 0x11, 0x04, 0x33, 0x34, 0x42, 0x35, 0xBF, 0x16
         };
@@ -332,40 +374,43 @@ void FillTxBuffer(uint8_t * txBuffer)
 
         //SYS_CONSOLE_PRINT("SETTING POWER CONSUMPTION FRAME TO HEATPUMP TX BUFFER\r\n");   
         POWER_CONSUMPTION_TO_HEATPUMP = false;
+        return;
+         
     }
     else
     {
         // Just asking the normal data
         bool foundFrame = false;
         
-        while (!foundFrame) {
-            // Wait for valid frame to send
-            
+        uint8_t attempts = 0;
+
+        while (!foundFrame && attempts < COMMUNICATION_ARRAY_MAX_ROWS)
+        {
+            attempts++;
+
             if (i < COMMUNICATION_ARRAY_NORMAL_ROWS) {
-                // First 17 normal rows, always send these
                 foundFrame = true;
             }
-            else if (i < COMMUNICATION_ARRAY_MAX_ROWS){
-                // Extra 15 rows for cascade slave(s)
-                // First time here i = 17;
-                uint8_t extraIndex = i - (COMMUNICATION_ARRAY_NORMAL_ROWS - 1);  // 0 t/m 14
+            else if (i < COMMUNICATION_ARRAY_MAX_ROWS) {
+                //uint8_t extraIndex = i - COMMUNICATION_ARRAY_NORMAL_ROWS;
+                uint8_t extraIndex = i - (COMMUNICATION_ARRAY_NORMAL_ROWS - 1);
 
                 uint16_t cascadeSlavesStatus = getCascadeSlaveStatus();
 
-                // controleer of het bijbehorende bit aan staat
-                if ((cascadeSlavesStatus >> extraIndex) & 1) {
-                    // bit is 1 ? Cascade Slave is present
+                if (cascadeSlavesStatus != UINT16_MAX &&
+                    ((cascadeSlavesStatus >> extraIndex) & 1U)) {
                     foundFrame = true;
-                } 
-                else {
-                    // bit is 0 ? Cascade Slave is NOT present
+                } else {
                     i++;
                 }
             }
             else {
-                // end
                 i = 0;
             }
+        }
+
+        if (!foundFrame) {
+            i = 0;
         }
 
         txBuffer[MODBUS_ADDRESS_INDEX] =            CommunicationArray[i][0];
@@ -384,6 +429,7 @@ void FillTxBuffer(uint8_t * txBuffer)
         if (i >= COMMUNICATION_ARRAY_MAX_ROWS) {
             i = 0;
         }
+        return;
     }
 }
 
@@ -522,8 +568,8 @@ void FillBufferWithStartupSettings(bool doFirstTimeHeatpumpCommunicationSettings
     
     if (doFirstTimeHeatpumpCommunicationSettings == true)
     {
-        ChangeHeatpumpSetting(ADDRESS_FUNCTIONAL_MODE, 96);
-        ChangeHeatpumpSetting(ADDRESS_CREW_CONTROL, 1024);
+        //ChangeHeatpumpSetting(ADDRESS_FUNCTIONAL_MODE, 96);
+        //ChangeHeatpumpSetting(ADDRESS_CREW_CONTROL, 1024);
         ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, 5); 
         ChangeHeatpumpSetting(ADDRESS_STERILIZATION_INTERVAL_DAYS, 7); 
         ChangeHeatpumpSetting(ADDRESS_STERILIZATION_START_TIME, 14); 

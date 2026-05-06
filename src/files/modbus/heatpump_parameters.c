@@ -4,11 +4,13 @@
 #include <stdbool.h>                    // Defines true
 #include "definitions.h"
 #include "heatpump_parameters.h"
+#include "heatpump.h"
 #include "modbus.h"
 #include "../time_counters.h"
 #include "../states.h"
 
 #define CASCADE_BIT_IS_SET(mask, bit)   (((mask) & (1u << (bit))) != 0u)
+
 
 // Known parameters
 uint16_t RealTimeData1          [REGISTERS_AMOUNT_REAL_TIME_DATA_1]         [PARAMETERS_ARRAY_LENGTH] [MAX_AMOUNT_HEATPUMPS_IN_CASCADE]; 
@@ -56,8 +58,10 @@ bool addSetting(MANUAL_SETTING newSetting)
 {
     if (currentSizeSettingsArray < MAX_SETTINGS) 
     {
+        
         //SYS_CONSOLE_PRINT("\nAdd setting %i, %i, %i, %i, %i\n", newSetting.settingStatus, newSetting.modbusDeviceAddress, newSetting.modbusCommand, newSetting.modbusWriteRegister, newSetting.modbusWriteData);
         settings[currentSizeSettingsArray++] = newSetting;
+        SYS_CONSOLE_PRINT("NEW SETTING, %i \r\n", currentSizeSettingsArray);   
         return true;
     } 
     else 
@@ -141,11 +145,13 @@ void ConfirmSettingIsEchoed(uint16_t reg, uint16_t data)
 {
     MANUAL_SETTING setting = (MANUAL_SETTING)PopFirstSetting();
     //if (setting.settingStatus == SETTING_SEND_STATUS_SETTING_IS_SENT) {
+    //SYS_CONSOLE_PRINT("RESPONSE S, %i, D %i\r\n", reg, data);   
         if (reg == setting.modbusWriteRegister && data == setting.modbusWriteData)
-        {
+        {  
             //setting.settingStatus = SETTING_SEND_STATUS_SETTING_IS_ECHOED;
             //setting.settingStatus = SETTING_SEND_STATUS_IDLE;
             setWaitForSettingEchoProtection(UINT32_MAX);
+            ResetHeatpumpSettingRetryCounter();
             removeSetting();
             
             //SetDataInArrays(reg, data);
