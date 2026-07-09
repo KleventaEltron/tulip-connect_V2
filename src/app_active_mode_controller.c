@@ -415,6 +415,7 @@ void PrintResetCause(void)
                 SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
                 SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, MASTER_HEATPUMP_IN_CASCADE));
             }
+             
         }
         
     }
@@ -917,7 +918,80 @@ void checkHeatpumpTargetFrequency() {
     return false;
  }
  
- 
+RUNNING_MODES determineRunningMode()
+{
+    //app_active_mode_controllerData.currentRunningMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
+    static bool previousChangeOverEnabled = false;
+    static bool initialized = false;
+    
+    bool changeOverSettingEnabled = (bool)ReadSmartEeprom16(SEEP_ADDR_CHANGEOVER_CONTACT_ENABLE);
+    RUNNING_MODES runningMode = (RUNNING_MODES)ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
+    
+    if (initialized == false) {
+        previousChangeOverEnabled = changeOverSettingEnabled;
+        initialized = true;
+    }
+    
+    // Alleen op het moment dat changeover van AAN naar UIT gaat
+    if (previousChangeOverEnabled == true && changeOverSettingEnabled == false) {
+        // One time when the settings gets disabled
+        if (runningMode == COOLING) {
+            runningMode = HEATING;
+            WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, runningMode);
+        }
+        else if (runningMode == HOT_WATER_COOLING) {
+            runningMode = HOT_WATER_HEATING;
+            WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, runningMode);
+        }
+
+        previousChangeOverEnabled = changeOverSettingEnabled;
+        return runningMode;
+    }
+    
+    previousChangeOverEnabled = changeOverSettingEnabled;
+    
+    if (changeOverSettingEnabled == false || runningMode == HOT_WATER) {
+        return runningMode;
+    }
+    
+    bool changeOverContactStatus = (bool)GetChangeOverContact();
+    RUNNING_MODES newMode = runningMode;
+
+    switch (runningMode) {
+        case HEATING:
+            if (changeOverContactStatus == true) {
+                newMode = COOLING;
+            }
+            break;
+
+        case COOLING:
+            if (changeOverContactStatus == false) {
+                newMode = HEATING;
+            }
+            break;
+
+        case HOT_WATER_HEATING:
+            if (changeOverContactStatus == true) {
+                newMode = HOT_WATER_COOLING;
+            }
+            break;
+
+        case HOT_WATER_COOLING:
+            if (changeOverContactStatus == false) {
+                newMode = HOT_WATER_HEATING;
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    if (newMode != runningMode) {
+        WriteSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE, newMode);
+    }
+
+    return newMode;
+}
  
 void callActiveModeTaskHandler() {
     switch(app_active_mode_controllerData.currentRunningMode)
@@ -1095,8 +1169,8 @@ void APP_ACTIVE_MODE_CONTROLLER_Tasks ( void )
      * Get the most recent selected active mode from the display 
      * 
      */
-    app_active_mode_controllerData.currentRunningMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
-    
+    //app_active_mode_controllerData.currentRunningMode = ReadSmartEeprom16(SEEP_ADDR_HEATPUMP_MODE);
+    app_active_mode_controllerData.currentRunningMode = determineRunningMode();
     
     /*
      *
