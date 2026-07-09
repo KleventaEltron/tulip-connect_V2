@@ -415,7 +415,7 @@ void PrintResetCause(void)
                 SYS_CONSOLE_PRINT(" DIP 1 state:          %i\n", getCurrentDip1SwitchState());
                 SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, MASTER_HEATPUMP_IN_CASCADE));
             }
-             */
+             
         }
         
     }
