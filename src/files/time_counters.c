@@ -404,8 +404,8 @@ bool HeatpumpCommunicationTimerExpired ( void )
 
 bool LoggingTimerExpired ( void ) {
     //if ((SecondCounterLogging >= TENTH_SECOND_COUNTER_1_MINUTE) && (getSettingChangedInDisplay() || getNewLogRequired())) {
-    if ((SecondCounterLogging >= TENTH_SECOND_COUNTER_1_MINUTE) && (getSettingChangedInDisplay() || getNewLogRequired())) {
-        SYS_CONSOLE_PRINT("***** EITHER DISPLAY || OR NEW SETTINGS REQUIRED ***** \r\n");
+        if ((SecondCounterLogging >= TENTH_SECOND_COUNTER_1_MINUTE) && (getSettingChangedInDisplay() || getNewLogRequired())) {
+        // SYS_CONSOLE_PRINT("***** EITHER DISPLAY || OR NEW SETTINGS REQUIRED ***** \r\n");
         setNewLogRequired(false);
         SecondCounterLoggingSettingsOnly = 0;
         SecondCounterLogging = 0;

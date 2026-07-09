@@ -1666,6 +1666,15 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
             break;            
         }
         
+        case RETURN_DIFFERENTIAL_VALUE_HEATING: {
+            WriteSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING, value);
+            break;
+        }
+        case RETURN_DIFFERENTIAL_VALUE_COOLING: {
+            WriteSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_COOLING, value);
+            break;
+        }
+        
         default: {
             ChangeHeatpumpSetting(address, value);
             break;

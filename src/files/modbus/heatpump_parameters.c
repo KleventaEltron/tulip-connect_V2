@@ -61,7 +61,7 @@ bool addSetting(MANUAL_SETTING newSetting)
         
         //SYS_CONSOLE_PRINT("\nAdd setting %i, %i, %i, %i, %i\n", newSetting.settingStatus, newSetting.modbusDeviceAddress, newSetting.modbusCommand, newSetting.modbusWriteRegister, newSetting.modbusWriteData);
         settings[currentSizeSettingsArray++] = newSetting;
-        SYS_CONSOLE_PRINT("NEW SETTING, %i \r\n", currentSizeSettingsArray);   
+        //SYS_CONSOLE_PRINT("NEW SETTING, %i \r\n", currentSizeSettingsArray);   
         return true;
     } 
     else 
@@ -194,7 +194,7 @@ void ChangeHeatpumpSetting(uint16_t reg, uint16_t data)
         MANUAL_SETTING newSetting = {SETTING_SEND_STATUS_SETTING_FILLED, (bit + 1), MB_FC_WRITE_REG, reg, data};
         addSetting(newSetting);   
         
-        SYS_CONSOLE_PRINT("Trying to add setting for mask = (0x%04X), S, %i, D %i\r\n", cascadeMask, reg, data);            
+        //SYS_CONSOLE_PRINT("Trying to add setting for mask = (0x%04X), S, %i, D %i\r\n", cascadeMask, reg, data);            
     }
             
     /*

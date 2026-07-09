@@ -77,9 +77,9 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         case APP_LOGGING_TASKS_IDLE:
         {
-            if (getActivateWifiAp()) {
-                break;
-            }
+//            if (getActivateWifiAp()) {
+//                break;
+//            }
             
             if (LoggingTimerExpiredSettingsInterval() && !onlyDoSettings) {
                 SYS_CONSOLE_PRINT("***** ONLY DO SETTINGS ***** \r\n");
@@ -362,7 +362,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
         case APP_LOGGING_TASKS_READ_RECEIVE_BUFFER_UPDATE_SETTINGS:
         {
             if (readServerResponseDone()) {
-                SYS_CONSOLE_PRINT("Done receiving data from server, start parsing!\r\n");
+                //SYS_CONSOLE_PRINT("Done receiving data from server, start parsing!\r\n");
                 app_logging_tasksData.state = APP_LOGGING_TASKS_PARSE_UPDATE_SETTINGS;            
             }
             
@@ -374,7 +374,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
         case APP_LOGGING_TASKS_PARSE_UPDATE_SETTINGS:
         {
             if (parse_modbus_settings()) {
-                SYS_CONSOLE_PRINT("Done receiving data from server, SETTING PARSED!\r\n");
+                //SYS_CONSOLE_PRINT("Done receiving data from server, SETTING PARSED!\r\n");
                 resetLoggingTimers();
                 setNewLogRequired(true);
                 app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_NEW_SETTINGS_CHANGED;      
@@ -399,7 +399,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
         {
             if(getSettingsQueuedAmount() > 0) { break; }
             
-            SYS_CONSOLE_PRINT("SETTING QUEUE EMPTY, PROCEEDING!\r\n");
+            // SYS_CONSOLE_PRINT("SETTING QUEUE EMPTY, PROCEEDING!\r\n");
             
             setSecondCounterDelayAfterChangingSettings(0);
             

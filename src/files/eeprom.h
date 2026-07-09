@@ -131,6 +131,9 @@
 #define SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY_CONSTANT_B           137 // 2 bytes V2-0-19
 #define SEEP_ADDR_INITIAL_FAN_SPEED                                        139 // 2 bytes V2-0-19
 
+#define SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING                        141
+#define SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_COOLING                        143
+
 #define SEEP_ADDR
 
 //.....

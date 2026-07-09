@@ -335,8 +335,6 @@ void FillTxBuffer(uint8_t * txBuffer)
 
         if (settingRetryCounter > MAX_SETTING_RETRIES)
         {
-            SYS_CONSOLE_PRINT("Heatpump setting retry limit reached. Dropping setting.\r\n");
-
             removeSetting();
             settingRetryCounter = 0;
 
