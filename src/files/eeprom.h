@@ -133,6 +133,7 @@
 
 #define SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING                        141
 #define SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_COOLING                        143
+#define SEEP_ADDR_CHANGEOVER_CONTACT_ENABLE                                145 // 2 bytes V2-0-22
 
 #define SEEP_ADDR
 
