@@ -434,7 +434,7 @@ void SmartEepromInit(void)
         WriteSmartEeprom16(SEEP_ADDR_INITIAL_FAN_SPEED, 35);
     }
     
-    if (thisEepromVersion < 2000021) {
+    if (thisEepromVersion < 2000022) {
         WriteSmartEeprom16(SEEP_ADDR_CHANGEOVER_CONTACT_ENABLE, false);
     }
     
