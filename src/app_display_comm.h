@@ -40,6 +40,8 @@
 
 #define THIS_DEVICE_ADDRESS 0x01
 
+#define POWER_CONSUMPTION_FRAME 0x68
+
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
 

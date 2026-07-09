@@ -6,6 +6,9 @@
 #include "heatpump.h"
 #include "definitions.h"
 
+bool POWER_CONSUMPTION_RESPONSE_TO_DISPLAY = false;
+bool POWER_CONSUMPTION_TO_HEATPUMP = false;
+bool PAUSE_FRAME_TRIGGERED = false;
 /*
 static uint16_t getDataFromAddress(uint16_t address)
 {
@@ -237,6 +240,42 @@ uint8_t CalculateModbusBufferSize(uint8_t* buffer)
     
     return (size);
 }
+
+
+DLT645_FRAME_DATA g_dlt645FrameData;
+
+void DLT645_FrameInit(void)
+{
+    memset(g_dlt645FrameData.frame, 0, sizeof(g_dlt645FrameData.frame));
+    g_dlt645FrameData.length  = 0U;
+    g_dlt645FrameData.pending = false;
+}
+
+bool DLT645_FrameStore(const uint8_t *src, uint16_t len)
+{
+    if ((src == NULL) || (len == 0U) || (len > DLT645_MAX_FRAME_SIZE))
+    {
+        return false;
+    }
+
+    memcpy(g_dlt645FrameData.frame, src, len);
+    g_dlt645FrameData.length  = len;
+    g_dlt645FrameData.pending = true;
+
+    return true;
+}
+
+void DLT645_FrameClear(void)
+{
+    g_dlt645FrameData.length  = 0U;
+    g_dlt645FrameData.pending = false;
+}
+
+const DLT645_FRAME_DATA *DLT645_FrameGet(void)
+{
+    return &g_dlt645FrameData;
+}
+
 
 /*
 void FillTransmitBufferWithOwnData(uint8_t* txBuffer)

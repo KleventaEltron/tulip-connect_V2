@@ -174,7 +174,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
             if (getCurrentUtcTimestamp()) {
                 app_logging_tasksData.state = APP_LOGGING_TASKS_PARSE_STRING_TO_IP;
             }
-            
+            break;
         }
         
         

@@ -4,11 +4,13 @@
 #include <stdbool.h>                    // Defines true
 #include "definitions.h"
 #include "heatpump_parameters.h"
+#include "heatpump.h"
 #include "modbus.h"
 #include "../time_counters.h"
 #include "../states.h"
 
 #define CASCADE_BIT_IS_SET(mask, bit)   (((mask) & (1u << (bit))) != 0u)
+
 
 // Known parameters
 uint16_t RealTimeData1          [REGISTERS_AMOUNT_REAL_TIME_DATA_1]         [PARAMETERS_ARRAY_LENGTH] [MAX_AMOUNT_HEATPUMPS_IN_CASCADE]; 
@@ -17,6 +19,7 @@ uint16_t UnitSystemParameters   [REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETERS]   [PAR
 uint16_t UserParameters         [REGISTERS_AMOUNT_USER_PARAMETERS]          [PARAMETERS_ARRAY_LENGTH]; 
 uint16_t UserOrder              [REGISTERS_AMOUNT_USER_ORDER]               [PARAMETERS_ARRAY_LENGTH]; 
 uint16_t VersionInformation     [REGISTERS_AMOUNT_VERSION_INFORMATION]      [PARAMETERS_ARRAY_LENGTH]; 
+uint16_t PowerConsumption       [REGISTERS_AMOUNT_POWER_CONSUMPTION]        [PARAMETERS_ARRAY_LENGTH];
 uint16_t UnitSystemParameterL   [REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETER_L]  [PARAMETERS_ARRAY_LENGTH]; 
 uint16_t CoilAddresses          [REGISTERS_AMOUNT_COIL_ADDRESSES]           [PARAMETERS_ARRAY_LENGTH]; 
 
@@ -55,8 +58,10 @@ bool addSetting(MANUAL_SETTING newSetting)
 {
     if (currentSizeSettingsArray < MAX_SETTINGS) 
     {
+        
         //SYS_CONSOLE_PRINT("\nAdd setting %i, %i, %i, %i, %i\n", newSetting.settingStatus, newSetting.modbusDeviceAddress, newSetting.modbusCommand, newSetting.modbusWriteRegister, newSetting.modbusWriteData);
         settings[currentSizeSettingsArray++] = newSetting;
+        SYS_CONSOLE_PRINT("NEW SETTING, %i \r\n", currentSizeSettingsArray);   
         return true;
     } 
     else 
@@ -140,11 +145,13 @@ void ConfirmSettingIsEchoed(uint16_t reg, uint16_t data)
 {
     MANUAL_SETTING setting = (MANUAL_SETTING)PopFirstSetting();
     //if (setting.settingStatus == SETTING_SEND_STATUS_SETTING_IS_SENT) {
+    //SYS_CONSOLE_PRINT("RESPONSE S, %i, D %i\r\n", reg, data);   
         if (reg == setting.modbusWriteRegister && data == setting.modbusWriteData)
-        {
+        {  
             //setting.settingStatus = SETTING_SEND_STATUS_SETTING_IS_ECHOED;
             //setting.settingStatus = SETTING_SEND_STATUS_IDLE;
             setWaitForSettingEchoProtection(UINT32_MAX);
+            ResetHeatpumpSettingRetryCounter();
             removeSetting();
             
             //SetDataInArrays(reg, data);
@@ -246,6 +253,12 @@ void SetDataInArrays(uint16_t address, uint16_t data)
         VersionInformation[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] = data;
         VersionInformation[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = data;
     }
+    else if ((address >= START_ADDRESS_POWER_CONSUMPTION) && (address < START_ADDRESS_POWER_CONSUMPTION + REGISTERS_AMOUNT_POWER_CONSUMPTION))
+    {
+        address -= START_ADDRESS_POWER_CONSUMPTION;
+        PowerConsumption[address][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP] = data;
+        PowerConsumption[address][PARAMETER_ARRAY_DATA_SEND_TO_DISPLAY] = data;
+    }    
     else if ((address >= START_ADDRESS_UNIT_SYSTEM_PARAMETER_L) && (address < START_ADDRESS_UNIT_SYSTEM_PARAMETER_L + REGISTERS_AMOUNT_UNIT_SYSTEM_PARAMETER_L))
     {
         address -= START_ADDRESS_UNIT_SYSTEM_PARAMETER_L;

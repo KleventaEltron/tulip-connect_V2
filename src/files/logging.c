@@ -41,7 +41,9 @@
 #define DEVICE_JSON_MAX  8192u   // start here; adjust if needed
 #define CASCADE_BIT_IS_SET(mask, bit)   (((mask) & (1u << (bit))) != 0u)
 
-
+static char devObjMeasureBuffer[DEVICE_JSON_MAX];
+static char devObjSendBuffer[DEVICE_JSON_MAX];
+static char settingsNetworkBuffer[4096];
 //extern const TCPIP_NETWORK_CONFIG __attribute__((unused))  TCPIP_HOSTS_CONFIGURATION[];
 extern const TCPIP_STACK_MODULE_CONFIG TCPIP_STACK_MODULE_CONFIG_TBL [];
 //extern const size_t TCPIP_HOSTS_CONFIGURATION_SIZE;
@@ -195,7 +197,7 @@ bool setupNewTcpipStack() {
     firstMacByte |= 0x02;  // Set "locally administered" bit
     firstMacByte &= ~0x01; 
     
-    sprintf(macToString, "%02X:%02X:%02X:%02X:%02X:%02X", 
+    snprintf(macToString, sizeof(macToString), "%02X:%02X:%02X:%02X:%02X:%02X", 
             firstMacByte,eui64[3],eui64[4],eui64[5],eui64[6],eui64[7]);
     
     //SYS_CONSOLE_PRINT("!!! MAC ADDRESS SET TO %s !!!\r\n", macToString);        
@@ -238,37 +240,37 @@ bool setupNewTcpipStack() {
 void setHardwareId( char device[], char* hardwareId, int modbusIndex ) {
     switch (DEVICE_TYPE_REQUESTED){
         case TULIP_PRINT:{
-            sprintf(hardwareId, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
+            snprintf(hardwareId, 50, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
                     eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]);       
             break;
         }
         
         case HEATPUMP:{
-            sprintf(hardwareId, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-W-%i",
+            snprintf(hardwareId, 50, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-W-%i",
                     eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7], modbusIndex);
             break;
         }
         
         case BATTERY:{
-            sprintf(hardwareId, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-B-%i",
+            snprintf(hardwareId, 50, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-B-%i",
                     eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7], modbusIndex);            
             break;
         }
         
         case SMART_METER:{
-            sprintf(hardwareId, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-SM-%i",
+            snprintf(hardwareId, 50, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-SM-%i",
                     eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7], modbusIndex);            
             break;
         }
         
         case INVERTER:{
-            sprintf(hardwareId, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-I-%i",
+            snprintf(hardwareId, 50, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-I-%i",
                     eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7], modbusIndex);            
             break;
         }
         
         case HEATPUMP_BOILER:{
-            sprintf(hardwareId, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-HB-%i",
+            snprintf(hardwareId, 50, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-HB-%i",
                     eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7], modbusIndex);            
             break;
         }
@@ -303,139 +305,115 @@ bool getCurrentUtcTimestamp ( void ) {
 
 
 char parameter[100];
-void setLogValue_STRING( char* requestBuilder, char settingName[], char value[]) {
-    sprintf(parameter, "\"%s\": \"%s\",", settingName, value);
-    strcat(requestBuilder, parameter);
-    memset(parameter, 0, sizeof (parameter));
-    return;
-}
-
-
-
-void setLogValue_BOOLEAN( char* requestBuilder, char settingName[], bool value) {
-    sprintf(parameter, "\"%s\": %d,", settingName, value);
-    strcat(requestBuilder, parameter);
-    memset(parameter, 0, sizeof (parameter));
-    return;
-}
-
-
-
-void setLogValue_NUMBER( char* requestBuilder, char settingName[], int value ) {
-    sprintf(parameter, "\"%s\": %i,", settingName, value);
-    strcat(requestBuilder, parameter);
-    memset(parameter, 0, sizeof (parameter));
-    return;
-}
-
-static bool setLogValue_NUMBER_S(char* rb, size_t rbSize, const char* name, int value)
-{
-    return appendf(rb, rbSize, "\"%s\": %i,", name, value);
-}
-
-static bool setLogValue_STRING_S(char* rb, size_t rbSize, const char* name, const char* value)
+bool setLogValue_STRING(char* rb, size_t rbSize, const char* name, const char* value)
 {
     return appendf(rb, rbSize, "\"%s\": \"%s\",", name, value);
 }
 
+bool setLogValue_BOOLEAN(char* rb, size_t rbSize, const char* name, bool value)
+{
+    return appendf(rb, rbSize, "\"%s\": %d,", name, value ? 1 : 0);
+}
 
-
-
+bool setLogValue_NUMBER(char* rb, size_t rbSize, const char* name, int value)
+{
+    return appendf(rb, rbSize, "\"%s\": %i,", name, value);
+}
 
 
 bool setLoggingDataPerDeviceType(char* requestBuilder, size_t requestBuilderSize, char device[], int index) {
     char hardwareId[50];
    
     /* SET THE DEVICE TYPE IN THE HTTP HEADER */
-    sprintf(parameter, "{\"type\": \"%s\",", device);
-    strcat(requestBuilder, parameter);
+    if (!appendf(requestBuilder, requestBuilderSize, "{\"type\": \"%s\",", device)) return false;
     memset(parameter, 0, sizeof (parameter));
     
     /* SET THE HARDWARE ID IN THE HTTP HEADER */
     setHardwareId( device, hardwareId, index );
-    sprintf(parameter, "\"hardware_id\": \"%s\",", hardwareId);
-    strcat(requestBuilder, parameter);
+    if (!appendf(requestBuilder, requestBuilderSize, "\"hardware_id\": \"%s\",", hardwareId)) return false;
     memset(parameter, 0, sizeof (parameter));
         
     /* ADD THE REQUEST BODY TO THE HTTP */
-    strcat(requestBuilder, "\"values\": {");
+    if (!appendf(requestBuilder, requestBuilderSize, "\"values\": {")) return false;
     switch (DEVICE_TYPE_REQUESTED){
         
         case TULIP_PRINT:{
-            setLogValue_STRING(requestBuilder, HardwareID, hardwareId);          
-            setLogValue_STRING(requestBuilder, KlantID, UNDEFINED_STRING);
+            if (!setLogValue_STRING(requestBuilder, requestBuilderSize, HardwareID, hardwareId)) return false;          
+            if (!setLogValue_STRING(requestBuilder, requestBuilderSize, KlantID, UNDEFINED_STRING)) return false;
             
             /* Software versie */
-            sprintf(parameter, "\"%s\": \"%d-%d-%d\",", SoftwareVersie, (int)((THIS_FIRMWARE_VERSION / 1000000)), (int)((THIS_FIRMWARE_VERSION / 1000) % 1000), (int)(THIS_FIRMWARE_VERSION % 1000));
-            strcat(requestBuilder, parameter);
-            memset(parameter, 0, sizeof (parameter));
+            if (!appendf(requestBuilder, requestBuilderSize, "\"%s\": \"%d-%d-%d\",", SoftwareVersie,
+                    (int)((THIS_FIRMWARE_VERSION / 1000000)),
+                    (int)((THIS_FIRMWARE_VERSION / 1000) % 1000),
+                    (int)(THIS_FIRMWARE_VERSION % 1000))) return false;
             
             /* Bootloader software versie */
             uint32_t BOOTLOADER_FIRMWARE_VERSION = ReadSmartEeprom32(BOOTLOADER_SOFTWARE_VERSION);
-            sprintf(parameter, "\"%s\": \"%d-%d-%d\",", BootloaderSoftwareVersie, (int)((BOOTLOADER_FIRMWARE_VERSION / 1000000)), (int)((BOOTLOADER_FIRMWARE_VERSION / 1000) % 1000), (int)(BOOTLOADER_FIRMWARE_VERSION % 1000));
-            strcat(requestBuilder, parameter);
-            memset(parameter, 0, sizeof (parameter));
+            if (!appendf(requestBuilder, requestBuilderSize, "\"%s\": \"%d-%d-%d\",", BootloaderSoftwareVersie,
+                    (int)((BOOTLOADER_FIRMWARE_VERSION / 1000000)),
+                    (int)((BOOTLOADER_FIRMWARE_VERSION / 1000) % 1000),
+                    (int)(BOOTLOADER_FIRMWARE_VERSION % 1000))) return false;
                 
             //setLogValue_STRING(requestBuilder, BootloaderSoftwareVersie, UNDEFINED_STRING);
-            setLogValue_STRING(requestBuilder, RTCCDatumtijd, NTP_TIME_BUFFER);    
-            setLogValue_STRING(requestBuilder, NTPDatumtijd, NTP_TIME_BUFFER);   
-            setLogValue_NUMBER(requestBuilder, Lognummer, UNDEFINED_INT16_T);
+            if (!setLogValue_STRING(requestBuilder, requestBuilderSize, RTCCDatumtijd, NTP_TIME_BUFFER)) return false;    
+            if (!setLogValue_STRING(requestBuilder, requestBuilderSize, NTPDatumtijd, NTP_TIME_BUFFER)) return false;   
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, Lognummer, UNDEFINED_INT16_T)) return false;
             
-            setLogValue_NUMBER(requestBuilder, ConnectTemp1, GetNtcTemperature(NTC_HEATING_BUFFER));
-            setLogValue_NUMBER(requestBuilder, ConnectTemp2, GetNtcTemperature(NTC_HOT_WATER_BUFFER));
-            setLogValue_NUMBER(requestBuilder, ConnectTemp3, GetNtcTemperature(NTC_RESERVED_1));
-            setLogValue_NUMBER(requestBuilder, ConnectTemp4, GetNtcTemperature(NTC_RESERVED_2));
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, ConnectTemp1, GetNtcTemperature(NTC_HEATING_BUFFER))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, ConnectTemp2, GetNtcTemperature(NTC_HOT_WATER_BUFFER))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, ConnectTemp3, GetNtcTemperature(NTC_RESERVED_1))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, ConnectTemp4, GetNtcTemperature(NTC_RESERVED_2))) return false;
             
-            setLogValue_BOOLEAN(requestBuilder, ConnectInput1, GetThermostatContact());
-            setLogValue_BOOLEAN(requestBuilder, ConnectInput2, GetDigitalInput2());
-            setLogValue_BOOLEAN(requestBuilder, ConnectInput3, GetDigitalInput3());
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, ConnectInput1, GetThermostatContact())) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, ConnectInput2, GetDigitalInput2())) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, ConnectInput3, GetDigitalInput3())) return false;
             
-            setLogValue_BOOLEAN(requestBuilder, ConnectRelay1, RelayPotfree1_Get());
-            setLogValue_BOOLEAN(requestBuilder, ConnectRelay2, RelayPotfree2_Get());
-            setLogValue_BOOLEAN(requestBuilder, ConnectRelay3, RelayPotfree3_Get());
-            setLogValue_BOOLEAN(requestBuilder, BufferElekElement, getStatusHeatingElementHeatingBuffer());
-            setLogValue_BOOLEAN(requestBuilder, TapwaterElekElement, getStatusHeatingElementHotWaterBuffer());
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, ConnectRelay1, RelayPotfree1_Get())) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, ConnectRelay2, RelayPotfree2_Get())) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, ConnectRelay3, RelayPotfree3_Get())) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, BufferElekElement, getStatusHeatingElementHeatingBuffer())) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, TapwaterElekElement, getStatusHeatingElementHotWaterBuffer())) return false;
             
-            setLogValue_BOOLEAN(requestBuilder, Reserved230vRelay, getReserved230VRelay());
-            setLogValue_BOOLEAN(requestBuilder, ThreeWayValveRelay, getStatus3WayValve());
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, Reserved230vRelay, getReserved230VRelay())) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, ThreeWayValveRelay, getStatus3WayValve())) return false;
             
-            setLogValue_BOOLEAN(requestBuilder, CirculatorPump, getStatusCirculationPump());
-            setLogValue_BOOLEAN(requestBuilder, SwitchInput, getInputSlideSwitch());
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, CirculatorPump, getStatusCirculationPump())) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, SwitchInput, getInputSlideSwitch())) return false;
             
-            setLogValue_BOOLEAN(requestBuilder, VerbondenMetServer, TRUE);
-            setLogValue_BOOLEAN(requestBuilder, DIPswitch1, GetDip1());
-            setLogValue_BOOLEAN(requestBuilder, DIPswitch2, GetDip2());
-            setLogValue_BOOLEAN(requestBuilder, DIPswitch3, GetDip3());
-            setLogValue_BOOLEAN(requestBuilder, DIPswitch4, GetDip4());
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, VerbondenMetServer, TRUE)) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, DIPswitch1, GetDip1())) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, DIPswitch2, GetDip2())) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, DIPswitch3, GetDip3())) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, DIPswitch4, GetDip4())) return false;
             
             //setLogValue_BOOLEAN(requestBuilder, ConfigModusActief, FALSE);
             //setLogValue_STRING(requestBuilder, WifiStatus, UNDEFINED_CHAR);   
             //setLogValue_NUMBER(requestBuilder, WifiInfo, UNDEFINED_INT16_T);
             
-            setLogValue_BOOLEAN(requestBuilder, SDcardAanwezig, SD_CARD_MOUNT_FLAG);
-            setLogValue_NUMBER(requestBuilder, SDstatus, getSdCardState());          
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, SDcardAanwezig, SD_CARD_MOUNT_FLAG)) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, SDstatus, getSdCardState())) return false;          
             
             //setLogValue_STRING(requestBuilder, RS485commMetDisplayOK, UNDEFINED_CHAR);
             //setLogValue_STRING(requestBuilder, RS485ommMetWarmtepompOK, UNDEFINED_CHAR);
             //setLogValue_NUMBER(requestBuilder, EthernetStatus, UNDEFINED_INT16_T);  
             //setLogValue_NUMBER(requestBuilder, USBstatus, UNDEFINED_INT16_T);  
             
-            setLogValue_BOOLEAN(requestBuilder, PowerFailStatus, getPowerFailStatus());
-            setLogValue_BOOLEAN(requestBuilder, SupercapacitorFaultStatus, getSupercapFaultStatus());
-            setLogValue_BOOLEAN(requestBuilder, Systemgoodindicator, getSystemGoodIndicator());
-            setLogValue_BOOLEAN(requestBuilder, SupercapacitorPowerGoodIndicator, getSupercapacitorPowerGoodIndicator());
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, PowerFailStatus, getPowerFailStatus())) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, SupercapacitorFaultStatus, getSupercapFaultStatus())) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, Systemgoodindicator, getSystemGoodIndicator())) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, SupercapacitorPowerGoodIndicator, getSupercapacitorPowerGoodIndicator())) return false;
             
-            setLogValue_NUMBER(requestBuilder, Alarmbytes, GetAlarm(0)); 
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, Alarmbytes, GetAlarm(0))) return false; 
             
-            setLogValue_BOOLEAN(requestBuilder, emergencyModeHeating, ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED));
-            setLogValue_BOOLEAN(requestBuilder, emergencyModeHotwater, ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED));            
-            setLogValue_NUMBER(requestBuilder, circPumpOffTempLow, ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW)); 
-            setLogValue_NUMBER(requestBuilder, circPumpOnTempLow, ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP)); 
-            setLogValue_NUMBER(requestBuilder, circPumpOffTempHigh, ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH)); 
-            setLogValue_NUMBER(requestBuilder, circPumpOnTempHigh, ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP)); 
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, emergencyModeHeating, ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HEATING_ENABLED))) return false;
+            if (!setLogValue_BOOLEAN(requestBuilder, requestBuilderSize, emergencyModeHotwater, ReadSmartEeprom16(SEEP_ADDR_EMERGENCY_MODE_HOTWATER_ENABLED))) return false;            
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, circPumpOffTempLow, ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_LOW))) return false; 
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, circPumpOnTempLow, ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_LOW_TEMP))) return false; 
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, circPumpOffTempHigh, ReadSmartEeprom16(SEEP_ADDR_PUMP_OFF_TEMP_TOO_HIGH))) return false; 
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, circPumpOnTempHigh, ReadSmartEeprom16(SEEP_ADDR_PUMP_ON_TEMP_AFTER_TOO_HIGH_TEMP))) return false; 
             
-            setLogValue_NUMBER(requestBuilder, circPumpOnTemp, ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_ON_TEMPERATURE)); 
-            setLogValue_NUMBER(requestBuilder, circPumpControlOnAmbTemp, ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_CONTROL_AT_AMBIENT_TEMPERATURE)); 
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, circPumpOnTemp, ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_ON_TEMPERATURE))) return false; 
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, circPumpControlOnAmbTemp, ReadSmartEeprom16(SEEP_ADDR_CIRCULATION_PUMP_CONTROL_AT_AMBIENT_TEMPERATURE))) return false; 
             
             requestBuilder[strlen(requestBuilder)-1] = '\0';
             break;
@@ -445,76 +423,83 @@ bool setLoggingDataPerDeviceType(char* requestBuilder, size_t requestBuilderSize
         
         case HEATPUMP:{
             index -= 1;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL1",  getDataFromMemoryCallable(ADDRESS_RUNNING_STATUS_1, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL2",  getDataFromMemoryCallable(ADDRESS_RUNNING_STATUS_2, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL3",  getDataFromMemoryCallable(ADDRESS_FAULT_STATE_1, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL4",  getDataFromMemoryCallable(ADDRESS_FAULT_STATE_2, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL5",  getDataFromMemoryCallable(ADDRESS_FAULT_STATE_3, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL6",  getDataFromMemoryCallable(ADDRESS_SYSTEM_1_FAULT_STATE_1, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL7",  getDataFromMemoryCallable(ADDRESS_SYSTEM_1_FAULT_STATE_2, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL8",  getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_1, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL9",  getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_2, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL10", getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_3, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL1",  getDataFromMemoryCallable(ADDRESS_RUNNING_STATUS_1, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL2",  getDataFromMemoryCallable(ADDRESS_RUNNING_STATUS_2, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL3",  getDataFromMemoryCallable(ADDRESS_FAULT_STATE_1, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL4",  getDataFromMemoryCallable(ADDRESS_FAULT_STATE_2, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL5",  getDataFromMemoryCallable(ADDRESS_FAULT_STATE_3, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL6",  getDataFromMemoryCallable(ADDRESS_SYSTEM_1_FAULT_STATE_1, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL7",  getDataFromMemoryCallable(ADDRESS_SYSTEM_1_FAULT_STATE_2, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL8",  getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_1, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL9",  getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_2, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL10", getDataFromMemoryCallable(ADDRESS_SYSTEM_1_DRIVE_FAULT_STATE_3, index))) return false;
 
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL11", getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_1, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL12", getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_2, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL13", getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_3, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL14", getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_4, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL15", getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_1, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL16", getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_2, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL17", getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_3, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL18", getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_4, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL19", getDataFromMemoryCallable(ADDRESS_CURRENT_UNIT_TOOLING_NO, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL20", (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_1_TARGET_FREQUENCY, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL11", getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_1, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL12", getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_2, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL13", getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_3, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL14", getDataFromMemoryCallable(ADDRESS_RELAY_OUTPUT_STATUS_4, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL15", getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_1, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL16", getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_2, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL17", getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_3, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL18", getDataFromMemoryCallable(ADDRESS_SWITCH_PORT_STATE_4, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL19", getDataFromMemoryCallable(ADDRESS_CURRENT_UNIT_TOOLING_NO, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL20", (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_1_TARGET_FREQUENCY, index))) return false;
 
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL21", (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_OPERATING_FREQUENCY, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL22", (int16_t)getDataFromMemoryCallable(ADDRESS_FAN_OPERATING_FREQUENCY_ROTATIONAL_SPEED, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL23", (int16_t)getDataFromMemoryCallable(ADDRESS_ELECTRONIC_EXPANSION_VALVE_STEPS_COUNT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL24", (int16_t)getDataFromMemoryCallable(ADDRESS_NUMBER_OF_EVI_VALVE_STEPS, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL25", (int16_t)getDataFromMemoryCallable(ADDRESS_AC_INPUT_VOLTAGE, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL26", (int16_t)getDataFromMemoryCallable(ADDRESS_AC_INPUT_CURRENT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL27", (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_PHASE_CURRENT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL28", (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_IPM_TEMPERATURE, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL29", (int16_t)getDataFromMemoryCallable(ADDRESS_HIGH_PRESSURE_SATURATION_TEMPERATURE, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL30", (int16_t)getDataFromMemoryCallable(ADDRESS_LOW_PRESSURE_SATURATION_TEMPERATURE, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL21", (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_OPERATING_FREQUENCY, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL22", (int16_t)getDataFromMemoryCallable(ADDRESS_FAN_OPERATING_FREQUENCY_ROTATIONAL_SPEED, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL23", (int16_t)getDataFromMemoryCallable(ADDRESS_ELECTRONIC_EXPANSION_VALVE_STEPS_COUNT, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL24", (int16_t)getDataFromMemoryCallable(ADDRESS_NUMBER_OF_EVI_VALVE_STEPS, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL25", (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_2_TARGET_FREQUENCY, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL26", (int16_t)getDataFromMemoryCallable(ADDRESS_SYSTEM_2_COMPRESSOR_RUNNING, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL27", (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_PHASE_CURRENT, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL28", (int16_t)getDataFromMemoryCallable(ADDRESS_COMPRESSOR_IPM_TEMPERATURE, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL29", (int16_t)getDataFromMemoryCallable(ADDRESS_HIGH_PRESSURE_SATURATION_TEMPERATURE, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL30", (int16_t)getDataFromMemoryCallable(ADDRESS_LOW_PRESSURE_SATURATION_TEMPERATURE, index))) return false;
 
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL31", (int16_t)getDataFromMemoryCallable(ADDRESS_EXTERNAL_AMBIENT_TEMPERATURE_T1, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL32", (int16_t)getDataFromMemoryCallable(ADDRESS_EXTERNAL_COIL_TUBE_FIN_T2, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL33", (int16_t)getDataFromMemoryCallable(ADDRESS_INTERNAL_COIL_TUBE_PLATE_REPLACEMENT_T3, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL34", (int16_t)getDataFromMemoryCallable(ADDRESS_RETURN_AIR_TEMPERATURE_T4, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL35", (int16_t)getDataFromMemoryCallable(ADDRESS_EXHAUST_TEMPERATURE_T5, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL36", (int16_t)getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_T6, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL37", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_OUTLET_TEMPERATURE_T7, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL38", (int16_t)getDataFromMemoryCallable(ADDRESS_ECONOMIZER_INLET_TUBE_T8, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL39", (int16_t)getDataFromMemoryCallable(ADDRESS_ECONOMIZER_OUTLET_TUBE_T9, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL40", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_TANK_TEMPERATURE, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL31", (int16_t)getDataFromMemoryCallable(ADDRESS_EXTERNAL_AMBIENT_TEMPERATURE_T1, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL32", (int16_t)getDataFromMemoryCallable(ADDRESS_EXTERNAL_COIL_TUBE_FIN_T2, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL33", (int16_t)getDataFromMemoryCallable(ADDRESS_INTERNAL_COIL_TUBE_PLATE_REPLACEMENT_T3, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL34", (int16_t)getDataFromMemoryCallable(ADDRESS_RETURN_AIR_TEMPERATURE_T4, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL35", (int16_t)getDataFromMemoryCallable(ADDRESS_EXHAUST_TEMPERATURE_T5, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL36", (int16_t)getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_T6, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL37", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_OUTLET_TEMPERATURE_T7, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL38", (int16_t)getDataFromMemoryCallable(ADDRESS_INDOOR_UNIT_PHASE_A_VOLTAGE, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL39", (int16_t)getDataFromMemoryCallable(ADDRESS_INDOOR_UNIT_PHASE_B_VOLTAGE, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL40", (int16_t)getDataFromMemoryCallable(ADDRESS_INDOOR_UNIT_PHASE_C_VOLTAGE, index))) return false;
 
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL41", (int16_t)getDataFromMemoryCallable(ADDRESS_FLUORINE_OUTLET_TEMPERATURE_OF_PLATE_HEAT_EXCHANGER, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL42", (int16_t)getDataFromMemoryCallable(ADDRESS_DRIVE_MANUFACTURER, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL43", (int16_t)getDataFromMemoryCallable(ADDRESS_PUMP_SPEED_PWM, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL44", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_FLOW, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL45", (int16_t)getDataFromMemoryCallable(ADDRESS_USER_RETURN_WATER_TEMPERATURE, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL41", (int16_t)getDataFromMemoryCallable(ADDRESS_FLUORINE_OUTLET_TEMPERATURE_OF_PLATE_HEAT_EXCHANGER, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL42", (int16_t)getDataFromMemoryCallable(CURRENT_COP, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL43", (int16_t)getDataFromMemoryCallable(ADDRESS_PUMP_SPEED_PWM, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL44", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_FLOW, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL45", (int16_t)getDataFromMemoryCallable(ADDRESS_INDOOR_UNIT_PHASE_A_CURRENT, index))) return false;
 
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL46", (int16_t)getDataFromMemoryCallable(ADDRESS_DEVICE_INPUT_VOLTAGE, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL47", (int16_t)getDataFromMemoryCallable(ADDRESS_DEVICE_INPUT_CURRENT, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL48", (int16_t)getDataFromMemoryCallable(ADDRESS_DEVICE_INPUT_POWER_KW, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL49", (int16_t)getDataFromMemoryCallable(ADDRESS_TOTAL_UNIT_ELECTRICITY_CONSUMPTION_KWH, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL50", (int16_t)getDataFromMemoryCallable(ADDRESS_AUXILIARY_HEATING_SOURCE_HOT_WATER_TEMPERATURE_VALUE, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL46", (int16_t)getDataFromMemoryCallable(ADDRESS_INDOOR_UNIT_PHASE_B_CURRENT, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL47", (int16_t)getDataFromMemoryCallable(ADDRESS_INDOOR_UNIT_PHASE_C_CURRENT, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL48", (int16_t)getDataFromMemoryCallable(ADDRESS_HIGH_INPUT_POWER_OF_INDOOR_UNIT, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL49", (int16_t)getDataFromMemoryCallable(ADDRESS_LOW_INPUT_POWER_OF_INDOOR_UNIT, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL50", (int16_t)getDataFromMemoryCallable(ADDRESS_HIGH_CUMULATIVE_ELECTRICITY_CONSUMPTION_OF_INDOOR_UNIT, index))) return false;
 
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL51", (int16_t)getDataFromMemoryCallable(ADDRESS_AUXILIARY_HEATING_SOURCE_HEATING_TEMPERATURE_VALUE, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL52", (int16_t)getDataFromMemoryCallable(ADDRESS_BUFFER_TANK_FOR_HEATING_TEMPERATURE_VALUE, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL53", (int16_t)getDataFromMemoryCallable(ADDRESS_MAIN_OUTLET_WATER_TEMPERATURE_VALUE, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL54", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_INLET_TEMPERATURE, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL55", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_OUTLET_TEMPERATURE, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL56", (int16_t)getDataFromMemoryCallable(ADDRESS_EXTERNAL_ENVIRONMENT_TEMPERATURE, index))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL57", (int16_t)getActiveStateFromActiveMode(getActiveStateValue()))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL51", (int16_t)getDataFromMemoryCallable(ADDRESS_LOW_CUMULATIVE_ELECTRICITY_CONSUMPTION_OF_INDOOR_UNIT, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL52", (int16_t)getDataFromMemoryCallable(OUTPUT_POWER_HEATING_HIGH_16BIT, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL53", (int16_t)getDataFromMemoryCallable(OUTPUT_POWER_HEATING_LOW_16BIT, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL54", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_INLET_TEMPERATURE, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL55", (int16_t)getDataFromMemoryCallable(ADDRESS_WATER_OUTLET_TEMPERATURE, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL56", (int16_t)getDataFromMemoryCallable(CURRENT_EER, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL57", (int16_t)getActiveStateFromActiveMode(getActiveStateValue()))) return false;
 
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL58", (int16_t)getActiveStateValue())) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL59", UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL60", ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL61", ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT))) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL62", UnitSystemParameterL[ADDRESS_STERILIZATION_TEMPERATURE_SETTING - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
-            if (!setLogValue_NUMBER_S(requestBuilder, requestBuilderSize, "WL63", UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL58", (int16_t)getActiveStateValue())) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL59", UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL60", ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL61", ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL62", UnitSystemParameterL[ADDRESS_STERILIZATION_TEMPERATURE_SETTING - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL63", UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
+            
+            // LATER TERUG ZETTEN!!!
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL64", (int16_t)getDataFromMemoryCallable(OUTPUT_POWER_COOLING_HIGH_16BIT, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL65", (int16_t)getDataFromMemoryCallable(OUTPUT_POWER_COOLING_LOW_16BIT, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL66", (int16_t)getDataFromMemoryCallable(COMPRESSOR_CUMMULATIVE_RUNNING_TIME_HIGH_BIT, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL67", (int16_t)getDataFromMemoryCallable(COMPRESSOR_CUMMULATIVE_RUNNING_TIME_LOW_BIT, index))) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL68", (int16_t)getDataFromMemoryCallable(ADDRESS_CASCADE_SLAVES_ONLINE_1, index))) return false;          
             
             /*
              * Vervangen waardes
@@ -556,7 +541,7 @@ bool setLoggingDataPerDeviceType(char* requestBuilder, size_t requestBuilderSize
             break;
         }
     }
-    strcat(requestBuilder, "}}");
+    if (!appendf(requestBuilder, requestBuilderSize, "}}")) return false;
     return true;
 }
 
@@ -566,12 +551,12 @@ void parseDeviceType (DEVICE_TYPE dvt, char* device) {
     DEVICE_TYPE_REQUESTED = dvt;
     switch (dvt) {
         case TULIP_PRINT:{
-            strcpy(device, "tulip_print");
+            snprintf(device, 20, "tulip_print");
             break;
         }
         
         case HEATPUMP:{
-            strcpy(device, "heatpump");
+            snprintf(device, 20, "heatpump");
             break;
         }
         
@@ -603,23 +588,23 @@ void parseDeviceType (DEVICE_TYPE dvt, char* device) {
 void parseRequestType (REQUEST_TYPE rqt, char* request) {
     switch(rqt) {
         case GET:{
-            strcpy(request, "GET");
+            snprintf(request, 7, "GET");
             break;
         }    
         case POST:{
-            strcpy(request, "POST");
+            snprintf(request, 7, "POST");
             break;
         }
         case PUT:{
-            strcpy(request, "PUT");
+            snprintf(request, 7, "PUT");
             break;
         } 
         case PATCH:{
-            strcpy(request, "PATCH");
+            snprintf(request, 7, "PATCH");
             break;
         }  
         case DELETE:{
-            strcpy(request, "DELETE");
+            snprintf(request, 7, "DELETE");
             break;
         }
         default:{
@@ -632,8 +617,8 @@ void parseRequestType (REQUEST_TYPE rqt, char* request) {
 
 
 void parsePath (char* path, REQUEST_TYPE rqt) {
-    if (rqt == GET) { sprintf(path, "%s", GET_PATH); }
-    else if (rqt == POST) { sprintf(path, "%s", POST_PATH); }
+    if (rqt == GET) { snprintf(path, 20, "%s", GET_PATH); }
+    else if (rqt == POST) { snprintf(path, 20, "%s", POST_PATH); }
     return;  
 }
 
@@ -661,10 +646,22 @@ static void SYS_CONSOLE_PRINT_CHUNKED(const char *label, const char *buf, size_t
 }
 
 
+static void debugPrintSocketData(const uint8_t *data, size_t len)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        SYS_CONSOLE_PRINT("%c", data[i]);
+    }
+}
+
 
 static bool socketWriteAll(const uint8_t* data, size_t len)
 {
     uint32_t spins = 0;
+    
+    //SYS_CONSOLE_PRINT("\r\n--- SOCKET WRITE %lu BYTES ---\r\n", (unsigned long)len);
+    //debugPrintSocketData(data, len);
+    //SYS_CONSOLE_PRINT("\r\n--- END SOCKET WRITE ---\r\n");
 
     while (len > 0)
     {
@@ -716,7 +713,6 @@ static void formatCascadeMaskBinary(uint16_t mask, char* out, size_t outSize)
 }
 
 
-
 static size_t measureRealtimeBodyLen(uint8_t deviceCount)
 {
     (void)deviceCount; // no longer used
@@ -733,15 +729,16 @@ static size_t measureRealtimeBodyLen(uint8_t deviceCount)
 
     total += (size_t)n;
 
-    char devObj[DEVICE_JSON_MAX];
+    char *devObj = devObjMeasureBuffer;
+    memset(devObj, 0, DEVICE_JSON_MAX);
     char device[20];
 
     /* ---------- Device 0: controller (always) ---------- */
-    memset(devObj, 0, sizeof(devObj));
+    memset(devObj, 0, DEVICE_JSON_MAX);
     memset(device, 0, sizeof(device));
 
     parseDeviceType(TULIP_PRINT, device);
-    if (!setLoggingDataPerDeviceType(devObj, sizeof(devObj), device, 0))
+    if (!setLoggingDataPerDeviceType(devObj, DEVICE_JSON_MAX, device, 0))
         return 0;
 
     total += strlen(devObj);
@@ -749,11 +746,11 @@ static size_t measureRealtimeBodyLen(uint8_t deviceCount)
     /* ---------- WL-1: heatpump index 1 (ALWAYS) ---------- */
     total += 1; // comma
 
-    memset(devObj, 0, sizeof(devObj));
+    memset(devObj, 0, DEVICE_JSON_MAX);
     memset(device, 0, sizeof(device));
 
     parseDeviceType(HEATPUMP, device);
-    if (!setLoggingDataPerDeviceType(devObj, sizeof(devObj), device, 1))
+    if (!setLoggingDataPerDeviceType(devObj, DEVICE_JSON_MAX, device, 1))
         return 0;
 
     total += strlen(devObj);
@@ -767,14 +764,14 @@ static size_t measureRealtimeBodyLen(uint8_t deviceCount)
 
         total += 1; // comma
 
-        memset(devObj, 0, sizeof(devObj));
+        memset(devObj, 0, DEVICE_JSON_MAX);
         memset(device, 0, sizeof(device));
 
         parseDeviceType(HEATPUMP, device);
 
         int hpIndex = (int)bit + 1; // bit 1 ? index 2
 
-        if (!setLoggingDataPerDeviceType(devObj, sizeof(devObj), device, hpIndex))
+        if (!setLoggingDataPerDeviceType(devObj, DEVICE_JSON_MAX, device, hpIndex))
             return 0;
 
         total += strlen(devObj);
@@ -807,15 +804,16 @@ static bool sendRealtimeBody(uint8_t deviceCount)
     // Optional: print once per request
     // SYS_CONSOLE_PRINT("Cascade mask = 0x%04X (WL-1 forced)\r\n", cascadeMask);
 
-    char devObj[DEVICE_JSON_MAX];
+    char *devObj = devObjSendBuffer;
+    memset(devObj, 0, DEVICE_JSON_MAX);
     char device[20];
 
     /* ---------- Device 0: controller (always) ---------- */
-    memset(devObj, 0, sizeof(devObj));
+    memset(devObj, 0, DEVICE_JSON_MAX);
     memset(device, 0, sizeof(device));
 
     parseDeviceType(TULIP_PRINT, device);
-    if (!setLoggingDataPerDeviceType(devObj, sizeof(devObj), device, 0))
+    if (!setLoggingDataPerDeviceType(devObj, DEVICE_JSON_MAX, device, 0))
         return false;
 
     if (!socketWriteAll((const uint8_t*)devObj, strlen(devObj)))
@@ -825,11 +823,11 @@ static bool sendRealtimeBody(uint8_t deviceCount)
     if (!socketWriteAll((const uint8_t*)",", 1))
         return false;
 
-    memset(devObj, 0, sizeof(devObj));
+    memset(devObj, 0, DEVICE_JSON_MAX);
     memset(device, 0, sizeof(device));
 
     parseDeviceType(HEATPUMP, device);
-    if (!setLoggingDataPerDeviceType(devObj, sizeof(devObj), device, 1))
+    if (!setLoggingDataPerDeviceType(devObj, DEVICE_JSON_MAX, device, 1))
         return false;
 
     if (!socketWriteAll((const uint8_t*)devObj, strlen(devObj)))
@@ -850,14 +848,14 @@ static bool sendRealtimeBody(uint8_t deviceCount)
         if (!socketWriteAll((const uint8_t*)",", 1))
             return false;
 
-        memset(devObj, 0, sizeof(devObj));
+        memset(devObj, 0, DEVICE_JSON_MAX);
         memset(device, 0, sizeof(device));
 
         parseDeviceType(HEATPUMP, device);
 
         int hpIndex = (int)bit + 1; // bit 1 -> index 2
 
-        if (!setLoggingDataPerDeviceType(devObj, sizeof(devObj), device, hpIndex))
+        if (!setLoggingDataPerDeviceType(devObj, DEVICE_JSON_MAX, device, hpIndex))
             return false;
 
         if (!socketWriteAll((const uint8_t*)devObj, strlen(devObj)))
@@ -873,7 +871,7 @@ static bool sendRealtimeBody(uint8_t deviceCount)
 static bool httpWriteChunk(const char* s, size_t len)
 {
     char hdr[16];
-    int n = sprintf(hdr, "%X\r\n", (unsigned)len);
+    int n = snprintf(hdr, sizeof(hdr), "%X\r\n", (unsigned)len);
     if (n <= 0) return false;
 
     if (!socketWriteAll((const uint8_t*)hdr, (size_t)n)) return false;
@@ -924,30 +922,27 @@ bool TULIP_REQUEST_TESTER(char request[], char path[])
 
 
 
-void getRealTimeDataStatussen ( char requestBuilder[] ) {   
-    char dateTimeSet[150];
+void getRealTimeDataStatussen ( char requestBuilder[] ) {
     char device[20];
-              
-    sprintf(dateTimeSet, "{\"date_time_utc\": \"%s\",", NTP_TIME_BUFFER);
-    strcat(requestBuilder, dateTimeSet);  
-    strcat(requestBuilder, "\"checksum\": \"xxxyyy\",");
-    strcat(requestBuilder, "\"devices\": [");
-    
+
+    if (!appendf(requestBuilder, DEVICE_JSON_MAX, "{\"date_time_utc\": \"%s\",", NTP_TIME_BUFFER)) return;
+    if (!appendf(requestBuilder, DEVICE_JSON_MAX, "\"checksum\": \"xxxyyy\",")) return;
+    if (!appendf(requestBuilder, DEVICE_JSON_MAX, "\"devices\": [")) return;
+
     /* LOG TULIP PRINT DATA */
-    parseDeviceType(TULIP_PRINT, device);  
-    //setLoggingDataPerDeviceType(requestBuilder, device, 0);
-    memset(device, 0, sizeof (device));   
-    
+    parseDeviceType(TULIP_PRINT, device);
+    //setLoggingDataPerDeviceType(requestBuilder, DEVICE_JSON_MAX, device, 0);
+    memset(device, 0, sizeof(device));
+
     /* ALS GEEN COMMUNICATIE ERROR MET DE WARMTE POMP LOG OOK DEZE WAARDES */
     if (!GetAlarm(ALARM_HEATPUMP_COMMUNICATION)) {
-    //if (GetAlarm(ALARM_HEATPUMP_COMMUNICATION)) {
-        strcat(requestBuilder, ",");
+        if (!appendf(requestBuilder, DEVICE_JSON_MAX, ",")) return;
         parseDeviceType(HEATPUMP, device);
-        //setLoggingDataPerDeviceType(requestBuilder, device, 1);
+        //setLoggingDataPerDeviceType(requestBuilder, DEVICE_JSON_MAX, device, 1);
     }
-    
-    strcat(requestBuilder, "]}");
-    return;  
+
+    (void)appendf(requestBuilder, DEVICE_JSON_MAX, "]}");
+    return;
 }
 
 
@@ -1141,22 +1136,27 @@ SSL_SOCKET_STATES socketReady( void ) {
 /*
  * Close an open socket
  */
-void closeSocket ( void ) {
-    NET_PRES_SocketClose(log_socket);
+void closeSocket(void)
+{
+    if (log_socket != INVALID_SOCKET) {
+        NET_PRES_SocketClose(log_socket);
+        log_socket = INVALID_SOCKET;
+    }
 }
 
 
 
 bool getUpdateSettingsFromServer ( void ) {
-    char networkBuffer[512];
+    char *networkBuffer = settingsNetworkBuffer;
+    memset(networkBuffer, 0, sizeof(settingsNetworkBuffer));
 
     char HARDWARE_ID[50];
-    sprintf(HARDWARE_ID, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-W-1",
+    snprintf(HARDWARE_ID, sizeof(HARDWARE_ID), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-W-1",
                     eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]);
     
     
     
-    sprintf(networkBuffer, "GET /api/v1/settings?hardware_id=%s&type=heatpump HTTP/1.1\r\n"
+    snprintf(networkBuffer, sizeof(settingsNetworkBuffer), "GET /api/v1/settings?hardware_id=%s&type=heatpump HTTP/1.1\r\n"
                     "Host: %s\r\n"
                     "Accept: application/json\r\n"
                     "Authorization: Bearer %s\r\n"
@@ -1189,40 +1189,86 @@ const char* find_http_body(const char *response, size_t response_len, size_t *ou
     return body;
 }
 
-char* dechunk_http_body(const char *chunked_body, size_t chunked_len, size_t *out_len) {
+#define DECHUNK_BUFFER_SIZE 4096
+static char dechunkBuffer[DECHUNK_BUFFER_SIZE];
+char* dechunk_http_body(const char *chunked_body, size_t chunked_len, size_t *out_len)
+{
     const char *ptr = chunked_body;
     const char *end = chunked_body + chunked_len;
-    char *output = malloc(chunked_len);
-    if (!output) return NULL;
     size_t output_offset = 0;
 
-    while (ptr < end) {
-        // Read chunk size in hex
+    if (out_len == NULL) {
+        return NULL;
+    }
+
+    *out_len = 0;
+
+    if (chunked_body == NULL || chunked_len == 0) {
+        return NULL;
+    }
+
+    memset(dechunkBuffer, 0, sizeof(dechunkBuffer));
+
+    while (ptr < end)
+    {
         char size_buf[16] = {0};
         int i = 0;
-        while (ptr < end && *ptr != '\r' && i < 15) {
+
+        while (ptr < end && *ptr != '\r' && i < 15)
+        {
             size_buf[i++] = *ptr++;
         }
+
         size_buf[i] = '\0';
 
-        if (*ptr == '\r') ptr++;
-        if (*ptr == '\n') ptr++;
+        if (ptr >= end || *ptr != '\r') {
+            SYS_CONSOLE_PRINT("Malformed chunk: missing CR\r\n");
+            return NULL;
+        }
+        ptr++;
+
+        if (ptr >= end || *ptr != '\n') {
+            SYS_CONSOLE_PRINT("Malformed chunk: missing LF\r\n");
+            return NULL;
+        }
+        ptr++;
 
         size_t chunk_size = strtoul(size_buf, NULL, 16);
-        if (chunk_size == 0) break;
 
-        if (ptr + chunk_size > end) break;  // Malformed
+        if (chunk_size == 0) {
+            *out_len = output_offset;
+            return dechunkBuffer;
+        }
 
-        memcpy(output + output_offset, ptr, chunk_size);
+        if ((size_t)(end - ptr) < chunk_size) {
+            SYS_CONSOLE_PRINT("Malformed chunk: chunk larger than remaining body\r\n");
+            return NULL;
+        }
+
+        if ((output_offset + chunk_size) >= DECHUNK_BUFFER_SIZE) {
+            SYS_CONSOLE_PRINT("Dechunk buffer too small\r\n");
+            return NULL;
+        }
+
+        memcpy(&dechunkBuffer[output_offset], ptr, chunk_size);
         output_offset += chunk_size;
         ptr += chunk_size;
 
-        if (*ptr == '\r') ptr++;
-        if (*ptr == '\n') ptr++;
+        if (ptr >= end || *ptr != '\r') {
+            SYS_CONSOLE_PRINT("Malformed chunk: missing CR after data\r\n");
+            return NULL;
+        }
+        ptr++;
+
+        if (ptr >= end || *ptr != '\n') {
+            SYS_CONSOLE_PRINT("Malformed chunk: missing LF after data\r\n");
+            return NULL;
+        }
+        ptr++;
     }
 
-    *out_len = output_offset;
-    return output;
+    SYS_CONSOLE_PRINT("Malformed chunked body: no final zero chunk\r\n");
+    return NULL;
 }
 
 bool parse_update_settings_from_json(const char *json_str, size_t len) {
@@ -1274,14 +1320,12 @@ bool areUpdateSettingsAvailable() {
     char *json_data = dechunk_http_body(chunked, body_len, &json_len);
     if (!json_data) {
         buffer_len = 0;
-        free(json_data);
         SYS_CONSOLE_PRINT("Dechunking failed\n");
         return false;
     }
     
     buffer_len = 0;
     bool updateSettings = parse_update_settings_from_json(json_data, json_len);
-    free(json_data);
     return updateSettings;
 }
 
@@ -1346,8 +1390,17 @@ bool readServerResponseDone(void)
     size_t room = READ_BUFFER_SIZE - buffer_len;
     if (room == 0)
     {
-        SYS_CONSOLE_PRINT("readBuffer overflow risk (READ_BUFFER_SIZE=%u)\r\n", READ_BUFFER_SIZE);
-        return true; // or false + force close; but do NOT keep appending
+        SYS_CONSOLE_PRINT("HTTP response too large. Closing socket.\r\n");
+
+        if (log_socket != INVALID_SOCKET) {
+            NET_PRES_SocketClose(log_socket);
+            log_socket = INVALID_SOCKET;
+        }
+
+        buffer_len = 0;
+        readBuffer[0] = '\0';
+
+        return false;
     }
 
     size_t toRead = READ_CHUNK_SIZE;
@@ -1623,12 +1676,10 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
 
 
 int setting_count = 0;
-bool parse_modbus_settings() {
-    
-    //for(int i = 0; i < buffer_len; i++) {
-    //    SYS_CONSOLE_PRINT("%c", readBuffer[i]);
-    //}
-    
+bool parse_modbus_settings(void)
+{
+    setting_count = 0;
+
     size_t body_len;
     const char *chunked = find_http_body(readBuffer, buffer_len, &body_len);
     if (!chunked) {
@@ -1640,15 +1691,13 @@ bool parse_modbus_settings() {
     char *json_data = dechunk_http_body(chunked, body_len, &json_len);
     if (!json_data) {
         buffer_len = 0;
-        free(json_data);
         SYS_CONSOLE_PRINT("Dechunking failed\n");
         return false;
-    }    
-    
+    }
+
     cJSON *root = cJSON_ParseWithLength(json_data, json_len);
     if (!root) {
         buffer_len = 0;
-        free(json_data);
         SYS_CONSOLE_PRINT("Failed to parse JSON\n");
         return false;
     }
@@ -1656,7 +1705,6 @@ bool parse_modbus_settings() {
     cJSON *updates = cJSON_GetObjectItem(root, "settings_updates");
     if (!cJSON_IsArray(updates)) {
         SYS_CONSOLE_PRINT("settings_updates not found or not an array\n");
-        free(json_data);
         cJSON_Delete(root);
         buffer_len = 0;
         return false;
@@ -1664,33 +1712,38 @@ bool parse_modbus_settings() {
 
     if (cJSON_GetArraySize(updates) == 0) {
         SYS_CONSOLE_PRINT("No settings to update\n");
-        buffer_len = 0;
-        free(json_data);
         cJSON_Delete(root);
-        return false;   // or false, depending on how you want to handle "no updates"
-    }    
-    
+        buffer_len = 0;
+        return false;
+    }
+
     cJSON *item = NULL;
-    cJSON_ArrayForEach(item, updates) {
-        if (setting_count >= MAX_SETTINGS) break;
+    cJSON_ArrayForEach(item, updates)
+    {
+        if (setting_count >= MAX_SETTINGS) {
+            break;
+        }
 
         cJSON *addr = cJSON_GetObjectItem(item, "modbus_address");
         cJSON *val  = cJSON_GetObjectItem(item, "value");
 
-        if (cJSON_IsString(addr) && cJSON_IsString(val)) {
-            
-            SYS_CONSOLE_PRINT("\nModbus Addy >> %i\n", (uint16_t)strtol(addr->valuestring, NULL, 0));
-            SYS_CONSOLE_PRINT("value >> %i\n", (uint16_t)strtol(val->valuestring, NULL, 10));
-            
-            processModbusSettingsFromServer((uint16_t)strtol(addr->valuestring, NULL, 0), (uint16_t)strtol(val->valuestring, NULL, 10));
+        if (cJSON_IsString(addr) && cJSON_IsString(val))
+        {
+            uint16_t modbusAddress = (uint16_t)strtol(addr->valuestring, NULL, 0);
+            uint16_t modbusValue   = (uint16_t)strtol(val->valuestring, NULL, 10);
+
+            SYS_CONSOLE_PRINT("\nModbus Addy >> %i\n", modbusAddress);
+            SYS_CONSOLE_PRINT("value >> %i\n", modbusValue);
+
+            processModbusSettingsFromServer(modbusAddress, modbusValue);
 
             setting_count++;
         }
     }
-    
-    buffer_len = 0;
-    free(json_data);
+
     cJSON_Delete(root);
+    buffer_len = 0;
+
     return true;
 }
 
@@ -1698,7 +1751,7 @@ bool parse_modbus_settings() {
 
 void send_http_chunk(const char *data, size_t len) {
     char header[16];
-    int n = sprintf(header, "%X\r\n", (unsigned int)len);
+    int n = snprintf(header, sizeof(header), "%X\r\n", (unsigned int)len);
 
     NET_PRES_SocketWrite(log_socket, header, n);
     NET_PRES_SocketWrite(log_socket, data, len);
@@ -1788,18 +1841,18 @@ void getSettingValuesByEepromList16Bit(const uint32_t *addresses, size_t count)
 
 
 bool sendUpdatedSettingsList ( void ) {
-    char networkBuffer[4096];
+    char *networkBuffer = settingsNetworkBuffer;
     char requestBody[512];
     char HARDWARE_ID[50];
     
-    memset(networkBuffer, 0, sizeof (networkBuffer));
+    memset(networkBuffer, 0, sizeof(settingsNetworkBuffer));
     memset(requestBody, 0, sizeof (requestBody));
     memset(HARDWARE_ID, 0, sizeof (HARDWARE_ID));
     
-    sprintf(HARDWARE_ID, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-W-1",
+    snprintf(HARDWARE_ID, sizeof(HARDWARE_ID), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-W-1",
                     eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]);
     
-    sprintf(networkBuffer, "POST /api/v1/settings?hardware_id=%s&type=heatpump HTTP/1.1\r\n"
+    snprintf(networkBuffer, sizeof(settingsNetworkBuffer), "POST /api/v1/settings?hardware_id=%s&type=heatpump HTTP/1.1\r\n"
                     "Host: %s\r\n"
                     "Accept: application/json\r\n"
                     "Authorization: Bearer %s\r\n"

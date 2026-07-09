@@ -9,5 +9,6 @@ void FillTxBuffer(uint8_t * txBuffer);
 void FillBufferWithStartupSettings(bool doFirstTimeHeatpumpCommunicationSettings);
 void CheckHeatpumpStaticSettings();
 char * getHeatpumpStateToString(APP_HEATPUMP_COMM_STATES logState);
+void ResetHeatpumpSettingRetryCounter(void);
 
 #endif /* _HEATPUMP_H */
