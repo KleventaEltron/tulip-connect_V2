@@ -171,6 +171,7 @@ typedef enum{
 typedef struct{
     bool coolingCurveSet;
     COOLING_MODE_STATES state;
+    int16_t stepperSetpoint;
 } COOLING_MODE_DATA;
 
 
@@ -228,6 +229,7 @@ typedef struct{
     int16_t setpointHotWaterOffset;
     bool HotwaterElementOn;
     bool coolingCurveSet;
+    int16_t stepperSetpoint;
 } HOT_WATER_COOLING_MODE_DATA;
 
 
@@ -347,6 +349,7 @@ int16_t getHeatpumpReturnWaterTemperature(uint8_t whichHeatpump);
 const char * getThreeWayValveState(int state);
 bool blockHotWaterBasedOnTimers(void);
 bool checkIfDefrostingActive(void);
+uint16_t getActiveTemperatureSettingHeatpump();
 
 void setActiveModeControllerPumpOffDueToDipSwitch1 (bool target);
 bool getActiveModeControllerPumpOffDueToDipSwitch1 ();

@@ -285,6 +285,8 @@ void restoreEepromValuesToDefault(void)
     WriteSmartEeprom16(SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION, false);
     WriteSmartEeprom16(SEEP_ADDR_INITIAL_FAN_SPEED, 35);
     
+    WriteSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING, 5);
+    WriteSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_COOLING, 5);
     WriteSmartEeprom16(SEEP_ADDR_CHANGEOVER_CONTACT_ENABLE, false);
 }
 
@@ -435,6 +437,8 @@ void SmartEepromInit(void)
     }
     
     if (thisEepromVersion < 2000022) {
+        WriteSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING, 5);
+        WriteSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_COOLING, 5);
         WriteSmartEeprom16(SEEP_ADDR_CHANGEOVER_CONTACT_ENABLE, false);
     }
     

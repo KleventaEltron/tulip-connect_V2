@@ -210,6 +210,30 @@ uint16_t getActiveStateFromActiveMode(RUNNING_MODES state){
     return activeModeActiveState;
 }
 
+uint16_t getActiveTemperatureSettingHeatpump() {
+    if (getSterilisationMode() == ACTIVE) {
+        return UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    
+    if (app_active_mode_controllerData.currentRunningMode == COOLING) {        
+        return UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];   
+    }
+    
+    if (app_active_mode_controllerData.currentRunningMode == HOT_WATER_COOLING) {
+        uint16_t currentFunctionInHotWaterCooling = (int16_t)getActiveStateFromActiveMode(getActiveStateValue());
+        
+        if (currentFunctionInHotWaterCooling == HOT_WATER_COOLING_INITIALIZE_COOLING
+                || currentFunctionInHotWaterCooling == HOT_WATER_COOLING_IDLE_COOLING
+                || currentFunctionInHotWaterCooling == HOT_WATER_COOLING_MODE_RUNNING_ON_COOLING) {
+            return UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];  
+        }
+        
+        return UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+    }
+    
+    return UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP];
+}
+
 
 const char * getActiveModeToString(RUNNING_MODES state){
     switch (state)

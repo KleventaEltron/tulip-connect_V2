@@ -100,6 +100,7 @@ int16_t determineCorrectCoolingSetpoint() {
             return coolingSetpoint;
         }
         
+        
         /*
             if((getHeatpumpReturnWaterTemperature() - coolingSetpoint) < 20  && changeCompensationsCooling) {
                 ChangeHeatpumpSetting(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE, (getDataFromMemoryCallable(ADDRESS_RETURN_WATER_TEMPERATURE_COMPENSATION_VALUE) + 1));
@@ -110,7 +111,33 @@ int16_t determineCorrectCoolingSetpoint() {
         
         return coolingSetpoint;
     } else {
+        
         coolingSetpoint = getCoolingSetpoint();
+        
+        if ((coolingBufferTemperature == TEMPERATURE_ALARM_VALUE) || (coolingSetpoint == TEMPERATURE_ALARM_VALUE)) {
+            // No temperature or setpoint known yet
+            cooling_mode_data.stepperSetpoint = coolingSetpoint;
+            return coolingSetpoint;
+        }            
+        
+        if (coolingBufferTemperature <= (coolingSetpoint - 10)) {
+            cooling_mode_data.stepperSetpoint = coolingSetpoint;
+            return coolingSetpoint;
+        }
+        
+        if (getActiveCompressorsMask() == 0) {
+            cooling_mode_data.stepperSetpoint = coolingSetpoint;
+            return coolingSetpoint;
+        }        
+        
+        if ((coolingSetpoint - getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE)) <= 20) {
+            if (getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE) <= (cooling_mode_data.stepperSetpoint + 20)) {
+                cooling_mode_data.stepperSetpoint -= 20;
+            }
+        }
+        
+        return cooling_mode_data.stepperSetpoint;
+        //coolingSetpoint = getCoolingSetpoint();
     }           
   
     return coolingSetpoint;
@@ -180,6 +207,12 @@ void COOLING_MODE_Tasks ( void )
         }
     }
     
+    uint16_t coolingReturnDifferentialValue = ReadSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_COOLING);
+    if (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, MASTER_HEATPUMP_IN_CASCADE) != coolingReturnDifferentialValue) 
+    {
+        ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, coolingReturnDifferentialValue);
+    }
+    
     setTemperatureOperatingCycleCooling();
     
     setActiveModeControllerHeatpumpSetpointCooling(determineCorrectCoolingSetpoint());
@@ -205,6 +238,7 @@ void COOLING_MODE_Tasks ( void )
             ChangeHeatpumpSetting(ADDRESS_COOLING_CURVE_SETTING, ReadSmartEeprom16(SEEP_ADDR_COOLING_CURVE));
             WriteSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT_CURVE_BACKUP, UINT16_MAX);
             WriteSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT_CURVE_BACKUP, UINT16_MAX);
+           
             
             cooling_mode_data.state = COOLING_IDLE;
             break;

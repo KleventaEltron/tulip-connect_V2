@@ -7,10 +7,12 @@
 // Define the NVMCTRL_SEEPSZ_MASK_BITS to extract the NVMCTRL_SEEPSZ bits(38:36) from NVM User Page Mapping(0x00804000)
 #define NVMCTRL_SEEPSZ_MASK_BITS    0x07
 
-/* A specific byte pattern stored at the begining of SmartEEPROM data area.
+/* 
+ * A specific byte pattern stored at the begining of SmartEEPROM data area.
  * When the application comes from a reset, if it finds this signature,
  * the assumption is that the SmartEEPROM has some valid data.
  */
+
 #define SMEE_CUSTOM_SIG         0x5a5a5a5a      // t/m V1-0-10, daarna niet meer
 //#define SMEE_CUSTOM_SIG         0x12345678
 
@@ -114,7 +116,7 @@
 
 #define SEEP_ADDR_CIRCULATION_PUMP_MAX_OFF_TIME_WHEN_SWITCHING_TO_HEATING   115 // 2 bytes V2-0-15
 #define SEEP_ADDR_CIRCULATION_PUMP_INIT_OFF_TIME_WHEN_SWITCHING_TO_HEATING  117 // 2 bytes V2-0-15
-#define SEEP_ADDR_CIRCULATION_PUMP_OFF_TIME_WHEN_HEATPUMP_RUNNING           119 // 2 bytes V2-0-15
+#define SEEP_ADDR_CIRCULATION_PUMP_OFF_TIME_WHEN_HEATPUMP_RUNNING           119 // 2 bytes V2-0-15 
 
 #define SEEP_ADDR_HYBRID_SYSTEM_ENABLED                                     121 // 2 bytes V2-0-15
 #define SEEP_ADDR_HYBRID_SYSTEM_ENABLED_ON_HEATING_ELEMENT_RELAIS           123 // 2 bytes V2-0-15

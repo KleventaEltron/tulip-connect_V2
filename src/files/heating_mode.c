@@ -270,6 +270,12 @@ void HEATING_MODE_Tasks ( void )
         }
     }
     
+    uint16_t heatingReturnDifferentialValue = ReadSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING);
+    if (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, MASTER_HEATPUMP_IN_CASCADE) != heatingReturnDifferentialValue) 
+    {
+        ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, heatingReturnDifferentialValue);
+    }    
+    
     setTemperatureOperatingCycleHeating();
     
     setActiveModeControllerHeatpumpSetpointHeating(determineCorrectHeatingSetpoint());

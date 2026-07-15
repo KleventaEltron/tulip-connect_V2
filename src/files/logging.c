@@ -488,11 +488,12 @@ bool setLoggingDataPerDeviceType(char* requestBuilder, size_t requestBuilderSize
             if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL57", (int16_t)getActiveStateFromActiveMode(getActiveStateValue()))) return false;
 
             if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL58", (int16_t)getActiveStateValue())) return false;
-            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL59", UserParameters[ADDRESS_HEATING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL59", getActiveTemperatureSettingHeatpump())) return false;
             if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL60", ReadSmartEeprom16(SEEP_ADDR_HEATING_SETPOINT))) return false;
             if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL61", ReadSmartEeprom16(SEEP_ADDR_HOT_WATER_SETPOINT))) return false;
             if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL62", UnitSystemParameterL[ADDRESS_STERILIZATION_TEMPERATURE_SETTING - START_ADDRESS_UNIT_SYSTEM_PARAMETER_L][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
-            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL63", UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
+            if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL63", ReadSmartEeprom16(SEEP_ADDR_COOLING_SETPOINT))) return false;
+            //if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL63", UserParameters[ADDRESS_COOLING_SET_TEMPERATURE - START_ADDRESS_USER_PARAMETERS][PARAMETER_ARRAY_DATA_READ_FROM_HEATPUMP])) return false;
             
             // LATER TERUG ZETTEN!!!
             if (!setLogValue_NUMBER(requestBuilder, requestBuilderSize, "WL64", (int16_t)getDataFromMemoryCallable(OUTPUT_POWER_COOLING_HIGH_16BIT, index))) return false;
@@ -1456,6 +1457,15 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
             ChangeHeatpumpSetting(address, value);
             break;
         }
+        
+        case ADDRESS_TULIP_CONNECT_DIGITAL_INPUT_TWO: {
+            // IF VALUE IS:
+            // 0 == CHANGEOVER CONTACT DISABLED
+            // 1 == CHANGEOVER CONTACT ENABLED
+            WriteSmartEeprom8(SEEP_ADDR_DIGITAL_INPUT_TWO, value);
+            WriteSmartEeprom16(SEEP_ADDR_CHANGEOVER_CONTACT_ENABLE, value);
+            break;
+        }
 
         /* DONE */
         /*  CUSTOM MODBUS ADRESSEN VANAF 0xC000  */
@@ -1665,7 +1675,7 @@ void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
             ChangeHeatpumpSetting(address, value);
             break;            
         }
-        
+        //
         case RETURN_DIFFERENTIAL_VALUE_HEATING: {
             WriteSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING, value);
             break;
@@ -1952,6 +1962,8 @@ bool sendUpdatedSettingsList ( void ) {
         SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY,
         SEEP_ADDR_ENABLE_FREQUENCY_CONTROLLER_FUNCTION,
         SEEP_ADDR_MAXIMUM_TARGET_COMPRESSOR_FREQUENCY_CONSTANT_B,
+        SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING,
+        SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_COOLING,
      };
     
     getSettingValuesByEepromList16Bit(eep_addrs_16_bit_3, sizeof(eep_addrs_16_bit_3)/sizeof(eep_addrs_16_bit_3[0]));    
