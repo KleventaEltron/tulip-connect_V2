@@ -17,9 +17,10 @@
 extern COOLING_MODE_DATA cooling_mode_data;
 bool regulateOnTempSensorInBufferCooling = false;
 
-
 bool changeSettingCooling = false;
 bool changeCompensationsCooling = false;
+
+static bool tenSecondCheckDone = false;
 
 void setTemperatureOperatingCycleCooling() {
     if ((getsystemOnCounter() % 10) == 0) {
@@ -207,10 +208,19 @@ void COOLING_MODE_Tasks ( void )
         }
     }
     
-    uint16_t coolingReturnDifferentialValue = ReadSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_COOLING);
-    if (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, MASTER_HEATPUMP_IN_CASCADE) != coolingReturnDifferentialValue) 
+    if ((getsystemOnCounter() % 10U) == 0U)
     {
-        ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, coolingReturnDifferentialValue);
+        if (!tenSecondCheckDone)
+        {
+            tenSecondCheckDone = true;
+            uint16_t coolingReturnDifferentialValue = ReadSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_COOLING);
+            if (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, MASTER_HEATPUMP_IN_CASCADE) != coolingReturnDifferentialValue) 
+            {
+                ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, coolingReturnDifferentialValue);
+            }
+        }
+    } else {
+        tenSecondCheckDone = false;
     }
     
     setTemperatureOperatingCycleCooling();

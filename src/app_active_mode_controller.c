@@ -182,7 +182,9 @@ void PrintResetCause(void)
  void printDebugInfo() {
     //printCustomEepromParameters();
     if (DebugDipSwitch() == true) {
-        PrintResetCause();
+        
+        printHeadOfStringBuffer();
+        //PrintResetCause();
         //debugPowerConsumption();
         
 //        SYS_CONSOLE_PRINT("\r\nINFO:\n", getActiveModeToString(app_active_mode_controllerData.currentRunningMode));
@@ -334,18 +336,18 @@ void PrintResetCause(void)
             
             if (heatpumpMode == HEATING) {
 
-//                SYS_CONSOLE_PRINT("\r\nHEATING:\n");
-//                SYS_CONSOLE_PRINT(" State:                %s\n", getHeatingStateToString());
-//                SYS_CONSOLE_PRINT(" Element ON:           %s\n", getStatusHeatingElementHeatingBuffer() ? "True" : "False");
-//                SYS_CONSOLE_PRINT(" Buffer:               %i\n", GetNtcTemperature(NTC_HEATING_BUFFER));
-//                SYS_CONSOLE_PRINT(" Initial buffer temp.: %i\n", getHeatingModeData().initialBufferTemp);
-//                SYS_CONSOLE_PRINT(" Stepper setpoint:     %i\n", getHeatingModeData().stepperSetpoint);
-//                SYS_CONSOLE_PRINT(" Heating setpoint:     %i\n", getHeatingSetpoint());
-//                SYS_CONSOLE_PRINT(" Inlet temp. master:   %i\n", getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE));
-//                SYS_CONSOLE_PRINT(" Ambient temp. master: %i\n", getExternalAmbientTemperature(MASTER_HEATPUMP_IN_CASCADE));
-//                SYS_CONSOLE_PRINT(" Setpoint in HP:       %i\n", getHeatpumpHeatingSetpoint() * 10);
-//                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, MASTER_HEATPUMP_IN_CASCADE));
-//                SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getSecondCounterHeatingTask());
+                SYS_CONSOLE_PRINT("\r\nHEATING:\n");
+                SYS_CONSOLE_PRINT(" State:                %s\n", getHeatingStateToString());
+                SYS_CONSOLE_PRINT(" Element ON:           %s\n", getStatusHeatingElementHeatingBuffer() ? "True" : "False");
+                SYS_CONSOLE_PRINT(" Buffer:               %i\n", GetNtcTemperature(NTC_HEATING_BUFFER));
+                SYS_CONSOLE_PRINT(" Initial buffer temp.: %i\n", getHeatingModeData().initialBufferTemp);
+                SYS_CONSOLE_PRINT(" Stepper setpoint:     %i\n", getHeatingModeData().stepperSetpoint);
+                SYS_CONSOLE_PRINT(" Heating setpoint:     %i\n", getHeatingSetpoint());
+                SYS_CONSOLE_PRINT(" Inlet temp. master:   %i\n", getHeatpumpReturnWaterTemperature(MASTER_HEATPUMP_IN_CASCADE));
+                SYS_CONSOLE_PRINT(" Ambient temp. master: %i\n", getExternalAmbientTemperature(MASTER_HEATPUMP_IN_CASCADE));
+                SYS_CONSOLE_PRINT(" Setpoint in HP:       %i\n", getHeatpumpHeatingSetpoint() * 10);
+                SYS_CONSOLE_PRINT(" Operating Cycle:      %i\n", getDataFromMemoryCallable(ADDRESS_CONSTANT_TEMPERATURE_OPERATION_CYCLE, MASTER_HEATPUMP_IN_CASCADE));
+                SYS_CONSOLE_PRINT(" Time counter:         %i\n\n", getSecondCounterHeatingTask());
                 //debugPI();
                 //debugPowerConsumption();
                 //SYS_CONSOLE_PRINT(" comp cummulative HIGH:          %i\n\n", getDataFromMemoryCallable(COMPRESSOR_CUMMULATIVE_RUNNING_TIME_HIGH_BIT, MASTER_HEATPUMP_IN_CASCADE));

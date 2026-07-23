@@ -24,6 +24,7 @@
 extern HEATING_MODE_DATA heating_mode_data;
 bool regulateOnTempSensorInBufferHeating = false;
 
+static bool tenSecondCheckDone = false;
 
 
 bool getHeatingElementBoolFromHeatingMode() {
@@ -270,11 +271,20 @@ void HEATING_MODE_Tasks ( void )
         }
     }
     
-    uint16_t heatingReturnDifferentialValue = ReadSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING);
-    if (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, MASTER_HEATPUMP_IN_CASCADE) != heatingReturnDifferentialValue) 
+    if ((getsystemOnCounter() % 10U) == 0U)
     {
-        ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, heatingReturnDifferentialValue);
-    }    
+        if (!tenSecondCheckDone)
+        {
+            tenSecondCheckDone = true;
+            uint16_t heatingReturnDifferentialValue = ReadSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING);
+            if (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, MASTER_HEATPUMP_IN_CASCADE) != heatingReturnDifferentialValue) 
+            {
+                ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, heatingReturnDifferentialValue);
+            }   
+        }
+    } else {
+        tenSecondCheckDone = false;
+    }
     
     setTemperatureOperatingCycleHeating();
     

@@ -377,6 +377,8 @@ void APP_LOGGING_TASKS_Tasks ( void )
                 //SYS_CONSOLE_PRINT("Done receiving data from server, SETTING PARSED!\r\n");
                 resetLoggingTimers();
                 setNewLogRequired(true);
+                setSecondCounterDelayAfterChangingSettings(0);
+                SYS_CONSOLE_PRINT("NEW SETTINGS FOUND, PROCEEDING\r\n");
                 app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_NEW_SETTINGS_CHANGED;      
                 break;
             }
@@ -385,6 +387,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
                 SYS_CONSOLE_PRINT("NOTHING BULL STILL GOING ON BECAUSE FIRST LOG OR DISPLAY CHANGE!\r\n");
                 firstStartAfterBoot = false;
                 setSettingChangedInDisplay(false);
+                setSecondCounterDelayAfterChangingSettings(0);
                 app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_NEW_SETTINGS_CHANGED;
             } else {
                 SYS_CONSOLE_PRINT("COULD NOT PARSE (OR THERE WERE NO) NEW SETTINGS! QUITTING\r\n");
@@ -397,9 +400,13 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         case APP_LOGGING_TASKS_WAIT_FOR_NEW_SETTINGS_CHANGED:
         {
-            if(getSettingsQueuedAmount() > 0) { break; }
+            //if(getSettingsQueuedAmount() > 0) { break; }        
             
-            // SYS_CONSOLE_PRINT("SETTING QUEUE EMPTY, PROCEEDING!\r\n");
+            if (getSecondCounterDelayAfterChangingSettings() < 100) {
+                break;
+            }            
+            
+            SYS_CONSOLE_PRINT("QUEUE SIZE >> %i\r\n", getSettingsQueuedAmount());
             
             setSecondCounterDelayAfterChangingSettings(0);
             
@@ -414,15 +421,17 @@ void APP_LOGGING_TASKS_Tasks ( void )
             // Needed because the Heatpump needs some time to actually store the settings
             // Otherwise we would send back outdated settings
             if (getSecondCounterDelayAfterChangingSettings() < 100) {
-                break;
-            }
-                
-            if(!sendUpdatedSettingsList()) {
-                setSecondCounterDelayAfterChangingSettings(UINT32_MAX);
-                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+        Groenlo        break;
             }
             
             setSecondCounterDelayAfterChangingSettings(UINT32_MAX);
+                
+            if(!sendUpdatedSettingsList()) {
+                SYS_CONSOLE_PRINT("!!! COULD NOT SEND UPDATE LIST !!!\r\n");
+                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
+            }
+            
+            SYS_CONSOLE_PRINT("+++ WAIT SETTINGS CONFIRMED +++\r\n");
             app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_CONFIRM_CHANGED_SETTINGS;
             break;
         }
@@ -433,10 +442,11 @@ void APP_LOGGING_TASKS_Tasks ( void )
             SSL_SOCKET_STATES sslState = socketReady();
             if (sslState == SSL_SOCKET_NOT_READY) { break; } 
             if (sslState == SSL_SOCKET_WAS_DISCONNECTED) {
+                SYS_CONSOLE_PRINT("!!! SOCKET WAS DISCONNECTED !!!\r\n");
                 app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
                 break;
             } 
-            
+            SYS_CONSOLE_PRINT("+++ SETTINGS SEND BACK CONFIRMED +++\r\n");
             app_logging_tasksData.state = APP_LOGGING_TASKS_READ_RECEIVE_BUFFER_SETTINGS_UPDATED;   
             break;
         }              

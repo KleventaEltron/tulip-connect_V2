@@ -4653,7 +4653,7 @@
         &lt;ElementPosition dnOrder=&quot;5&quot; id=&quot;HarmonyCore&quot; x=&quot;250&quot; y=&quot;32&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;6&quot; id=&quot;TCP/IP STACK&quot; x=&quot;752&quot; y=&quot;293&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;7&quot; id=&quot;cmsis&quot; x=&quot;7&quot; y=&quot;153&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;8&quot; id=&quot;core&quot; x=&quot;7&quot; y=&quot;98&quot;/&gt;
+        &lt;ElementPosition dnOrder=&quot;8&quot; id=&quot;core&quot; x=&quot;8&quot; y=&quot;98&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;9&quot; id=&quot;dfp&quot; x=&quot;7&quot; y=&quot;127&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;10&quot; id=&quot;drvWifiWinc&quot; x=&quot;1022&quot; y=&quot;496&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;11&quot; id=&quot;drv_sdmmc&quot; x=&quot;467&quot; y=&quot;448&quot;/&gt;
@@ -4667,7 +4667,7 @@
         &lt;ElementPosition dnOrder=&quot;19&quot; id=&quot;sdhc1&quot; x=&quot;281&quot; y=&quot;516&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;20&quot; id=&quot;sercom2&quot; x=&quot;832&quot; y=&quot;562&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;21&quot; id=&quot;sercom5&quot; x=&quot;240&quot; y=&quot;136&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;22&quot; id=&quot;sys_command&quot; x=&quot;775&quot; y=&quot;160&quot;/&gt;
+        &lt;ElementPosition dnOrder=&quot;22&quot; id=&quot;sys_command&quot; x=&quot;776&quot; y=&quot;160&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;23&quot; id=&quot;sys_console&quot; x=&quot;436&quot; y=&quot;28&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;24&quot; id=&quot;sys_debug&quot; x=&quot;744&quot; y=&quot;21&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;25&quot; id=&quot;sys_fs&quot; x=&quot;636&quot; y=&quot;480&quot;/&gt;
@@ -4753,7 +4753,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;APP_START_ADDRESS&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;0&quot;/&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;40000&quot;/&gt;
     &lt;/Values&gt;
   &lt;/core&gt;
 &lt;/core&gt;

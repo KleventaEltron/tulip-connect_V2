@@ -18,6 +18,7 @@
 
 extern HOT_WATER_MODE_DATA hot_water_mode_data;
 bool regulateOnTempSensorInBufferHotWater = false;
+static bool tenSecondCheckDone = false;
 
 bool getHotwaterElementBoolFromHotwaterMode() {
     return hot_water_mode_data.HotwaterElementOn;
@@ -181,11 +182,20 @@ void HOT_WATER_MODE_Tasks ( void )
         }
     }
 
-    uint16_t heatingReturnDifferentialValue = ReadSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING);
-    if (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, MASTER_HEATPUMP_IN_CASCADE) != heatingReturnDifferentialValue) 
+    if ((getsystemOnCounter() % 10U) == 0U)
     {
-        ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, heatingReturnDifferentialValue);
-    }        
+        if (!tenSecondCheckDone)
+        {
+            tenSecondCheckDone = true;
+            uint16_t heatingReturnDifferentialValue = ReadSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING);
+            if (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, MASTER_HEATPUMP_IN_CASCADE) != heatingReturnDifferentialValue) 
+            {
+                ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, heatingReturnDifferentialValue);
+            }    
+        }
+    } else {
+        tenSecondCheckDone = false;
+    }
     
     setTemperatureOperatingCycleHotWater();
     

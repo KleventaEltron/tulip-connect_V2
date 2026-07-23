@@ -20,6 +20,7 @@ extern HOT_WATER_COOLING_MODE_DATA hot_water_cooling_mode_data;
 
 bool regulateOnTempSensorInBufferHotWaterCooling = false;
 bool changeSettingHotWaterCooling = false;
+static bool tenSecondCheckDone = false;
 
 void setTemperatureOperatingCycleHotWaterCooling() {
     if ((getsystemOnCounter() % 10) == 0) {
@@ -305,27 +306,37 @@ void HOT_WATER_COOLING_MODE_Tasks ( void )
         return;
     }
     
-    if (areWeOnHotWaterModeInHotWaterAndCoolingMode() == true){
-        uint16_t heatingReturnDifferentialValue = ReadSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING);
-        if (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, MASTER_HEATPUMP_IN_CASCADE) != heatingReturnDifferentialValue) 
+    if ((getsystemOnCounter() % 10U) == 0U)
+    {
+        if (!tenSecondCheckDone)
         {
-            ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, heatingReturnDifferentialValue);
-        }        
-    
-        // Already in one of the hot water modes
-        // If sterilization goes to passive mode, go to heating
-        if (getSterilisationMode() == PASSIVE){
-            // Sterilization mode on passive, so go back to heating            
-            hot_water_cooling_mode_data.hotwaterPassive = false;
-            hot_water_cooling_mode_data.state = HOT_WATER_COOLING_INITIALIZE_COOLING;
-            return;
+            tenSecondCheckDone = true;
+
+            if (areWeOnHotWaterModeInHotWaterAndCoolingMode() == true){ 
+                // Already in one of the hot water modes
+                // If sterilization goes to passive mode, go to heating
+                if (getSterilisationMode() == PASSIVE){
+                    // Sterilization mode on passive, so go back to heating            
+                    hot_water_cooling_mode_data.hotwaterPassive = false;
+                    hot_water_cooling_mode_data.state = HOT_WATER_COOLING_INITIALIZE_COOLING;
+                    return;
+                }
+                uint16_t heatingReturnDifferentialValue = ReadSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING);
+                if (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, MASTER_HEATPUMP_IN_CASCADE) != heatingReturnDifferentialValue) 
+                {
+                    ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, heatingReturnDifferentialValue);
+                }             
+
+            } else {
+                uint16_t coolingReturnDifferentialValue = ReadSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_COOLING);
+                if (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, MASTER_HEATPUMP_IN_CASCADE) != coolingReturnDifferentialValue) 
+                {
+                    ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, coolingReturnDifferentialValue);
+                }        
+            }
         }
     } else {
-        uint16_t coolingReturnDifferentialValue = ReadSmartEeprom16(SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_COOLING);
-        if (getDataFromMemoryCallable(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, MASTER_HEATPUMP_IN_CASCADE) != coolingReturnDifferentialValue) 
-        {
-            ChangeHeatpumpSetting(ADDRESS_AIR_CONDITIONER_RETURN_DIFFERENCE, coolingReturnDifferentialValue);
-        }        
+       tenSecondCheckDone = false;
     }
     
     if (hot_water_cooling_mode_data.hotwaterPassive == true){
