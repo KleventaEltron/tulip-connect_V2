@@ -96,7 +96,10 @@
 
 #include <xc.h>
 #include <string.h>
-#include <stdbool.h>   
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>   
 #include "../app_wifi_access_point_controller.h"
 #include "wdrv_winc_client_api.h"
 #include "wincSoftAp.h"
@@ -359,6 +362,1017 @@ static uint8_t recvBuffer[TCP_BUFFER_SIZE];
 static WDRV_WINC_BSS_CONTEXT  bssCtx;
 static WDRV_WINC_AUTH_CONTEXT authCtx;
 
+typedef enum
+{
+    HTTP_CLIENT_IDLE = 0,
+    HTTP_CLIENT_CONNECTING,
+    HTTP_CLIENT_RECEIVING
+} HTTP_CLIENT_STATE;
+
+static HTTP_CLIENT_STATE httpClientState = HTTP_CLIENT_IDLE;
+static SOCKET httpSocket = -1;
+static uint32_t connectedStationIp = 0;
+static bool connectedStationIpValid = false;
+static char connectedStationIpText[20];
+static uint32_t nextHttpPollTime = 0;
+static uint32_t httpRequestDeadline = 0;
+static char httpTxBuffer[320];
+static uint8_t httpRxChunk[TCP_BUFFER_SIZE];
+static char httpResponse[HTTP_RESPONSE_MAX + 1U];
+static size_t httpResponseLength = 0;
+static char actualData[HTTP_RESPONSE_MAX + 1U];
+static size_t actualDataLength = 0;
+static volatile bool actualDataAvailable = false;
+static WINC_SM_ACTUAL_DATA parsedActualData;
+static volatile bool parsedActualDataAvailable = false;
+
+
+
+static bool timeReached(uint32_t now, uint32_t target)
+{
+    return ((int32_t)(now - target) >= 0);
+}
+
+static void httpScheduleNextRequest(uint32_t delayMs)
+{
+    nextHttpPollTime = SYS_TIME_CounterGet() + SYS_TIME_MSToCount(delayMs);
+}
+
+static void httpCloseSocket(void)
+{
+    SOCKET socketToClose = httpSocket;
+
+    httpSocket = -1;
+    httpClientState = HTTP_CLIENT_IDLE;
+
+    if (socketToClose >= 0)
+    {
+        shutdown(socketToClose);
+    }
+}
+
+static void httpFinishRequest(void)
+{
+    httpCloseSocket();
+    httpScheduleNextRequest(HTTP_POLL_INTERVAL_MS);
+}
+
+static void httpFailRequest(const char *reason)
+{
+    if (reason != NULL)
+    {
+        SYS_CONSOLE_Print(app_wifi_access_point_controllerData.consoleHandle,
+                          "HTTP request failed: %s\r\n", reason);
+    }
+
+    httpFinishRequest();
+}
+
+static int asciiToLower(int c)
+{
+    if ((c >= 'A') && (c <= 'Z'))
+    {
+        return c - 'A' + 'a';
+    }
+
+    return c;
+}
+
+static bool textEqualsIgnoreCase(const char *left, const char *right, size_t length)
+{
+    size_t i;
+
+    for (i = 0; i < length; i++)
+    {
+        if (asciiToLower((unsigned char)left[i]) !=
+            asciiToLower((unsigned char)right[i]))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static bool textContainsIgnoreCase(const char *text, size_t textLength,
+                                   const char *needle)
+{
+    size_t needleLength = strlen(needle);
+    size_t i;
+
+    if ((needleLength == 0U) || (needleLength > textLength))
+    {
+        return false;
+    }
+
+    for (i = 0; i <= (textLength - needleLength); i++)
+    {
+        if (textEqualsIgnoreCase(&text[i], needle, needleLength))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool httpGetHeaderValue(const char *headers, size_t headersLength,
+                               const char *headerName,
+                               const char **value, size_t *valueLength)
+{
+    const char *cursor = headers;
+    const char *headersEnd = headers + headersLength;
+    size_t headerNameLength = strlen(headerName);
+
+    /* Skip the HTTP status line. */
+    while ((cursor < headersEnd) && (*cursor != '\n'))
+    {
+        cursor++;
+    }
+
+    if (cursor < headersEnd)
+    {
+        cursor++;
+    }
+
+    while (cursor < headersEnd)
+    {
+        const char *lineStart = cursor;
+        const char *lineEnd;
+        const char *colon;
+        const char *headerValue;
+        const char *headerValueEnd;
+
+        while ((cursor < headersEnd) && (*cursor != '\n'))
+        {
+            cursor++;
+        }
+
+        lineEnd = cursor;
+        if ((lineEnd > lineStart) && (*(lineEnd - 1) == '\r'))
+        {
+            lineEnd--;
+        }
+
+        if (cursor < headersEnd)
+        {
+            cursor++;
+        }
+
+        if (lineEnd == lineStart)
+        {
+            break;
+        }
+
+        colon = lineStart;
+        while ((colon < lineEnd) && (*colon != ':'))
+        {
+            colon++;
+        }
+
+        if ((colon < lineEnd) &&
+            ((size_t)(colon - lineStart) == headerNameLength) &&
+            textEqualsIgnoreCase(lineStart, headerName, headerNameLength))
+        {
+            headerValue = colon + 1;
+            while ((headerValue < lineEnd) &&
+                   ((*headerValue == ' ') || (*headerValue == '\t')))
+            {
+                headerValue++;
+            }
+
+            headerValueEnd = lineEnd;
+            while ((headerValueEnd > headerValue) &&
+                   ((*(headerValueEnd - 1) == ' ') ||
+                    (*(headerValueEnd - 1) == '\t')))
+            {
+                headerValueEnd--;
+            }
+
+            *value = headerValue;
+            *valueLength = (size_t)(headerValueEnd - headerValue);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool parseDecimalSize(const char *text, size_t textLength, size_t *value)
+{
+    size_t result = 0;
+    size_t i;
+
+    if (textLength == 0U)
+    {
+        return false;
+    }
+
+    for (i = 0; i < textLength; i++)
+    {
+        unsigned char c = (unsigned char)text[i];
+
+        if ((c < '0') || (c > '9'))
+        {
+            return false;
+        }
+
+        if (result > ((SIZE_MAX - (size_t)(c - '0')) / 10U))
+        {
+            return false;
+        }
+
+        result = (result * 10U) + (size_t)(c - '0');
+    }
+
+    *value = result;
+    return true;
+}
+
+static bool parseHexSize(const char *text, size_t textLength, size_t *value)
+{
+    size_t result = 0;
+    size_t i;
+    bool digitFound = false;
+
+    for (i = 0; i < textLength; i++)
+    {
+        unsigned char c = (unsigned char)text[i];
+        unsigned int digit;
+
+        if ((c == ';') || (c == ' ') || (c == '\t'))
+        {
+            break;
+        }
+
+        if ((c >= '0') && (c <= '9'))
+        {
+            digit = (unsigned int)(c - '0');
+        }
+        else if ((c >= 'a') && (c <= 'f'))
+        {
+            digit = (unsigned int)(c - 'a') + 10U;
+        }
+        else if ((c >= 'A') && (c <= 'F'))
+        {
+            digit = (unsigned int)(c - 'A') + 10U;
+        }
+        else
+        {
+            return false;
+        }
+
+        digitFound = true;
+
+        if (result > ((SIZE_MAX - digit) / 16U))
+        {
+            return false;
+        }
+
+        result = (result * 16U) + digit;
+    }
+
+    if (!digitFound)
+    {
+        return false;
+    }
+
+    *value = result;
+    return true;
+}
+
+static bool httpDecodeChunkedBody(const char *encoded, size_t encodedLength,
+                                  char *decoded, size_t decodedCapacity,
+                                  size_t *decodedLength)
+{
+    size_t inputOffset = 0;
+    size_t outputOffset = 0;
+
+    while (inputOffset < encodedLength)
+    {
+        size_t lineStart = inputOffset;
+        size_t lineEnd;
+        size_t chunkSize;
+
+        while (((inputOffset + 1U) < encodedLength) &&
+               !((encoded[inputOffset] == '\r') &&
+                 (encoded[inputOffset + 1U] == '\n')))
+        {
+            inputOffset++;
+        }
+
+        if ((inputOffset + 1U) >= encodedLength)
+        {
+            return false;
+        }
+
+        lineEnd = inputOffset;
+        if (!parseHexSize(&encoded[lineStart], lineEnd - lineStart, &chunkSize))
+        {
+            return false;
+        }
+
+        inputOffset += 2U;
+
+        if (chunkSize == 0U)
+        {
+            decoded[outputOffset] = '\0';
+            *decodedLength = outputOffset;
+            return true;
+        }
+
+        if ((chunkSize > (encodedLength - inputOffset)) ||
+            (chunkSize > (decodedCapacity - outputOffset)))
+        {
+            return false;
+        }
+
+        memcpy(&decoded[outputOffset], &encoded[inputOffset], chunkSize);
+        outputOffset += chunkSize;
+        inputOffset += chunkSize;
+
+        if (((inputOffset + 1U) >= encodedLength) ||
+            (encoded[inputOffset] != '\r') ||
+            (encoded[inputOffset + 1U] != '\n'))
+        {
+            return false;
+        }
+
+        inputOffset += 2U;
+    }
+
+    return false;
+}
+
+static const char *jsonFindObjectForKey(const char *json, const char *key,
+                                            const char **objectEnd)
+{
+    const char *match = json;
+    size_t keyLength;
+
+    if ((json == NULL) || (key == NULL) || (objectEnd == NULL))
+    {
+        return NULL;
+    }
+
+    keyLength = strlen(key);
+
+    while ((match = strstr(match, key)) != NULL)
+    {
+        const char *cursor;
+        const char *end;
+
+        /* Require an exact JSON member name: "key". */
+        if ((match > json) && (match[-1] == '"') &&
+            (match[keyLength] == '"'))
+        {
+            cursor = match + keyLength + 1U;
+
+            while ((*cursor == ' ') || (*cursor == '\t') ||
+                   (*cursor == '\r') || (*cursor == '\n'))
+            {
+                cursor++;
+            }
+
+            if (*cursor != ':')
+            {
+                match += keyLength;
+                continue;
+            }
+
+            cursor++;
+            while ((*cursor == ' ') || (*cursor == '\t') ||
+                   (*cursor == '\r') || (*cursor == '\n'))
+            {
+                cursor++;
+            }
+
+            if (*cursor != '{')
+            {
+                match += keyLength;
+                continue;
+            }
+
+            end = strchr(cursor + 1, '}');
+            if (end == NULL)
+            {
+                return NULL;
+            }
+
+            *objectEnd = end;
+            return cursor;
+        }
+
+        match += keyLength;
+    }
+
+    return NULL;
+}
+
+static const char *jsonFindValueInObject(const char *objectStart,
+                                         const char *objectEnd)
+{
+    const char *valueKey;
+    const char *cursor;
+
+    if ((objectStart == NULL) || (objectEnd == NULL) ||
+        (objectStart >= objectEnd))
+    {
+        return NULL;
+    }
+
+    valueKey = strstr(objectStart, "\"value\"");
+    if ((valueKey == NULL) || (valueKey >= objectEnd))
+    {
+        return NULL;
+    }
+
+    cursor = valueKey + sizeof("\"value\"") - 1U;
+
+    while ((cursor < objectEnd) &&
+           ((*cursor == ' ') || (*cursor == '\t') ||
+            (*cursor == '\r') || (*cursor == '\n')))
+    {
+        cursor++;
+    }
+
+    if ((cursor >= objectEnd) || (*cursor != ':'))
+    {
+        return NULL;
+    }
+
+    cursor++;
+    while ((cursor < objectEnd) &&
+           ((*cursor == ' ') || (*cursor == '\t') ||
+            (*cursor == '\r') || (*cursor == '\n')))
+    {
+        cursor++;
+    }
+
+    return (cursor < objectEnd) ? cursor : NULL;
+}
+
+static bool jsonGetFloatValue(const char *json, const char *key, float *value)
+{
+    const char *objectEnd;
+    const char *objectStart;
+    const char *valueStart;
+    char *numberEnd;
+    float parsedValue;
+
+    if (value == NULL)
+    {
+        return false;
+    }
+
+    objectStart = jsonFindObjectForKey(json, key, &objectEnd);
+    valueStart = jsonFindValueInObject(objectStart, objectEnd);
+
+    if ((valueStart == NULL) || (*valueStart == '"'))
+    {
+        return false;
+    }
+
+    parsedValue = strtof(valueStart, &numberEnd);
+    if ((numberEnd == valueStart) || (numberEnd > objectEnd))
+    {
+        return false;
+    }
+
+    *value = parsedValue;
+    return true;
+}
+
+static bool jsonGetStringValue(const char *json, const char *key,
+                               char *output, size_t outputSize)
+{
+    const char *objectEnd;
+    const char *objectStart;
+    const char *valueStart;
+    const char *valueEnd;
+    size_t valueLength;
+
+    if ((output == NULL) || (outputSize == 0U))
+    {
+        return false;
+    }
+
+    objectStart = jsonFindObjectForKey(json, key, &objectEnd);
+    valueStart = jsonFindValueInObject(objectStart, objectEnd);
+
+    if ((valueStart == NULL) || (*valueStart != '"'))
+    {
+        return false;
+    }
+
+    valueStart++;
+    valueEnd = valueStart;
+
+    while ((valueEnd < objectEnd) && (*valueEnd != '"'))
+    {
+        /* These endpoint strings do not contain JSON escape sequences. */
+        if (*valueEnd == '\\')
+        {
+            return false;
+        }
+        valueEnd++;
+    }
+
+    if ((valueEnd >= objectEnd) || (*valueEnd != '"'))
+    {
+        return false;
+    }
+
+    valueLength = (size_t)(valueEnd - valueStart);
+    if (valueLength >= outputSize)
+    {
+        return false;
+    }
+
+    memcpy(output, valueStart, valueLength);
+    output[valueLength] = '\0';
+    return true;
+}
+
+static void printParsedActualData(const WINC_SM_ACTUAL_DATA *data)
+{
+    if (data == NULL)
+    {
+        return;
+    }
+
+    SYS_CONSOLE_PRINT("\r\n--- Parsed smart-meter actual data ---\r\n");
+    SYS_CONSOLE_PRINT("timestamp: %s\r\n", data->timestamp);
+    SYS_CONSOLE_PRINT("energy_delivered_tariff1: %.3f kWh\r\n",
+                      (double)data->energyDeliveredTariff1KWh);
+    SYS_CONSOLE_PRINT("energy_delivered_tariff2: %.3f kWh\r\n",
+                      (double)data->energyDeliveredTariff2KWh);
+    SYS_CONSOLE_PRINT("energy_returned_tariff1: %.3f kWh\r\n",
+                      (double)data->energyReturnedTariff1KWh);
+    SYS_CONSOLE_PRINT("energy_returned_tariff2: %.3f kWh\r\n",
+                      (double)data->energyReturnedTariff2KWh);
+    SYS_CONSOLE_PRINT("electricity_tariff: %s\r\n", data->electricityTariff);
+    SYS_CONSOLE_PRINT("power_delivered: %.3f kW\r\n",
+                      (double)data->powerDeliveredKW);
+    SYS_CONSOLE_PRINT("power_returned: %.3f kW\r\n",
+                      (double)data->powerReturnedKW);
+    SYS_CONSOLE_PRINT("voltage_l1: %.1f V\r\n", (double)data->voltageL1V);
+    SYS_CONSOLE_PRINT("voltage_l2: %.1f V\r\n", (double)data->voltageL2V);
+    SYS_CONSOLE_PRINT("voltage_l3: %.1f V\r\n", (double)data->voltageL3V);
+    SYS_CONSOLE_PRINT("current_l1: %.3f A\r\n", (double)data->currentL1A);
+    SYS_CONSOLE_PRINT("current_l2: %.3f A\r\n", (double)data->currentL2A);
+    SYS_CONSOLE_PRINT("current_l3: %.3f A\r\n", (double)data->currentL3A);
+    SYS_CONSOLE_PRINT("power_delivered_l1: %.3f kW\r\n",
+                      (double)data->powerDeliveredL1KW);
+    SYS_CONSOLE_PRINT("power_delivered_l2: %.3f kW\r\n",
+                      (double)data->powerDeliveredL2KW);
+    SYS_CONSOLE_PRINT("power_delivered_l3: %.3f kW\r\n",
+                      (double)data->powerDeliveredL3KW);
+    SYS_CONSOLE_PRINT("power_returned_l1: %.3f kW\r\n",
+                      (double)data->powerReturnedL1KW);
+    SYS_CONSOLE_PRINT("power_returned_l2: %.3f kW\r\n",
+                      (double)data->powerReturnedL2KW);
+    SYS_CONSOLE_PRINT("power_returned_l3: %.3f kW\r\n",
+                      (double)data->powerReturnedL3KW);
+    if (data->gasDataAvailable)
+    {
+        SYS_CONSOLE_PRINT("gas_delivered: %.3f m3\r\n",
+                          (double)data->gasDeliveredM3);
+        SYS_CONSOLE_PRINT("gas_delivered_timestamp: %s\r\n",
+                          data->gasDeliveredTimestamp);
+    }
+    else
+    {
+        SYS_CONSOLE_PRINT("gas data: not included in this response\r\n");
+    }
+
+    SYS_CONSOLE_PRINT("--------------------------------------\r\n\r\n");
+}
+
+static bool parseActualDataJson(const char *json)
+{
+    WINC_SM_ACTUAL_DATA parsed;
+    bool valid = true;
+
+    memset(&parsed, 0, sizeof(parsed));
+
+#define PARSE_STRING(jsonKey, member)                                      \
+    do                                                                     \
+    {                                                                      \
+        if (!jsonGetStringValue(json, jsonKey,                             \
+                                parsed.member, sizeof(parsed.member)))     \
+        {                                                                  \
+            SYS_CONSOLE_PRINT("JSON field missing/invalid: %s\r\n",      \
+                              jsonKey);                                    \
+            valid = false;                                                 \
+        }                                                                  \
+    } while (0)
+
+#define PARSE_FLOAT(jsonKey, member)                                       \
+    do                                                                     \
+    {                                                                      \
+        if (!jsonGetFloatValue(json, jsonKey, &parsed.member))             \
+        {                                                                  \
+            SYS_CONSOLE_PRINT("JSON field missing/invalid: %s\r\n",      \
+                              jsonKey);                                    \
+            valid = false;                                                 \
+        }                                                                  \
+    } while (0)
+
+    PARSE_STRING("timestamp", timestamp);
+    PARSE_FLOAT("energy_delivered_tariff1", energyDeliveredTariff1KWh);
+    PARSE_FLOAT("energy_delivered_tariff2", energyDeliveredTariff2KWh);
+    PARSE_FLOAT("energy_returned_tariff1", energyReturnedTariff1KWh);
+    PARSE_FLOAT("energy_returned_tariff2", energyReturnedTariff2KWh);
+    PARSE_STRING("electricity_tariff", electricityTariff);
+    PARSE_FLOAT("power_delivered", powerDeliveredKW);
+    PARSE_FLOAT("power_returned", powerReturnedKW);
+    PARSE_FLOAT("voltage_l1", voltageL1V);
+    PARSE_FLOAT("voltage_l2", voltageL2V);
+    PARSE_FLOAT("voltage_l3", voltageL3V);
+    PARSE_FLOAT("current_l1", currentL1A);
+    PARSE_FLOAT("current_l2", currentL2A);
+    PARSE_FLOAT("current_l3", currentL3A);
+    PARSE_FLOAT("power_delivered_l1", powerDeliveredL1KW);
+    PARSE_FLOAT("power_delivered_l2", powerDeliveredL2KW);
+    PARSE_FLOAT("power_delivered_l3", powerDeliveredL3KW);
+    PARSE_FLOAT("power_returned_l1", powerReturnedL1KW);
+    PARSE_FLOAT("power_returned_l2", powerReturnedL2KW);
+    PARSE_FLOAT("power_returned_l3", powerReturnedL3KW);
+
+    /*
+     * Gas data is optional. Only mark it available when both the value and
+     * its timestamp are present and valid. Missing gas fields must not make
+     * an otherwise valid electrical-data response fail.
+     */
+    parsed.gasDataAvailable =
+        jsonGetFloatValue(json, "gas_delivered",
+                          &parsed.gasDeliveredM3) &&
+        jsonGetStringValue(json, "gas_delivered_timestamp",
+                           parsed.gasDeliveredTimestamp,
+                           sizeof(parsed.gasDeliveredTimestamp));
+
+    if (!parsed.gasDataAvailable)
+    {
+        parsed.gasDeliveredM3 = 0.0f;
+        parsed.gasDeliveredTimestamp[0] = '\0';
+    }
+
+#undef PARSE_FLOAT
+#undef PARSE_STRING
+
+    if (!valid)
+    {
+        parsedActualDataAvailable = false;
+        return false;
+    }
+
+    parsedActualData = parsed;
+    parsedActualDataAvailable = true;
+    printParsedActualData(&parsedActualData);
+    return true;
+}
+
+static void processHttpResponse(void)
+{
+    char *headerEnd;
+    const char *body;
+    size_t headersLength;
+    size_t bodyLength;
+    size_t payloadLength;
+    int statusCode = 0;
+    const char *headerValue;
+    size_t headerValueLength;
+    bool isChunked = false;
+
+    httpResponse[httpResponseLength] = '\0';
+
+    if (httpResponseLength == 0U)
+    {
+        SYS_CONSOLE_PRINT("HTTP response was empty\r\n");
+        return;
+    }
+
+    if (sscanf(httpResponse, "HTTP/%*u.%*u %d", &statusCode) != 1)
+    {
+        SYS_CONSOLE_PRINT("Invalid HTTP status line\r\n");
+        return;
+    }
+
+    headerEnd = strstr(httpResponse, "\r\n\r\n");
+    if (headerEnd == NULL)
+    {
+        SYS_CONSOLE_PRINT("HTTP header terminator not found\r\n");
+        return;
+    }
+
+    headersLength = (size_t)(headerEnd - httpResponse);
+    body = headerEnd + 4;
+    bodyLength = httpResponseLength - (size_t)(body - httpResponse);
+
+    SYS_CONSOLE_Print(app_wifi_access_point_controllerData.consoleHandle,
+                      "HTTP status %d, received %u bytes\r\n",
+                      statusCode, (unsigned int)httpResponseLength);
+
+    if (statusCode != 200)
+    {
+        SYS_CONSOLE_Print(app_wifi_access_point_controllerData.consoleHandle,
+                          "Endpoint returned HTTP status %d\r\n", statusCode);
+        return;
+    }
+
+    if (httpGetHeaderValue(httpResponse, headersLength,
+                           "Transfer-Encoding", &headerValue,
+                           &headerValueLength))
+    {
+        isChunked = textContainsIgnoreCase(headerValue, headerValueLength,
+                                           "chunked");
+    }
+
+    if (isChunked)
+    {
+        if (!httpDecodeChunkedBody(body, bodyLength, actualData,
+                                   HTTP_RESPONSE_MAX, &payloadLength))
+        {
+            SYS_CONSOLE_PRINT("Could not decode chunked HTTP body\r\n");
+            return;
+        }
+    }
+    else
+    {
+        payloadLength = bodyLength;
+
+        if (httpGetHeaderValue(httpResponse, headersLength,
+                               "Content-Length", &headerValue,
+                               &headerValueLength))
+        {
+            size_t contentLength;
+
+            if (!parseDecimalSize(headerValue, headerValueLength,
+                                  &contentLength))
+            {
+                SYS_CONSOLE_PRINT("Invalid Content-Length header\r\n");
+                return;
+            }
+
+            if (contentLength > bodyLength)
+            {
+                SYS_CONSOLE_PRINT("HTTP body ended before Content-Length\r\n");
+                return;
+            }
+
+            payloadLength = contentLength;
+        }
+
+        if (payloadLength > HTTP_RESPONSE_MAX)
+        {
+            SYS_CONSOLE_PRINT("HTTP body is larger than HTTP_RESPONSE_MAX\r\n");
+            return;
+        }
+
+        memcpy(actualData, body, payloadLength);
+        actualData[payloadLength] = '\0';
+    }
+
+    actualDataLength = payloadLength;
+    actualDataAvailable = true;
+
+    SYS_CONSOLE_Print(app_wifi_access_point_controllerData.consoleHandle,
+                      "Actual data updated: %u bytes\r\n",
+                      (unsigned int)actualDataLength);
+
+#if HTTP_PRINT_RAW_PREVIEW
+    if (actualDataLength > 0U)
+    {
+        size_t previewLength = actualDataLength;
+
+        if (previewLength > HTTP_RESPONSE_PREVIEW_MAX)
+        {
+            previewLength = HTTP_RESPONSE_PREVIEW_MAX;
+        }
+
+        SYS_CONSOLE_Print(app_wifi_access_point_controllerData.consoleHandle,
+                          "Actual data preview:\r\n%.*s\r\n",
+                          (int)previewLength, actualData);
+    }
+#endif
+
+    if (!parseActualDataJson(actualData))
+    {
+        SYS_CONSOLE_PRINT("Actual-data JSON parsing failed\r\n");
+    }
+}
+
+static void httpStartActualRequest(void)
+{
+    struct sockaddr_in serverAddress;
+    int requestLength;
+
+    if (!connectedStationIpValid ||
+        (httpClientState != HTTP_CLIENT_IDLE))
+    {
+        return;
+    }
+
+    httpResponseLength = 0U;
+    httpResponse[0] = '\0';
+
+    httpSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (httpSocket < 0)
+    {
+        httpFailRequest("socket creation failed");
+        return;
+    }
+
+    memset(&serverAddress, 0, sizeof(serverAddress));
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_port = _htons((uint16_t)HTTP_SERVER_PORT);
+    serverAddress.sin_addr.s_addr = connectedStationIp;
+
+    requestLength = snprintf(httpTxBuffer, sizeof(httpTxBuffer),
+                             "GET " HTTP_ENDPOINT " HTTP/1.1\r\n"
+                             "Host: %s\r\n"
+                             "Accept: application/json\r\n"
+                             "Connection: close\r\n"
+                             HTTP_EXTRA_HEADERS
+                             "\r\n",
+                             connectedStationIpText);
+
+    if ((requestLength <= 0) ||
+        ((size_t)requestLength >= sizeof(httpTxBuffer)))
+    {
+        httpFailRequest("request buffer too small");
+        return;
+    }
+
+    SYS_CONSOLE_Print(app_wifi_access_point_controllerData.consoleHandle,
+                      "HTTP GET http://%s:%u%s\r\n",
+                      connectedStationIpText,
+                      (unsigned int)HTTP_SERVER_PORT,
+                      HTTP_ENDPOINT);
+
+    httpClientState = HTTP_CLIENT_CONNECTING;
+    httpRequestDeadline = SYS_TIME_CounterGet() +
+                          SYS_TIME_MSToCount(HTTP_REQUEST_TIMEOUT_MS);
+
+    if (connect(httpSocket, (struct sockaddr *)&serverAddress,
+                sizeof(serverAddress)) < 0)
+    {
+        httpFailRequest("connect call failed");
+    }
+}
+
+static void handleHttpSocketEvent(SOCKET socket, uint8_t messageType,
+                                  void *pMessage)
+{
+    switch (messageType)
+    {
+        case SOCKET_MSG_CONNECT:
+        {
+            tstrSocketConnectMsg *connectMessage =
+                (tstrSocketConnectMsg *)pMessage;
+
+            if ((connectMessage == NULL) ||
+                (connectMessage->s8Error != 0))
+            {
+                httpFailRequest("TCP connection failed");
+                return;
+            }
+
+            SYS_CONSOLE_PRINT("HTTP TCP connection established\r\n");
+
+            if (send(socket, (void *)httpTxBuffer,
+                     (uint16_t)strlen(httpTxBuffer), 0) < 0)
+            {
+                httpFailRequest("send call failed");
+                return;
+            }
+
+            memset(httpRxChunk, 0, sizeof(httpRxChunk));
+            if (recv(socket, httpRxChunk, sizeof(httpRxChunk), 0) < 0)
+            {
+                httpFailRequest("receive could not be started");
+                return;
+            }
+
+            httpClientState = HTTP_CLIENT_RECEIVING;
+            break;
+        }
+
+        case SOCKET_MSG_SEND:
+        {
+            SYS_CONSOLE_PRINT("HTTP request sent\r\n");
+            break;
+        }
+
+        case SOCKET_MSG_RECV:
+        {
+            tstrSocketRecvMsg *recvMessage =
+                (tstrSocketRecvMsg *)pMessage;
+
+            if ((recvMessage != NULL) &&
+                (recvMessage->s16BufferSize > 0))
+            {
+                size_t receivedLength =
+                    (size_t)recvMessage->s16BufferSize;
+                size_t availableSpace =
+                    HTTP_RESPONSE_MAX - httpResponseLength;
+
+                if (receivedLength > availableSpace)
+                {
+                    httpFailRequest("response exceeded HTTP_RESPONSE_MAX");
+                    return;
+                }
+
+                memcpy(&httpResponse[httpResponseLength],
+                       recvMessage->pu8Buffer, receivedLength);
+                httpResponseLength += receivedLength;
+                httpResponse[httpResponseLength] = '\0';
+
+                httpRequestDeadline = SYS_TIME_CounterGet() +
+                                      SYS_TIME_MSToCount(
+                                          HTTP_REQUEST_TIMEOUT_MS);
+
+                memset(httpRxChunk, 0, sizeof(httpRxChunk));
+                if (recv(socket, httpRxChunk, sizeof(httpRxChunk), 0) < 0)
+                {
+                    httpFailRequest("could not continue receive");
+                }
+            }
+            else
+            {
+                processHttpResponse();
+                httpFinishRequest();
+            }
+
+            break;
+        }
+
+        default:
+        {
+            break;
+        }
+    }
+}
+
+static void httpClientTasks(void)
+{
+    uint32_t now;
+
+    if (!connectedStationIpValid)
+    {
+        return;
+    }
+
+    now = SYS_TIME_CounterGet();
+
+    if (httpClientState == HTTP_CLIENT_IDLE)
+    {
+        if (timeReached(now, nextHttpPollTime))
+        {
+            httpStartActualRequest();
+        }
+    }
+    else if (timeReached(now, httpRequestDeadline))
+    {
+        httpFailRequest("request timeout");
+    }
+}
+
+bool WINC_SoftAPActualDataAvailable(void)
+{
+    return actualDataAvailable;
+}
+
+const char *WINC_SoftAPGetActualData(void)
+{
+    return actualData;
+}
+
+size_t WINC_SoftAPGetActualDataLength(void)
+{
+    return actualDataLength;
+}
+
+void WINC_SoftAPClearActualDataFlag(void)
+{
+    actualDataAvailable = false;
+}
+
+bool WINC_SoftAPParsedActualDataAvailable(void)
+{
+    return parsedActualDataAvailable;
+}
+
+const WINC_SM_ACTUAL_DATA *WINC_SoftAPGetParsedActualData(void)
+{
+    return &parsedActualData;
+}
+
+void WINC_SoftAPClearParsedActualDataFlag(void)
+{
+    parsedActualDataAvailable = false;
+}
 
 static void buildSoftApPassword(char *out, size_t outSize, const uint8_t eui64[8])
 {
@@ -392,6 +1406,13 @@ static void buildSoftApPassword(char *out, size_t outSize, const uint8_t eui64[8
 
 static void APP_ExampleSocketEventCallback(SOCKET socket, uint8_t messageType, void *pMessage)
 {
+    /* Keep outgoing HTTP client events separate from the TCP command server. */
+    if (socket == httpSocket)
+    {
+        handleHttpSocketEvent(socket, messageType, pMessage);
+        return;
+    }
+
     switch(messageType)
     {
         case SOCKET_MSG_BIND:
@@ -496,7 +1517,10 @@ static void APP_ExampleSocketEventCallback(SOCKET socket, uint8_t messageType, v
                 g_sess.closeAfterSend = false;
 
                 // keep server open and accept next client
-                accept(serverSocket, NULL, NULL);
+                if (serverSocket >= 0)
+                {
+                    accept(serverSocket, NULL, NULL);
+                }
             }
             break;
         }
@@ -517,7 +1541,10 @@ static void APP_ExampleSocketEventCallback(SOCKET socket, uint8_t messageType, v
                 g_sess.sock = -1;
                 g_sess.rxLen = 0;
 
-                accept(serverSocket, NULL, NULL);
+                if (serverSocket >= 0)
+                {
+                    accept(serverSocket, NULL, NULL);
+                }
             }
             break;
         }
@@ -531,6 +1558,10 @@ static void APP_ExampleSocketEventCallback(SOCKET socket, uint8_t messageType, v
 
 static void APP_ExampleAPConnectNotifyCallback(DRV_HANDLE handle, WDRV_WINC_ASSOC_HANDLE assocHandle, WDRV_WINC_CONN_STATE currentState, WDRV_WINC_CONN_ERROR errorCode)
 {
+    (void)handle;
+    (void)assocHandle;
+    (void)errorCode;
+
     if (WDRV_WINC_CONN_STATE_CONNECTED == currentState)
     {
         SYS_CONSOLE_Print(app_wifi_access_point_controllerData.consoleHandle, "AP Mode: Station connected\r\n");
@@ -539,21 +1570,57 @@ static void APP_ExampleAPConnectNotifyCallback(DRV_HANDLE handle, WDRV_WINC_ASSO
     {
         SYS_CONSOLE_Print(app_wifi_access_point_controllerData.consoleHandle, "AP Mode: Station disconnected\r\n");
 
-        if (-1 != serverSocket)
+        connectedStationIpValid = false;
+        connectedStationIp = 0;
+        connectedStationIpText[0] = '\0';
+        httpCloseSocket();
+
+        if (tcp_client_socket >= 0)
+        {
+            shutdown(tcp_client_socket);
+            tcp_client_socket = -1;
+        }
+
+        g_sess.sock = -1;
+        g_sess.rxLen = 0;
+        g_sess.closeAfterSend = false;
+
+        if (serverSocket >= 0)
         {
             shutdown(serverSocket);
             serverSocket = -1;
         }
+
+        state = EXAMP_STATE_WAIT_FOR_STATION;
     }
 }
 
 #if defined(WLAN_DHCP_SRV_ADDR) && defined(WLAN_DHCP_SRV_NETMASK)
 static void APP_ExampleDHCPAddressEventCallback(DRV_HANDLE handle, uint32_t ipAddress)
 {
-    char s[20];
+    (void)handle;
 
-    SYS_CONSOLE_Print(app_wifi_access_point_controllerData.consoleHandle, "AP Mode: Station IP address is %s\r\n", inet_ntop(AF_INET, &ipAddress, s, sizeof(s)));
-    state = EXAMP_STATE_START_TCP_SERVER;
+    if (connectedStationIpValid && (connectedStationIp != ipAddress))
+    {
+        httpCloseSocket();
+    }
+
+    connectedStationIp = ipAddress;
+    connectedStationIpValid = true;
+
+    inet_ntop(AF_INET, &connectedStationIp, connectedStationIpText,
+              sizeof(connectedStationIpText));
+
+    SYS_CONSOLE_Print(app_wifi_access_point_controllerData.consoleHandle,
+                      "AP Mode: Station IP address is %s\r\n",
+                      connectedStationIpText);
+
+    httpScheduleNextRequest(HTTP_FIRST_REQUEST_DELAY_MS);
+
+    if (serverSocket < 0)
+    {
+        state = EXAMP_STATE_START_TCP_SERVER;
+    }
 }
 #endif
 
@@ -565,13 +1632,35 @@ void APP_ExampleInitialize(DRV_HANDLE handle)
     SYS_CONSOLE_Print(app_wifi_access_point_controllerData.consoleHandle, "===========================================\r\n");
     SYS_CONSOLE_Print(app_wifi_access_point_controllerData.consoleHandle, "\r\n");
 
-    state = EXAMP_STATE_INIT;
+    (void)handle;
 
+    state = EXAMP_STATE_INIT;
     serverSocket = -1;
+    tcp_client_socket = -1;
+    g_sess.sock = -1;
+    g_sess.rxLen = 0;
+    g_sess.closeAfterSend = false;
+
+    httpSocket = -1;
+    httpClientState = HTTP_CLIENT_IDLE;
+    connectedStationIp = 0;
+    connectedStationIpValid = false;
+    connectedStationIpText[0] = '\0';
+    nextHttpPollTime = 0;
+    httpRequestDeadline = 0;
+    httpResponseLength = 0;
+    httpResponse[0] = '\0';
+    actualDataLength = 0;
+    actualData[0] = '\0';
+    actualDataAvailable = false;
+    memset(&parsedActualData, 0, sizeof(parsedActualData));
+    parsedActualDataAvailable = false;
 }
 
 void APP_ExampleTasks(DRV_HANDLE handle)
 {
+    httpClientTasks();
+
     switch (state)
     {
         case EXAMP_STATE_INIT:
@@ -654,8 +1743,14 @@ void APP_ExampleTasks(DRV_HANDLE handle)
 
         case EXAMP_STATE_START_TCP_SERVER:
         {
-            /* Create the server socket. */
+            /* Do not create/bind a second listening socket. */
+            if (serverSocket >= 0)
+            {
+                state = EXAMP_STATE_SOCKET_LISTENING;
+                break;
+            }
 
+            /* Create the server socket. */
             serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 
             if (serverSocket >= 0)

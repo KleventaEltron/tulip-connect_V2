@@ -421,7 +421,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
             // Needed because the Heatpump needs some time to actually store the settings
             // Otherwise we would send back outdated settings
             if (getSecondCounterDelayAfterChangingSettings() < 100) {
-        Groenlo        break;
+                break;
             }
             
             setSecondCounterDelayAfterChangingSettings(UINT32_MAX);
