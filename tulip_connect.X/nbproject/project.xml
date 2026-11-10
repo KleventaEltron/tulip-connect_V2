@@ -10,7 +10,7 @@
             <make-dep-projects/>
             <sourceRootList>
                 <sourceRootElem>files</sourceRootElem>
-                <sourceRootElem>../src/files</sourceRootElem>
+                <sourceRootElem>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

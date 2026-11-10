@@ -26,6 +26,8 @@
 #include <stdbool.h>                    // Defines true
 #include <stdlib.h>                     // Defines EXIT_FAILURE
 #include "definitions.h"                // SYS function prototypes
+#include "files/network_manager.h"
+#include "app_s2_tasks.h"
 
 #include "files\delay.h"
 
@@ -71,6 +73,8 @@ int main ( void )
 {
     /* Initialize all modules */
     SYS_Initialize ( NULL );
+    NETWORK_MANAGER_Initialize();
+    APP_S2_Initialize();
     
     NVIC_INT_Disable();
     initComplete();
@@ -80,6 +84,8 @@ int main ( void )
     {
         /* Maintain state machines of all polled MPLAB Harmony modules. */
         SYS_Tasks ( );
+        NETWORK_MANAGER_Tasks();
+        APP_S2_Tasks();
         
         // Watchdog clear
         WDT_Clear();

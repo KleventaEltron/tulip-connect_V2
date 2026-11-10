@@ -26,6 +26,7 @@
 // Section: Included Files
 // *****************************************************************************
 // *****************************************************************************
+#include "files/network_manager.h"
 #include <stdio.h>
 #include <stddef.h>                     // Defines NULL
 #include <stdbool.h>                    // Defines true
@@ -243,21 +244,8 @@ void APP_I2C_TASKS_Tasks ( void )
                 }
                 case MAC_STATE_XFER_SUCCESSFUL:
                 {
-                    TCPIP_NET_HANDLE netH = TCPIP_STACK_NetHandleGet("eth0");
-                    
-                    if (netH == NULL) {
-                        //SYS_CONSOLE_PRINT("Error: Network interface not found! Setting up new interface\n");
-                        if(!setupNewTcpipStack()){
-                            break;
-                        }
-                    }  
-                    
-                    if (!TCPIP_STACK_NetIsUp(netH)) {      
-                        break;
-                    }
-                    
-                    SYS_CONSOLE_PRINT("*** NETWORK STACK CONFIGURED ***\r\n");
-                    
+                    NETWORK_MANAGER_SetHardwareEui(eui64);
+                    /* Network startup and retries now belong to the manager. */
                    macState = MAC_STATE_XFER_ERROR;
                    break;
                 }

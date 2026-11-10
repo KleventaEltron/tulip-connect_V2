@@ -11,6 +11,7 @@
 #include "app_logging_tasks.h"
 #include "files/time_counters.h"
 #include "files/logging.h"
+#include "files/network_manager.h"
 #include "files/delay.h"
 
 #include "configuration.h"
@@ -36,19 +37,35 @@ IPV4_ADDR               ipAddr;
 bool onlyDoSettings = false;
 bool firstStartAfterBoot = true;
 
-void TC2_Callback_InterruptHandler(TC_TIMER_STATUS status, uintptr_t context)
-{           
-    increaseTcpIpResetCounter();
-    while(!releaseLoggingLock());
-    TCPIP_STACK_Deinitialize(sysObj.tcpip);
-    app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
-}
-    
+static volatile bool loggingTimedOut;
+static bool loggingLockHeld;
 
+static void releaseOwnedLoggingLock(void)
+{
+    if (loggingLockHeld && releaseLoggingLock()) loggingLockHeld = false;
+}
+
+static void loggingNetworkDown(void)
+{
+    TC2_TimerStop();
+    loggingTimedOut = false;
+    closeSocket();
+    releaseOwnedLoggingLock();
+    onlyDoSettings = false;
+    app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;
+}
+
+void TC2_Callback_InterruptHandler(TC_TIMER_STATUS status, uintptr_t context)
+{
+    /* ISR only signals. Socket/mutex/stack work belongs in the main loop. */
+    loggingTimedOut = true;
+}
 
 void APP_LOGGING_TASKS_Initialize ( void )
 {
     initializeMutex();
+    loggingTimedOut = false;
+    loggingLockHeld = false;
              
     memset(&app_logging_tasksData, 0, sizeof (app_logging_tasksData));
     TC2_TimerCallbackRegister(TC2_Callback_InterruptHandler, (uintptr_t)NULL);
@@ -61,6 +78,19 @@ void APP_LOGGING_TASKS_Initialize ( void )
 
 void APP_LOGGING_TASKS_Tasks ( void )
 {
+    if (loggingTimedOut)
+    {
+        loggingNetworkDown();
+        return;
+    }
+    if (app_logging_tasksData.state != APP_LOGGING_TASKS_STATE_INIT &&
+        app_logging_tasksData.state != APP_LOGGING_TASKS_IDLE &&
+        app_logging_tasksData.state != APP_LOGGING_TASKS_WAIT_FOR_LOGGING_UNLOCK &&
+        !NETWORK_MANAGER_IsReady())
+    {
+        loggingNetworkDown();
+        return;
+    }
     /* Check the application's current state. */
     switch ( app_logging_tasksData.state )
     {
@@ -69,7 +99,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
         /* Application's initial state. */
         case APP_LOGGING_TASKS_STATE_INIT:
         { 
-            //TC2_TimerStart();
+            if (!NETWORK_MANAGER_RegisterDownCallback(loggingNetworkDown)) break;
             app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;
             break;
         }
@@ -99,41 +129,9 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         case APP_LOGGING_TASKS_WAIT_FOR_LOGGING_UNLOCK:{
             
-            if(!setLoggingLock()){   
-                break;
-            }
-                            
-            // Get handle to the first network interface
-            TCPIP_NET_HANDLE netH = TCPIP_STACK_NetHandleGet("eth0");
-            
-            if (netH == NULL) {
-                //SYS_CONSOLE_PRINT("Error: Network interface not found! Setting up new interface\n");
-                onlyDoSettings = false;
-                app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;
-                if(!setupNewTcpipStack()){
-                    while(!releaseLoggingLock());
-                    break;
-                }
-                while(!releaseLoggingLock());
-                break;
-            }    
-            
-            if(!isEthernetCableConnected(netH)) {
-                SYS_CONSOLE_PRINT("Ethernet cable is DISCONNECTED!\n");
-                TCPIP_STACK_Deinitialize(sysObj.tcpip);
-                increaseTcpIpResetCounter();
-                onlyDoSettings = false;
-                app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;
-                while(!releaseLoggingLock());
-                break;
-            }
-                 
-            // Check if the network is up
-            if (!TCPIP_STACK_NetIsUp(netH)) {      
-                while(!releaseLoggingLock());
-                break;
-            } 
-            
+            if (!NETWORK_MANAGER_IsReady()) break;
+            if (!setLoggingLock()) break;
+            loggingLockHeld = true;
             app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_TCPIP_INIT;  
             break;
         }
@@ -141,6 +139,9 @@ void APP_LOGGING_TASKS_Tasks ( void )
         
         case APP_LOGGING_TASKS_WAIT_FOR_TCPIP_INIT:
         {  
+            TC2_TimerStop();
+            TC2_Timer32bitCounterSet(0);
+            loggingTimedOut = false;
             TC2_TimerStart();
             tcpipStat = TCPIP_STACK_Status(sysObj.tcpip);
             if(tcpipStat == SYS_STATUS_READY)
@@ -190,8 +191,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
                 app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_ON_DNS;
             } else {
                 SYS_CONSOLE_PRINT("DNS Query returned %d Aborting\r\n", result);
-                //while(!releaseLoggingLock());
-                app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;
+                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
             }
             break;
         }
@@ -213,8 +213,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
         {
             SYS_CONSOLE_PRINT("***** LOGGING LOCK SET ***** \r\n");
             if (!startSocketConnection()) {
-                while(!releaseLoggingLock());
-                app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;
+                app_logging_tasksData.state = APP_LOGGING_TASKS_CLOSE_CONNECTION;
             } else {
                 app_logging_tasksData.state = APP_LOGGING_TASKS_WAIT_FOR_CONNECTION; 
             }   
@@ -468,7 +467,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
             SYS_CONSOLE_PRINT("******** CLOSING CONNECTION **********!\r\n");
             TC2_TimerStop();
             closeSocket();
-            while(!releaseLoggingLock());
+            releaseOwnedLoggingLock();
             onlyDoSettings = false;
             app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;
             break;
@@ -477,7 +476,7 @@ void APP_LOGGING_TASKS_Tasks ( void )
         /* The default state should never be executed. */
         default:
         {
-            app_logging_tasksData.state = APP_LOGGING_TASKS_IDLE;
+            loggingNetworkDown();
             break;
         }
     }

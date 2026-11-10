@@ -5,6 +5,7 @@
 #include "configuration.h"
 
 #include "logging.h"
+#include "network_manager.h"
 #include "modbus/heatpump_parameters.h"
 #include "i2c/mac.h"
 #include "alarms.h"
@@ -45,18 +46,15 @@ static char devObjMeasureBuffer[DEVICE_JSON_MAX];
 static char devObjSendBuffer[DEVICE_JSON_MAX];
 static char settingsNetworkBuffer[4096];
 //extern const TCPIP_NETWORK_CONFIG __attribute__((unused))  TCPIP_HOSTS_CONFIGURATION[];
-extern const TCPIP_STACK_MODULE_CONFIG TCPIP_STACK_MODULE_CONFIG_TBL [];
 //extern const size_t TCPIP_HOSTS_CONFIGURATION_SIZE;
-extern const size_t TCPIP_STACK_MODULE_CONFIG_TBL_SIZE;
 //extern APP_HEATING_AND_HOT_WATER_DATA app_Data;
 
-NET_PRES_SKT_HANDLE_T   log_socket;
+NET_PRES_SKT_HANDLE_T   log_socket = INVALID_SOCKET;
 IP_MULTI_ADDRESS        address;
 
 DEVICE_TYPE DEVICE_TYPE_REQUESTED = -1; 
 char NTP_TIME_BUFFER[40];
 
-uint8_t TcpIPStackResetCount = 0;
         
 static size_t totalBytesReceived = 0;
 static char readBuffer[READ_BUFFER_SIZE + 1];
@@ -156,12 +154,8 @@ bool isEthernetCableConnected(TCPIP_NET_HANDLE netH) {
     return true;
 }
 
-void increaseTcpIpResetCounter() {
-    TcpIPStackResetCount += 1;
-}
-
 uint8_t getTcpIpResetCounter() {
-    return TcpIPStackResetCount;
+    return (uint8_t)NETWORK_MANAGER_GetStatus().stackRestarts;
 }
 
 
@@ -186,55 +180,6 @@ char * getLoggingStateToString(APP_LOGGING_TASKS_STATES logState) {
         default: return "14, Unkown"; break;
     }
 }
-
-
-bool setupNewTcpipStack() {
-    TCPIP_STACK_INIT    tcpipInit;
-    
-    char macToString[40];
-    
-    uint8_t firstMacByte = eui64[2];
-    firstMacByte |= 0x02;  // Set "locally administered" bit
-    firstMacByte &= ~0x01; 
-    
-    snprintf(macToString, sizeof(macToString), "%02X:%02X:%02X:%02X:%02X:%02X", 
-            firstMacByte,eui64[3],eui64[4],eui64[5],eui64[6],eui64[7]);
-    
-    //SYS_CONSOLE_PRINT("!!! MAC ADDRESS SET TO %s !!!\r\n", macToString);        
-    
-    TCPIP_NETWORK_CONFIG __attribute__((unused))  TCPIP_HOSTS_CONFIGURATION_CUSTOM[] =
-    {
-        /*** Network Configuration Index 0 ***/
-        {
-            .interface = TCPIP_NETWORK_DEFAULT_INTERFACE_NAME_IDX0,
-            .hostName = TCPIP_NETWORK_DEFAULT_HOST_NAME_IDX0,
-            .macAddr = macToString, // Change default MAC to MAC obtained from IC
-            .ipAddr = TCPIP_NETWORK_DEFAULT_IP_ADDRESS_IDX0,
-            .ipMask = TCPIP_NETWORK_DEFAULT_IP_MASK_IDX0,
-            .gateway = TCPIP_NETWORK_DEFAULT_GATEWAY_IDX0,
-            .priDNS = TCPIP_NETWORK_DEFAULT_DNS_IDX0,
-            .secondDNS = TCPIP_NETWORK_DEFAULT_SECOND_DNS_IDX0,
-            .powerMode = TCPIP_NETWORK_DEFAULT_POWER_MODE_IDX0,
-            .startFlags = TCPIP_NETWORK_DEFAULT_INTERFACE_FLAGS_IDX0,
-            .pMacObject = &TCPIP_NETWORK_DEFAULT_MAC_DRIVER_IDX0,
-        },
-    };
-    size_t TCPIP_HOSTS_CONFIGURATION_SIZE_CUSTOM = sizeof (TCPIP_HOSTS_CONFIGURATION_CUSTOM) / sizeof (*TCPIP_HOSTS_CONFIGURATION_CUSTOM);
-    
-    tcpipInit.pNetConf = TCPIP_HOSTS_CONFIGURATION_CUSTOM;
-    tcpipInit.nNets = TCPIP_HOSTS_CONFIGURATION_SIZE_CUSTOM;
-    tcpipInit.pModConfig = TCPIP_STACK_MODULE_CONFIG_TBL;
-    tcpipInit.nModules = TCPIP_STACK_MODULE_CONFIG_TBL_SIZE;
-    tcpipInit.initCback = 0;
-
-    sysObj.tcpip = TCPIP_STACK_Initialize(0, &tcpipInit.moduleInit);
-    if (sysObj.tcpip == SYS_MODULE_OBJ_INVALID) {
-        SYS_CONSOLE_PRINT("TCPIP_STACK_Init Failed!\n");
-        return false;
-    }    
-    return true;
-}
-
 
 
 void setHardwareId( char device[], char* hardwareId, int modbusIndex ) {
@@ -1046,18 +991,61 @@ bool readNetworkBufferBodySslResponse ( void ) {
 /*
  * Starts the TCP connection the the server on a given PORT
  */
-bool startSocketConnection ( void ) {
-    //SYS_CONSOLE_PRINT("Starting TCP/IPv4 Connection to : %d.%d.%d.%d port  '%d'\r\n",
-    //    address.v4Add.v[0], address.v4Add.v[1], address.v4Add.v[2], address.v4Add.v[3], PORT);
-                
-    NET_PRES_SKT_ERROR_T *error = NULL;
-    log_socket = NET_PRES_SocketOpen(0, NET_PRES_SKT_UNENCRYPTED_STREAM_CLIENT, IP_ADDRESS_TYPE_IPV4, PORT, (NET_PRES_ADDRESS *)&address, error);                    
-    NET_PRES_SocketWasReset(log_socket);
-            
-    if (log_socket == INVALID_SOCKET) {
-        SYS_CONSOLE_MESSAGE("Could not create socket - aborting\r\n");
+static void reportLoggingSocketFailure(NET_PRES_SKT_ERROR_T error)
+{
+    TCPIP_STACK_HEAP_HANDLE heap = TCPIP_STACK_HeapHandleGet(TCPIP_STACK_HEAP_TYPE_INTERNAL_HEAP, 0);
+    TCP_SOCKET_INFO info;
+    unsigned occupied = 0;
+    int socket;
+    for (socket = 0; socket < TCPIP_TCP_MAX_SOCKETS; socket++)
+    {
+        if (TCPIP_TCP_SocketInfoGet((TCP_SOCKET)socket, &info))
+        {
+            occupied++;
+            SYS_CONSOLE_PRINT("Logging TCP socket %d: state=%d tx=%u rx=%u pending=%u\r\n",
+                socket, (int)info.state, (unsigned)info.txSize,
+                (unsigned)info.rxSize, (unsigned)info.txPending);
+        }
+    }
+    SYS_CONSOLE_PRINT("Could not create logging socket: NET_PRES error=%d TCP sockets=%u/%u heap free=%lu total=%lu largest=%lu\r\n",
+        (int)error, occupied, (unsigned)TCPIP_TCP_MAX_SOCKETS,
+        (unsigned long)(heap != NULL ? TCPIP_STACK_HEAP_FreeSize(heap) : 0),
+        (unsigned long)(heap != NULL ? TCPIP_STACK_HEAP_Size(heap) : 0),
+        (unsigned long)(heap != NULL ? TCPIP_STACK_HEAP_MaxSize(heap) : 0));
+}
+
+bool startSocketConnection ( void )
+{
+    NET_PRES_SKT_ERROR_T error = NET_PRES_SKT_OK;
+    TCP_OPTION_LINGER_DATA closeOptions = {0};
+
+    /* Never overwrite the only handle to an existing logging connection. */
+    if (log_socket != INVALID_SOCKET)
+    {
+        SYS_CONSOLE_MESSAGE("Logging socket already owned; closing before retry\r\n");
+        closeSocket();
+    }
+    log_socket = NET_PRES_SocketOpen(0, NET_PRES_SKT_UNENCRYPTED_STREAM_CLIENT,
+        IP_ADDRESS_TYPE_IPV4, PORT, (NET_PRES_ADDRESS *)&address, &error);
+    if (log_socket == INVALID_SOCKET)
+    {
+        reportLoggingSocketFailure(error);
         return false;
     }
+
+    /* Logging is request/response. Once complete or aborted, do not retain its
+     * large TCP buffers waiting for FIN/ACK. This affects only this socket;
+     * normal writes/TLS remain unchanged until closeSocket is called. */
+    closeOptions.lingerEnable = false;
+    closeOptions.gracefulEnable = false;
+    if (!NET_PRES_SocketOptionsSet(log_socket,
+            (NET_PRES_SKT_OPTION_TYPE)TCP_OPTION_LINGER, &closeOptions))
+    {
+        SYS_CONSOLE_MESSAGE("Could not configure logging socket cleanup - aborting\r\n");
+        closeSocket();
+        return false;
+    }
+    NET_PRES_SocketWasReset(log_socket);
     return true;
 }
 
@@ -1393,10 +1381,7 @@ bool readServerResponseDone(void)
     {
         SYS_CONSOLE_PRINT("HTTP response too large. Closing socket.\r\n");
 
-        if (log_socket != INVALID_SOCKET) {
-            NET_PRES_SocketClose(log_socket);
-            log_socket = INVALID_SOCKET;
-        }
+        closeSocket();
 
         buffer_len = 0;
         readBuffer[0] = '\0';

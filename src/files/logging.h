@@ -140,8 +140,8 @@ void initializeMutex();
 bool setLoggingLockNoPrint();
 bool releaseLoggingLockNoPrint();
 bool isEthernetCableConnected(TCPIP_NET_HANDLE netH);
-bool setupNewTcpipStack();
-void increaseTcpIpResetCounter();
+
+
 uint8_t getTcpIpResetCounter();
 char * getLoggingStateToString(APP_LOGGING_TASKS_STATES logState);
 bool getUpdateSettingsFromServer ( void );
