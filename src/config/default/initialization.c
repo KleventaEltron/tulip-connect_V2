@@ -734,6 +734,8 @@ void SYS_Initialize ( void* data )
 
     EVSYS_Initialize();
 
+    SERCOM0_USART_Initialize();
+
     SERCOM7_USART_Initialize();
 
 	SYSTICK_TimerInitialize();

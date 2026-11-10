@@ -72,6 +72,7 @@ void DMAC_1_InterruptHandler (void);
 void DMAC_2_InterruptHandler (void);
 void DMAC_3_InterruptHandler (void);
 void DMAC_OTHER_InterruptHandler (void);
+void SERCOM0_USART_InterruptHandler (void);
 void SERCOM1_USART_InterruptHandler (void);
 void SERCOM2_SPI_InterruptHandler (void);
 void SERCOM3_I2C_InterruptHandler (void);

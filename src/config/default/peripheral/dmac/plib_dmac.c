@@ -54,7 +54,7 @@
 // *****************************************************************************
 // *****************************************************************************
 
-#define DMAC_CHANNELS_NUMBER        (6U)
+#define DMAC_CHANNELS_NUMBER        (8U)
 
 #define DMAC_CRC_CHANNEL_OFFSET     (0x20U)
 
@@ -179,6 +179,30 @@ void DMAC_Initialize( void )
    dmacChannelObj[5].inUse = true;
 
    DMAC_REGS->CHANNEL[5].DMAC_CHINTENSET = (DMAC_CHINTENSET_TERR_Msk | DMAC_CHINTENSET_TCMPL_Msk);
+
+
+   /***************** Configure DMA channel 6 ********************/
+   DMAC_REGS->CHANNEL[6].DMAC_CHCTRLA = DMAC_CHCTRLA_TRIGACT(2U) | DMAC_CHCTRLA_TRIGSRC(5U) | DMAC_CHCTRLA_THRESHOLD(0U) | DMAC_CHCTRLA_BURSTLEN(0U) ;
+
+   descriptor_section[6].DMAC_BTCTRL = DMAC_BTCTRL_BLOCKACT_INT | DMAC_BTCTRL_BEATSIZE_BYTE | DMAC_BTCTRL_VALID_Msk | DMAC_BTCTRL_SRCINC_Msk ;
+
+   DMAC_REGS->CHANNEL[6].DMAC_CHPRILVL = DMAC_CHPRILVL_PRILVL(0U);
+
+   dmacChannelObj[6].inUse = true;
+
+   DMAC_REGS->CHANNEL[6].DMAC_CHINTENSET = (DMAC_CHINTENSET_TERR_Msk | DMAC_CHINTENSET_TCMPL_Msk);
+
+
+   /***************** Configure DMA channel 7 ********************/
+   DMAC_REGS->CHANNEL[7].DMAC_CHCTRLA = DMAC_CHCTRLA_TRIGACT(2U) | DMAC_CHCTRLA_TRIGSRC(4U) | DMAC_CHCTRLA_THRESHOLD(0U) | DMAC_CHCTRLA_BURSTLEN(0U) ;
+
+   descriptor_section[7].DMAC_BTCTRL = DMAC_BTCTRL_BLOCKACT_INT | DMAC_BTCTRL_BEATSIZE_BYTE | DMAC_BTCTRL_VALID_Msk | DMAC_BTCTRL_DSTINC_Msk ;
+
+   DMAC_REGS->CHANNEL[7].DMAC_CHPRILVL = DMAC_CHPRILVL_PRILVL(0U);
+
+   dmacChannelObj[7].inUse = true;
+
+   DMAC_REGS->CHANNEL[7].DMAC_CHINTENSET = (DMAC_CHINTENSET_TERR_Msk | DMAC_CHINTENSET_TCMPL_Msk);
 
     /* Enable the DMAC module & Priority Level x Enable */
     DMAC_REGS->DMAC_CTRL = DMAC_CTRL_DMAENABLE_Msk | DMAC_CTRL_LVLEN0_Msk | DMAC_CTRL_LVLEN1_Msk | DMAC_CTRL_LVLEN2_Msk | DMAC_CTRL_LVLEN3_Msk;
@@ -562,7 +586,7 @@ void __attribute__((used)) DMAC_OTHER_InterruptHandler( void )
 {
     uint8_t channel = 0U;
 
-    for(channel = 4U; channel <= 5U; channel++)
+    for(channel = 4U; channel <= 7U; channel++)
     {
         if (((DMAC_REGS->DMAC_INTSTATUS >> channel) & 0x1U) != 0U)
         {

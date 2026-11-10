@@ -97,6 +97,10 @@ typedef uint8_t DMAC_CRC_BEAT_SIZE;
 #define  DMAC_CHANNEL_4   (4U)
     /* DMAC Channel 5 */
 #define  DMAC_CHANNEL_5   (5U)
+    /* DMAC Channel 6 */
+#define  DMAC_CHANNEL_6   (6U)
+    /* DMAC Channel 7 */
+#define  DMAC_CHANNEL_7   (7U)
 typedef uint32_t DMAC_CHANNEL;
 
 typedef enum
