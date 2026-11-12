@@ -1,12 +1,10 @@
 #ifndef APP_S2_TASKS_H
 #define APP_S2_TASKS_H
+#include "files/s2/s2_limits.h"
 #include "files/s2/s2_tls.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define APP_S2_CA_MAX 4096u
-#define APP_S2_PATH_MAX 511u
-#define APP_S2_TOKEN_MAX 511u
 
 typedef enum { APP_S2_NOT_INITIALIZED=0, APP_S2_DISABLED, APP_S2_WAIT_SESSION,
     APP_S2_WAIT_NETWORK, APP_S2_WAIT_TIME, APP_S2_TLS_CONNECTING,

@@ -1,0 +1,10 @@
+{
+  "retrieved": "2026-11-11",
+  "source": "https://github.com/flexiblepower/s2-connect/tree/main/openapi",
+  "api": "v1.0",
+  "message_version": "v1.0.0",
+  "sha256": {
+    "s2-connect-session-init.yml": "785ba6cd75fc2c01f0302782105bd2d3b2b275d2d50b89c8883918508045c417",
+    "s2-connect-common.yml": "4e8b85a65e10b9d220df49db7767d70119d557c80ff56c90662e3afb49de4bc8"
+  }
+}

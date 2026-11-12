@@ -196,6 +196,20 @@ static bool verified(void *user)
     S2_TLS *t = user;
     return t->state == S2_TLS_VERIFIED && NETWORK_MANAGER_IsReady() && S2_TLS_ClockReady();
 }
+bool S2_TLS_PeerMatches(S2_TLS *t,const char *host,uint16_t port)
+{
+    TCP_SOCKET_INFO info;
+    const char *expected;
+    if(t==NULL || !t->initialized || host==NULL || port==0 || !verified(t))return false;
+    expected=t->hostname;
+    while(*host && *expected) {
+        unsigned a=(unsigned char)*host++,b=(unsigned char)*expected++;
+        if(a>='A'&&a<='Z')a+='a'-'A';
+        if(b>='A'&&b<='Z')b+='a'-'A';
+        if(a!=b)return false;
+    }
+    return *host==*expected && TCPIP_TCP_SocketInfoGet((TCP_SOCKET)t->socket,&info) && info.remotePort==port;
+}
 static int writePlaintext(void *user, const uint8_t *data, size_t length)
 {
     S2_TLS *t = user;
@@ -233,6 +247,11 @@ static int readPlaintext(void *user, uint8_t *out, size_t capacity)
             if (error == WOLFSSL_ERROR_WANT_READ || error == WOLFSSL_ERROR_WANT_WRITE) {
                 t->readNeedsWrite = error == WOLFSSL_ERROR_WANT_WRITE;
                 return 0;
+            }
+            if (error == WOLFSSL_ERROR_ZERO_RETURN) {
+                t->wolfError = error;
+                S2_TLS_Close(t);
+                return S2_TLS_READ_EOF;
             }
             t->wolfError = error; fail(t, S2_TLS_ERROR_IO); return -1;
         }

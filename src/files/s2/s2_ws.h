@@ -1,5 +1,6 @@
 #ifndef S2_WS_H
 #define S2_WS_H
+#include "s2_limits.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -10,8 +11,6 @@ extern "C" {
 #endif
 
 /* Local implementation limits, not limits imposed by S2. */
-#define S2_WS_MESSAGE_MAX 4096u
-#define S2_WS_HEADERS_MAX 4096u
 
 typedef enum {
     S2_WS_OK = 0,

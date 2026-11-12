@@ -28,6 +28,8 @@
 #include "definitions.h"                // SYS function prototypes
 #include "files/network_manager.h"
 #include "app_s2_tasks.h"
+#include "app_s2_session_tasks.h"
+#include "app_s2_comm_test.h"
 
 #include "files\delay.h"
 
@@ -75,6 +77,8 @@ int main ( void )
     SYS_Initialize ( NULL );
     NETWORK_MANAGER_Initialize();
     APP_S2_Initialize();
+    APP_S2_SESSION_Initialize();
+    APP_S2_COMM_TEST_Initialize();
     
     NVIC_INT_Disable();
     initComplete();
@@ -85,7 +89,9 @@ int main ( void )
         /* Maintain state machines of all polled MPLAB Harmony modules. */
         SYS_Tasks ( );
         NETWORK_MANAGER_Tasks();
+        APP_S2_SESSION_Tasks();
         APP_S2_Tasks();
+        APP_S2_COMM_TEST_Tasks();
         
         // Watchdog clear
         WDT_Clear();

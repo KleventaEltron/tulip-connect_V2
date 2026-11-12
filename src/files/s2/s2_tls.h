@@ -1,5 +1,6 @@
 #ifndef S2_TLS_H
 #define S2_TLS_H
+#include "s2_limits.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -8,7 +9,8 @@
 extern "C" {
 #endif
 #define S2_TLS_HOST_MAX 253u
-#define S2_TLS_IO_SIZE 512u
+/* Authenticated TLS close_notify, distinct from a truncated/error read (-1). */
+#define S2_TLS_READ_EOF (-2)
 #define S2_TLS_PHASE_TIMEOUT_MS 30000u
 
 typedef enum { S2_TLS_IDLE = 0, S2_TLS_TCP_CONNECTING, S2_TLS_HANDSHAKING,
@@ -46,6 +48,8 @@ bool S2_TLS_Start(S2_TLS *tls, uint32_t ipv4, uint16_t port, const char *hostnam
     const uint8_t *caDer, size_t caLength, uint32_t nowMs);
 void S2_TLS_Tasks(S2_TLS *tls, uint32_t nowMs);
 bool S2_TLS_ClockReady(void);
+/* Bind an HTTP origin to the verified DNS name and actual TCP peer port. */
+bool S2_TLS_PeerMatches(S2_TLS *tls,const char *hostname,uint16_t port);
 /* Application must register a network-manager callback that stops the transport
  * then calls Close BEFORE shared-stack teardown. Close is idempotent. */
 void S2_TLS_Close(S2_TLS *tls);

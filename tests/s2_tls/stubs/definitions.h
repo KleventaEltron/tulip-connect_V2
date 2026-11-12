@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 typedef int TCP_SOCKET;
-typedef struct { unsigned txPending; } TCP_SOCKET_INFO;
+typedef struct { unsigned txPending, remotePort; } TCP_SOCKET_INFO;
 bool TCPIP_TCP_SocketInfoGet(int,TCP_SOCKET_INFO *);
 typedef struct { struct { uint32_t Val; } v4Add; } IP_MULTI_ADDRESS;
 typedef struct { bool lingerEnable, gracefulEnable; uint16_t lingerTmo; } TCP_OPTION_LINGER_DATA;

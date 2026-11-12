@@ -140,6 +140,12 @@
 #define SEEP_ADDR
 
 //.....
+// Reserved S2 journal logical ranges; bootloader preservation must be verified.
+// No startup writes: populated only by the explicitly initialized S2 adapter.
+#define SEEP_ADDR_S2_TOKEN_SLOT0         1024u // reserve [1024,2048)
+#define SEEP_ADDR_S2_TOKEN_SLOT1         2048u // reserve [2048,3072)
+#define SEEP_S2_TOKEN_SLOT_SPAN          1024u
+
 #define SEEP_ADDR_LAST                  4095
 
 void WriteSmartEeprom8(uint32_t address, uint8_t data);

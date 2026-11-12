@@ -61,3 +61,8 @@ src/files/credentials.h
 
 # Windows specific files
 Thumbs.db
+# Private S2 bench certificates, credentials and generated firmware fixture
+/tools/s2_comm_test/local/
+/src/files/s2/s2_comm_test_local.h
+
+__pycache__/

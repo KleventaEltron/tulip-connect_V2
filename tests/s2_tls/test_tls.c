@@ -29,7 +29,7 @@ static char integrationInput[512];
 static size_t integrationLength;
 static S2_TRANSPORT transport;
 bool TCPIP_TCP_SocketInfoGet(int socket,TCP_SOCKET_INFO *info)
-{ assert(socket==3);info->txPending=tcpPending;return true; }
+{ assert(socket==3);info->txPending=tcpPending;info->remotePort=443;return true; }
 int wolfSSL_shutdown(WOLFSSL *s) { assert(s==&session);return shutdownResult; }
 static const uint8_t ca[] = {1,2,3};
 
@@ -136,6 +136,9 @@ int main(void)
     initialize();start(0);connected=true;lastError=-188;
     S2_TLS_Tasks(&tls,1);assert(tls.state==S2_TLS_FAILED && tls.wolfError==-188);checkReleased();
     openConnection();
+    assert(S2_TLS_PeerMatches(&tls,"CEM.local",443));
+    assert(!S2_TLS_PeerMatches(&tls,"other.local",443));
+    assert(!S2_TLS_PeerMatches(&tls,"cem.local",444));
     char data[8];tcpReadReady=3;tcpWriteReady=2;
     assert(receiveCallback(&session,data,2,&tls)==2);
     assert(sendCallback(&session,data,8,&tls)==2);
@@ -160,6 +163,8 @@ int main(void)
     lastError=WOLFSSL_ERROR_WANT_READ;
     assert(io.read(io.user,(uint8_t*)data,8)==0 && !tls.readNeedsWrite);
     lastError=0;readResult=0;assert(io.read(io.user,(uint8_t*)data,8)==-1);checkReleased();
+    openConnection();lastError=WOLFSSL_ERROR_ZERO_RETURN;readResult=0;
+    assert(io.read(io.user,(uint8_t*)data,8)==S2_TLS_READ_EOF);checkReleased();
     openConnection();writeResult=-1;lastError=WOLFSSL_ERROR_WANT_WRITE;
     assert(io.write(io.user,first,3)==0);larger[0]=9;
     assert(io.write(io.user,larger,5)==-1 && tls.error==S2_TLS_ERROR_IO);checkReleased();

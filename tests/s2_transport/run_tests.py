@@ -14,7 +14,7 @@ if Path(args.cc).stem.lower() == "zig":
     compiler.append("cc")
 with tempfile.TemporaryDirectory(prefix="tulip-s2-transport-") as temporary:
     executable = Path(temporary) / ("test.exe" if os.name == "nt" else "test")
-    subprocess.run(compiler + ["-std=c99", "-Wall", "-Wextra", "-Werror",
+    subprocess.run(compiler + ["-std=c99", "-DTULIP_S2_COMM_TEST_ENABLE=0", "-Wall", "-Wextra", "-Werror",
         "-I" + str(root / "src/files/s2"),
         str(root / "src/files/s2/s2_ws.c"),
         str(root / "src/files/s2/s2_sha1.c"),

@@ -1,0 +1,25 @@
+{
+  "repository": "https://github.com/flexiblepower/s2-json",
+  "commit": "02772ed39752fba210f87b80e969a0be4ffd6e90",
+  "sha256": {
+    "messages/Handshake.schema.json": "a4b6aebbc6f5d2e60e4fdc87d46a219d1033c836812a34334b449ef1510ffd14",
+    "messages/HandshakeResponse.schema.json": "65a9fff22ed7ebdb615a8cb15efa5f7a940b1e21e330de21f85befe8a8bdbb95",
+    "messages/ReceptionStatus.schema.json": "91658b1615be0ce44f2ffe223ce508b6625b81b152d9d54122150137ee2f8a64",
+    "messages/ResourceManagerDetails.schema.json": "d40daa013b668c19f49cdc9ae32514f9d8d600a5ec2b84d5ef9b571439ff2a0d",
+    "messages/SelectControlType.schema.json": "8557371e7010fef8eb632bcc17d7e4a23ec812a62ba8f5b36bb8300b13660ad4",
+    "messages/SessionRequest.schema.json": "2578e81d9f7876d67cdf5d04bbe0e8bf0b8f90831254d3b090f06214adfbf7c3",
+    "schemas/ID.schema.json": "881bff59629bfd78cd040b2e80d8f867849cbdbda89ac866d60a9e1552ed24ca",
+    "schemas/EnergyManagementRole.schema.json": "49ee763968d6efc96f64d229436e95278b7c4e7f2238168e6617b3d00461ba91",
+    "schemas/ReceptionStatusValues.schema.json": "a3c375a17667186dbfca5e6b0a85138415c8506a9c9d1ae17d0fea179ba81b62",
+    "schemas/Role.schema.json": "8a1ccdbc822d7a20050c0ce9378867c336fabd800af16c6aa89200151a802961",
+    "schemas/Duration.schema.json": "bfb30643a897796ce601df0e4938434131ea6d456af5c10ca11ce120a6577b4c",
+    "schemas/ControlType.schema.json": "5a54035735d1327dc4cd06900a87eb325cc11b05593677c86fcd14694250aadf",
+    "schemas/Currency.schema.json": "2236777c4d372b55d1a5f1ffaca280aeccbe17bc45456eb1b68cad1fd6bfe8f0",
+    "schemas/CommodityQuantity.schema.json": "d5d28ea8265d8eae89a8815f9b464039a093895a46ff45709bd91591fba0fa43",
+    "schemas/SessionRequestType.schema.json": "902d96e708e50db7e859b194d2482e0991b8dfbed7dce4cfe20bf52d571c6ed0",
+    "schemas/RoleType.schema.json": "d19036d9c104ee717d93faa108aeba5cc643d4f5ebdc1293d2ae884d8f14a95d",
+    "schemas/Commodity.schema.json": "b9cea4e66cc90d2a3f22b27b6e3187825725c249ee908ae75b458cf6674eca03",
+    "messages/PowerMeasurement.schema.json": "963507fffadeac4a44cc5a114f45fa2fffdaf4cc18c32a7e964d6f5c0cc66f62",
+    "schemas/PowerValue.schema.json": "e776f3aea64dd3d6e4749eacb23a3a01c5e263d644f5461eb2a731db252d9d48"
+  }
+}

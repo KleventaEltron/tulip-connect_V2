@@ -419,6 +419,15 @@
           <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_transport.h</itemPath>
           <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_sha1.h</itemPath>
           <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_tls.h</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_session.h</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_https.h</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_token_store.h</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_token_store_same54.h</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_token_store_same54_hw.h</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_test_messages.h</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_comm_test_config.h</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_comm_test_local.h</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_limits.h</itemPath>
         </logicalFolder>
         <itemPath>../src/files/alarms.h</itemPath>
         <itemPath>../src/files/delay.h</itemPath>
@@ -755,6 +764,8 @@
       <itemPath>../src/app_active_mode_controller.h</itemPath>
       <itemPath>../src/app_wifi_access_point_controller.h</itemPath>
       <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/app_s2_tasks.h</itemPath>
+      <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/app_s2_session_tasks.h</itemPath>
+      <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/app_s2_comm_test.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -1038,6 +1049,11 @@
           <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_transport.c</itemPath>
           <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_sha1.c</itemPath>
           <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_tls.c</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_session.c</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_https.c</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_token_store.c</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_token_store_same54.c</itemPath>
+          <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/files/s2/s2_test_messages.c</itemPath>
         </logicalFolder>
         <itemPath>../src/files/alarms.c</itemPath>
         <itemPath>../src/files/delay.c</itemPath>
@@ -1200,6 +1216,8 @@
       <itemPath>../src/app_active_mode_controller.c</itemPath>
       <itemPath>../src/app_wifi_access_point_controller.c</itemPath>
       <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/app_s2_tasks.c</itemPath>
+      <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/app_s2_session_tasks.c</itemPath>
+      <itemPath>//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/src/app_s2_comm_test.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
@@ -1285,6 +1303,8 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-fffff"/>
         <property key="poweroptions.powerenable" value="false"/>
+        <property key="programmerToGoFilePath"
+                  value="//kleventa-fs/RedirectedFolders/beerten/Mijn documenten/PROJECTEN/TULIP/MAIN/Tulip-Connect-V2/tulip-connect_V2/tulip_connect.X/debug/default/tulip_connect_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"
