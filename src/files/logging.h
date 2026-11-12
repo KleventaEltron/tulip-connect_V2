@@ -155,6 +155,12 @@ bool getSettingChangedInDisplay();
 void setNewLogRequired(bool value);
 bool getNewLogRequired();
 void resetRxBuffer(void);
+void loggingNetworkTasks(void);
+bool loggingTransmitBusy(void);
+bool loggingIoFailed(void);
+bool loggingConnectionReusable(void);
+uint32_t loggingLastProgress(void);
+uint32_t loggingDisplayRevision(void);
 
 //extern char NTP_TIME_BUFFER[40];
 

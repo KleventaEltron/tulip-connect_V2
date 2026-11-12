@@ -4,6 +4,9 @@
 #include <stdarg.h>
 #include <string.h>
 
+LOG_HTTP_TX loggingTx;bool loggingFault;
+char settingsNetworkBuffer[4096],loggingChunk[512];
+void resetRxBuffer(void) {}
 NET_PRES_SKT_HANDLE_T log_socket = INVALID_SOCKET;
 NET_PRES_ADDRESS address;
 static bool allocated[2], immediate[2], failOpen, failOptions, noHeap;
@@ -79,7 +82,7 @@ bool TCPIP_TCP_SocketInfoGet(TCP_SOCKET socket, TCP_SOCKET_INFO *info)
 {
     assert(socket >= 0 && socket < TCPIP_TCP_MAX_SOCKETS);
     if (socket >= 2 || !allocated[socket]) return false;
-    *info = (TCP_SOCKET_INFO){8, 16384, 1024, 0};
+    *info = (TCP_SOCKET_INFO){8, 4097, 1025, 0};
     return true;
 }
 int main(void)

@@ -6,6 +6,7 @@
 
 #include "logging.h"
 #include "network_manager.h"
+#include "logging_http.h"
 #include "modbus/heatpump_parameters.h"
 #include "i2c/mac.h"
 #include "alarms.h"
@@ -24,6 +25,7 @@
 #include <zlib.h>
 #include "cJSON.h"
 #include <stdarg.h>
+#include <errno.h>
 //#include "delay.h"
 
 /* Used in sending and receiving data to and from the server */
@@ -42,7 +44,7 @@
 #define DEVICE_JSON_MAX  8192u   // start here; adjust if needed
 #define CASCADE_BIT_IS_SET(mask, bit)   (((mask) & (1u << (bit))) != 0u)
 
-static char devObjMeasureBuffer[DEVICE_JSON_MAX];
+
 static char devObjSendBuffer[DEVICE_JSON_MAX];
 static char settingsNetworkBuffer[4096];
 //extern const TCPIP_NETWORK_CONFIG __attribute__((unused))  TCPIP_HOSTS_CONFIGURATION[];
@@ -51,6 +53,34 @@ static char settingsNetworkBuffer[4096];
 
 NET_PRES_SKT_HANDLE_T   log_socket = INVALID_SOCKET;
 IP_MULTI_ADDRESS        address;
+static LOG_HTTP_TX loggingTx;
+static LOG_HTTP_RESPONSE loggingResponse;
+static bool loggingFault,loggingRxComplete;
+static uint32_t loggingProgress;
+static char loggingChunk[512];
+static uint32_t loggingNow(void) {
+    uint64_t ticks=SYS_TIME_Counter64Get();uint32_t hz=SYS_TIME_FrequencyGet();
+    return hz?(uint32_t)((ticks/hz)*1000u+(ticks%hz)*1000u/hz):0;
+}
+bool loggingTransmitBusy(void) { return loggingTx.state!=LOG_TX_IDLE&&loggingTx.state!=LOG_TX_DONE&&loggingTx.state!=LOG_TX_FAILED; }
+bool loggingIoFailed(void) { return loggingFault||loggingTx.state==LOG_TX_FAILED; }
+uint32_t loggingLastProgress(void) { return loggingProgress; }
+static int loggingWrite(void *user,const uint8_t *data,size_t length) {
+    uint16_t ready;(void)user;
+    if(log_socket==INVALID_SOCKET||!NET_PRES_SocketIsConnected(log_socket))return -1;
+    ready=NET_PRES_SocketWriteIsReady(log_socket,(uint16_t)length,0);
+    if(ready<(uint16_t)length)return 0;
+    return (int)NET_PRES_SocketWrite(log_socket,data,(uint16_t)length);
+}
+void loggingNetworkTasks(void) {
+    uint32_t now=loggingNow(),before=loggingTx.progress;LOG_HTTP_TxTasks(&loggingTx,loggingWrite,NULL,now);
+    if(loggingTx.progress!=before)loggingProgress=loggingTx.progress;
+}
+static bool beginLoggingRequest(size_t length,LOG_HTTP_PRODUCER producer) {
+    loggingFault=false;loggingProgress=loggingNow();
+    return LOG_HTTP_TxBegin(&loggingTx,settingsNetworkBuffer,length,producer,NULL,loggingProgress);
+}
+
 
 DEVICE_TYPE DEVICE_TYPE_REQUESTED = -1; 
 char NTP_TIME_BUFFER[40];
@@ -62,11 +92,15 @@ static char readBuffer[READ_BUFFER_SIZE + 1];
 //static size_t expectedContentLength = 0;
 
 bool settingChangedInDisplay = false;
+static uint32_t displayChangeRevision;
 bool newLogRequired = false;
 
 void setSettingChangedInDisplay(bool value) {
+    if(value)displayChangeRevision++;
     settingChangedInDisplay = value;
 }
+
+uint32_t loggingDisplayRevision(void) {return displayChangeRevision;}
 
 bool getSettingChangedInDisplay() {
     return settingChangedInDisplay;
@@ -601,43 +635,6 @@ static void debugPrintSocketData(const uint8_t *data, size_t len)
 }
 
 
-static bool socketWriteAll(const uint8_t* data, size_t len)
-{
-    uint32_t spins = 0;
-    
-    //SYS_CONSOLE_PRINT("\r\n--- SOCKET WRITE %lu BYTES ---\r\n", (unsigned long)len);
-    //debugPrintSocketData(data, len);
-    //SYS_CONSOLE_PRINT("\r\n--- END SOCKET WRITE ---\r\n");
-
-    while (len > 0)
-    {
-        // how much can we write right now?
-        uint16_t canWrite = NET_PRES_SocketWriteIsReady(log_socket, (uint16_t)len, 0);
-
-        if (canWrite == 0)
-        {
-            // Not an error: TX buffer full, let stack progress
-            TCPIP_STACK_Task(sysObj.tcpip);
-            NET_PRES_Tasks(sysObj.netPres);
-
-            if (++spins > 50000u)   // timeout guard
-            {
-                SYS_CONSOLE_PRINT("socketWriteAll timeout\r\n");
-                return false;
-            }
-            continue;
-        }
-
-        int w = NET_PRES_SocketWrite(log_socket, data, canWrite);
-        if (w < 0) return false;
-
-        data += (size_t)w;
-        len  -= (size_t)w;
-        spins = 0;
-    }
-
-    return true;
-}
 
 static void formatCascadeMaskBinary(uint16_t mask, char* out, size_t outSize)
 {
@@ -659,209 +656,49 @@ static void formatCascadeMaskBinary(uint16_t mask, char* out, size_t outSize)
 }
 
 
-static size_t measureRealtimeBodyLen(uint8_t deviceCount)
-{
-    (void)deviceCount; // no longer used
 
-    size_t total = 0;
-    uint16_t cascadeMask = getCascadeSlaveStatus();
 
-    char tmp[256];
-    int n = snprintf(tmp, sizeof(tmp),
-        "{\"date_time_utc\":\"%s\",\"checksum\":\"xxxyyy\",\"devices\":[",
-        NTP_TIME_BUFFER);
-    if (n < 0 || (size_t)n >= sizeof(tmp))
-        return 0;
 
-    total += (size_t)n;
 
-    char *devObj = devObjMeasureBuffer;
-    memset(devObj, 0, DEVICE_JSON_MAX);
-    char device[20];
 
-    /* ---------- Device 0: controller (always) ---------- */
-    memset(devObj, 0, DEVICE_JSON_MAX);
-    memset(device, 0, sizeof(device));
 
-    parseDeviceType(TULIP_PRINT, device);
-    if (!setLoggingDataPerDeviceType(devObj, DEVICE_JSON_MAX, device, 0))
-        return 0;
 
-    total += strlen(devObj);
 
-    /* ---------- WL-1: heatpump index 1 (ALWAYS) ---------- */
-    total += 1; // comma
 
-    memset(devObj, 0, DEVICE_JSON_MAX);
-    memset(device, 0, sizeof(device));
 
-    parseDeviceType(HEATPUMP, device);
-    if (!setLoggingDataPerDeviceType(devObj, DEVICE_JSON_MAX, device, 1))
-        return 0;
 
-    total += strlen(devObj);
-  
 
-    /* ---------- WL-2 .. WL-16 (mask controlled) ---------- */
-    for (uint8_t bit = 1; bit < 16; bit++)
-    {
-        if (!CASCADE_BIT_IS_SET(cascadeMask, bit))
-            continue;
-
-        total += 1; // comma
-
-        memset(devObj, 0, DEVICE_JSON_MAX);
-        memset(device, 0, sizeof(device));
-
-        parseDeviceType(HEATPUMP, device);
-
-        int hpIndex = (int)bit + 1; // bit 1 ? index 2
-
-        if (!setLoggingDataPerDeviceType(devObj, DEVICE_JSON_MAX, device, hpIndex))
-            return 0;
-
-        total += strlen(devObj);
+static unsigned realtimeStage,realtimeDevice;
+static uint16_t realtimeMask;
+static int nextRealtime(void *user,const uint8_t **data,size_t *length) {
+    char device[20];int n;(void)user;
+    switch(realtimeStage) {
+        case 0:
+            n=snprintf(loggingChunk,sizeof(loggingChunk),"{\"date_time_utc\":\"%s\",\"checksum\":\"xxxyyy\",\"devices\":[",NTP_TIME_BUFFER);
+            if(n<0||(size_t)n>=sizeof(loggingChunk))return -1;
+            *data=(const uint8_t*)loggingChunk;*length=(size_t)n;realtimeStage=1;return 1;
+        case 1:
+            memset(devObjSendBuffer,0,sizeof(devObjSendBuffer));memset(device,0,sizeof(device));
+            parseDeviceType(realtimeDevice?HEATPUMP:TULIP_PRINT,device);
+            if(!setLoggingDataPerDeviceType(devObjSendBuffer,sizeof(devObjSendBuffer),device,(int)realtimeDevice))return -1;
+            *data=(const uint8_t*)devObjSendBuffer;*length=strlen(devObjSendBuffer);
+            if(realtimeDevice==0)realtimeDevice=1;
+            else {
+                unsigned bit=realtimeDevice;
+                while(bit<16&&!CASCADE_BIT_IS_SET(realtimeMask,bit))bit++;
+                realtimeDevice=bit<16?bit+1:0;
+            }
+            realtimeStage=realtimeDevice?2:3;return 1;
+        case 2:*data=(const uint8_t*)",";*length=1;realtimeStage=1;return 1;
+        case 3:*data=(const uint8_t*)"]}";*length=2;realtimeStage=4;return 1;
+        default:return 0;
     }
-
-    total += 2; // "]}"
-    return total;
 }
-
-
-
-
-
-static bool sendRealtimeBody(uint8_t deviceCount)
-{
-    (void)deviceCount; // no longer used
-
-    char tmp[256];
-    uint16_t cascadeMask = getCascadeSlaveStatus();
-
-    int n = snprintf(tmp, sizeof(tmp),
-        "{\"date_time_utc\":\"%s\",\"checksum\":\"xxxyyy\",\"devices\":[",
-        NTP_TIME_BUFFER);
-    if (n < 0 || (size_t)n >= sizeof(tmp))
-        return false;
-
-    if (!socketWriteAll((const uint8_t*)tmp, (size_t)n))
-        return false;
-
-    // Optional: print once per request
-    // SYS_CONSOLE_PRINT("Cascade mask = 0x%04X (WL-1 forced)\r\n", cascadeMask);
-
-    char *devObj = devObjSendBuffer;
-    memset(devObj, 0, DEVICE_JSON_MAX);
-    char device[20];
-
-    /* ---------- Device 0: controller (always) ---------- */
-    memset(devObj, 0, DEVICE_JSON_MAX);
-    memset(device, 0, sizeof(device));
-
-    parseDeviceType(TULIP_PRINT, device);
-    if (!setLoggingDataPerDeviceType(devObj, DEVICE_JSON_MAX, device, 0))
-        return false;
-
-    if (!socketWriteAll((const uint8_t*)devObj, strlen(devObj)))
-        return false;
-
-    /* ---------- WL-1: heatpump index 1 (ALWAYS) ---------- */
-    if (!socketWriteAll((const uint8_t*)",", 1))
-        return false;
-
-    memset(devObj, 0, DEVICE_JSON_MAX);
-    memset(device, 0, sizeof(device));
-
-    parseDeviceType(HEATPUMP, device);
-    if (!setLoggingDataPerDeviceType(devObj, DEVICE_JSON_MAX, device, 1))
-        return false;
-
-    if (!socketWriteAll((const uint8_t*)devObj, strlen(devObj)))
-        return false;
-
-    
-    char maskStr[20];
-    formatCascadeMaskBinary(cascadeMask, maskStr, sizeof(maskStr));
-    SYS_CONSOLE_PRINT("Cascade mask = %s (0x%04X)\r\n", maskStr, cascadeMask);  
-    
-    
-    /* ---------- WL-2 .. WL-16 (mask controlled) ---------- */
-    for (uint8_t bit = 1; bit < 16; bit++)
-    {
-        if (!CASCADE_BIT_IS_SET(cascadeMask, bit))
-            continue;
-
-        if (!socketWriteAll((const uint8_t*)",", 1))
-            return false;
-
-        memset(devObj, 0, DEVICE_JSON_MAX);
-        memset(device, 0, sizeof(device));
-
-        parseDeviceType(HEATPUMP, device);
-
-        int hpIndex = (int)bit + 1; // bit 1 -> index 2
-
-        if (!setLoggingDataPerDeviceType(devObj, DEVICE_JSON_MAX, device, hpIndex))
-            return false;
-
-        if (!socketWriteAll((const uint8_t*)devObj, strlen(devObj)))
-            return false;
-    }
-
-    return socketWriteAll((const uint8_t*)"]}", 2);
-}
-
-
-
-
-static bool httpWriteChunk(const char* s, size_t len)
-{
-    char hdr[16];
-    int n = snprintf(hdr, sizeof(hdr), "%X\r\n", (unsigned)len);
-    if (n <= 0) return false;
-
-    if (!socketWriteAll((const uint8_t*)hdr, (size_t)n)) return false;
-    if (len && !socketWriteAll((const uint8_t*)s, len)) return false;
-    return socketWriteAll((const uint8_t*)"\r\n", 2);
-}
-
-
-
-bool TULIP_REQUEST_TESTER(char request[], char path[])
-{
-    // decide how many devices you want to send
-    // total devices = 1 controller + (up to) 15 heatpumps
-    uint8_t deviceCount = MAX_LOG_DEVICES; // e.g. 16
-    if (GetAlarm(ALARM_HEATPUMP_COMMUNICATION))
-    {
-        deviceCount = 1; // only controller if heatpump comm alarm
-    }
-
-    size_t bodyLen = measureRealtimeBodyLen(deviceCount);
-    if (bodyLen == 0) return false;
-
-    char hdr[768];
-    int hn = snprintf(hdr, sizeof(hdr),
-        "%s /%s HTTP/1.1\r\n"
-        "Host: %s\r\n"
-        "Accept: application/json\r\n"
-        "Content-Type: application/json\r\n"
-        "Authorization: Bearer %s\r\n"
-        "Connection: keep-alive\r\n"
-        "Content-Length: %lu\r\n"
-        "\r\n",
-        request, path, HOST, TOKEN, (unsigned long)bodyLen);
-
-    if (hn < 0 || (size_t)hn >= sizeof(hdr)) return false;
-    if (!socketWriteAll((const uint8_t*)hdr, (size_t)hn)) return false;
-
-    if (!sendRealtimeBody(deviceCount)) return false;
-
-    SYS_CONSOLE_PRINT("*** REQUEST SEND (content-length): %s, %s, %s, len=%lu\r\n",
-                      request, path, NTP_TIME_BUFFER, (unsigned long)bodyLen);
-
-    DEVICE_TYPE_REQUESTED = -1;
-    return true;
+bool TULIP_REQUEST_TESTER(char request[],char path[]) {
+    int n;if(loggingTransmitBusy())return false;
+    n=snprintf(settingsNetworkBuffer,sizeof(settingsNetworkBuffer),"%s /%s HTTP/1.1\r\nHost: %s\r\nAccept: application/json\r\nAccept-Encoding: identity\r\nContent-Type: application/json\r\nAuthorization: Bearer %s\r\nConnection: keep-alive\r\nTransfer-Encoding: chunked\r\n\r\n",request,path,HOST,TOKEN);
+    realtimeStage=0;realtimeDevice=0;realtimeMask=getCascadeSlaveStatus();DEVICE_TYPE_REQUESTED=-1;
+    return n>0&&(size_t)n<sizeof(settingsNetworkBuffer)&&beginLoggingRequest((size_t)n,nextRealtime);
 }
 
 
@@ -1110,14 +947,11 @@ SSL_NEGOTIATION_STATES waitForSslConnection ( void ) {
 /*
  * Wait for the socket to be available for requests.
  */
-SSL_SOCKET_STATES socketReady( void ) {
-    if (NET_PRES_SocketReadIsReady(log_socket) == 0) {
-        if (NET_PRES_SocketWasReset(log_socket) || NET_PRES_SocketWasDisconnected(log_socket)) {
-            return SSL_SOCKET_WAS_DISCONNECTED;
-        }
-        return SSL_SOCKET_NOT_READY;
-    }    
-    return SSL_SOCKET_READY;
+SSL_SOCKET_STATES socketReady(void) {
+    if(log_socket==INVALID_SOCKET)return SSL_SOCKET_WAS_DISCONNECTED;
+    if(NET_PRES_SocketReadIsReady(log_socket)>0)return SSL_SOCKET_READY;
+    if(!NET_PRES_SocketIsConnected(log_socket)||NET_PRES_SocketWasReset(log_socket)||NET_PRES_SocketWasDisconnected(log_socket))return SSL_SOCKET_WAS_DISCONNECTED;
+    return SSL_SOCKET_NOT_READY;
 }
 
 
@@ -1127,6 +961,8 @@ SSL_SOCKET_STATES socketReady( void ) {
  */
 void closeSocket(void)
 {
+    LOG_HTTP_TxReset(&loggingTx);loggingFault=false;resetRxBuffer();
+    memset(settingsNetworkBuffer,0,sizeof(settingsNetworkBuffer));memset(loggingChunk,0,sizeof(loggingChunk));
     if (log_socket != INVALID_SOCKET) {
         NET_PRES_SocketClose(log_socket);
         log_socket = INVALID_SOCKET;
@@ -1135,136 +971,44 @@ void closeSocket(void)
 
 
 
-bool getUpdateSettingsFromServer ( void ) {
-    char *networkBuffer = settingsNetworkBuffer;
-    memset(networkBuffer, 0, sizeof(settingsNetworkBuffer));
-
-    char HARDWARE_ID[50];
-    snprintf(HARDWARE_ID, sizeof(HARDWARE_ID), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-W-1",
-                    eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]);
-    
-    
-    
-    snprintf(networkBuffer, sizeof(settingsNetworkBuffer), "GET /api/v1/settings?hardware_id=%s&type=heatpump HTTP/1.1\r\n"
-                    "Host: %s\r\n"
-                    "Accept: application/json\r\n"
-                    "Authorization: Bearer %s\r\n"
-                    "Accept-Encoding: Identity\r\n"
-                    "Connection: keep-alive\r\n"
-                    "Content-Type: application/json\r\n"            
-                    "Content-Length: 0\r\n\r\n",
-                    HARDWARE_ID, HOST, TOKEN);     
- 
-    uint16_t bytesSend = NET_PRES_SocketWrite(log_socket, (uint8_t*) networkBuffer, strlen(networkBuffer));
-    
-    if (bytesSend <= 0) {
-        SYS_CONSOLE_PRINT("***** COULD NOT COMPLETE REQUEST, CHECK IF NETWORK TX BUFFER SIZE IS BIG ENOUGH TO SEND THE REQUEST! SIZE NOW >> %d *****\r\n", strlen(networkBuffer));  
-        return false;
-    } else {
-        SYS_CONSOLE_PRINT("*** REQUEST SEND WITH FOLLOWING SETTINGS: GET, /api/v1/settings?hardware_id=%s&type=heatpump, %s, SIZE %i\r\n", HARDWARE_ID, NTP_TIME_BUFFER, strlen(networkBuffer));
-    }
-    return true;    
+bool getUpdateSettingsFromServer(void) {
+    int n;char hardware[50];if(loggingTransmitBusy())return false;
+    snprintf(hardware,sizeof(hardware),"%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-W-1",eui64[0],eui64[1],eui64[2],eui64[3],eui64[4],eui64[5],eui64[6],eui64[7]);
+    n=snprintf(settingsNetworkBuffer,sizeof(settingsNetworkBuffer),"GET /api/v1/settings?hardware_id=%s&type=heatpump HTTP/1.1\r\nHost: %s\r\nAccept: application/json\r\nAuthorization: Bearer %s\r\nAccept-Encoding: identity\r\nConnection: keep-alive\r\nContent-Length: 0\r\n\r\n",hardware,HOST,TOKEN);
+    return n>0&&(size_t)n<sizeof(settingsNetworkBuffer)&&beginLoggingRequest((size_t)n,NULL);
 }
 
 
 
-const char* find_http_body(const char *response, size_t response_len, size_t *out_body_len) {
-    const char *marker = "\r\n\r\n";
-    const char *pos = strstr(response, marker);
-    if (!pos) return NULL;
-
-    const char *body = pos + 4;
-    *out_body_len = response + response_len - body;
-    return body;
+static cJSON *loggingParseJson(const char *text,size_t length) {
+    const char *end; cJSON *root;size_t i,depth=0,tokens=0;bool quoted=false,escaped=false;
+    if(!text||!length||memchr(text,0,length)) {loggingFault=true;return NULL;}
+    for(i=0;i<length;i++) {
+        char ch=text[i];
+        if(quoted) {
+            if(escaped) {
+                if(ch=='u'&&i+4<length&&!memcmp(text+i+1,"0000",4)) {loggingFault=true;return NULL;}
+                escaped=false;
+            }
+            else if(ch=='\\')escaped=true;
+            else if(ch=='"')quoted=false;
+            else if((unsigned char)ch<32) {loggingFault=true;return NULL;}
+        } else if(ch=='"') {quoted=true;if(++tokens>512) {loggingFault=true;return NULL;}}
+        else if(ch=='{'||ch=='[') {if(++depth>12) {loggingFault=true;return NULL;}}
+        else if(ch=='}'||ch==']') {if(!depth) {loggingFault=true;return NULL;}depth--;}
+    }
+    if(quoted||depth) {loggingFault=true;return NULL;}
+    root=cJSON_ParseWithLengthOpts(text,length,&end,false);
+    if(!root) {loggingFault=true;return NULL;}
+    while(end<text+length&&(*end==' '||*end=='\r'||*end=='\n'||*end=='\t'))end++;
+    if(end!=text+length||!cJSON_IsObject(root)) {cJSON_Delete(root);loggingFault=true;return NULL;}
+    return root;
 }
-
-#define DECHUNK_BUFFER_SIZE 4096
-static char dechunkBuffer[DECHUNK_BUFFER_SIZE];
-char* dechunk_http_body(const char *chunked_body, size_t chunked_len, size_t *out_len)
-{
-    const char *ptr = chunked_body;
-    const char *end = chunked_body + chunked_len;
-    size_t output_offset = 0;
-
-    if (out_len == NULL) {
-        return NULL;
-    }
-
-    *out_len = 0;
-
-    if (chunked_body == NULL || chunked_len == 0) {
-        return NULL;
-    }
-
-    memset(dechunkBuffer, 0, sizeof(dechunkBuffer));
-
-    while (ptr < end)
-    {
-        char size_buf[16] = {0};
-        int i = 0;
-
-        while (ptr < end && *ptr != '\r' && i < 15)
-        {
-            size_buf[i++] = *ptr++;
-        }
-
-        size_buf[i] = '\0';
-
-        if (ptr >= end || *ptr != '\r') {
-            SYS_CONSOLE_PRINT("Malformed chunk: missing CR\r\n");
-            return NULL;
-        }
-        ptr++;
-
-        if (ptr >= end || *ptr != '\n') {
-            SYS_CONSOLE_PRINT("Malformed chunk: missing LF\r\n");
-            return NULL;
-        }
-        ptr++;
-
-        size_t chunk_size = strtoul(size_buf, NULL, 16);
-
-        if (chunk_size == 0) {
-            *out_len = output_offset;
-            return dechunkBuffer;
-        }
-
-        if ((size_t)(end - ptr) < chunk_size) {
-            SYS_CONSOLE_PRINT("Malformed chunk: chunk larger than remaining body\r\n");
-            return NULL;
-        }
-
-        if ((output_offset + chunk_size) >= DECHUNK_BUFFER_SIZE) {
-            SYS_CONSOLE_PRINT("Dechunk buffer too small\r\n");
-            return NULL;
-        }
-
-        memcpy(&dechunkBuffer[output_offset], ptr, chunk_size);
-        output_offset += chunk_size;
-        ptr += chunk_size;
-
-        if (ptr >= end || *ptr != '\r') {
-            SYS_CONSOLE_PRINT("Malformed chunk: missing CR after data\r\n");
-            return NULL;
-        }
-        ptr++;
-
-        if (ptr >= end || *ptr != '\n') {
-            SYS_CONSOLE_PRINT("Malformed chunk: missing LF after data\r\n");
-            return NULL;
-        }
-        ptr++;
-    }
-
-    SYS_CONSOLE_PRINT("Malformed chunked body: no final zero chunk\r\n");
-    return NULL;
-}
-
 bool parse_update_settings_from_json(const char *json_str, size_t len) {
-    cJSON *root = cJSON_ParseWithLength(json_str, len);
+    cJSON *root = loggingParseJson(json_str,len);
     if (!root) {
         SYS_CONSOLE_PRINT("Failed to parse JSON\n");
-        return false;
+        loggingFault=true;return false;
     }
 
     cJSON *upd = cJSON_GetObjectItemCaseSensitive(root, "update_settings");
@@ -1274,7 +1018,7 @@ bool parse_update_settings_from_json(const char *json_str, size_t len) {
         cJSON_Delete(root);
         return updateSettings;
     } else {
-        SYS_CONSOLE_PRINT("update_settings field missing\n");
+        loggingFault=true;SYS_CONSOLE_PRINT("update_settings field missing\n");
         cJSON_Delete(root);
         return false;
     }
@@ -1287,130 +1031,40 @@ bool parse_update_settings_from_json(const char *json_str, size_t len) {
 int bytesRead = 0;
 size_t buffer_len;
 
-void resetRxBuffer(void) { buffer_len = 0; readBuffer[0] = '\0'; }
+void resetRxBuffer(void) { buffer_len=0;readBuffer[0]=0;loggingRxComplete=false;memset(&loggingResponse,0,sizeof(loggingResponse)); }
+bool loggingConnectionReusable(void) { return log_socket!=INVALID_SOCKET&&loggingRxComplete&&loggingResponse.reusable&&NET_PRES_SocketIsConnected(log_socket); }
 
-bool areUpdateSettingsAvailable() {
-    size_t body_len;
-    
-    SYS_CONSOLE_PRINT(
-        "RAW HTTP BUFFER (%u bytes):\n%.*s\n",
-        (unsigned)buffer_len,
-        (int)buffer_len,
-        readBuffer
-    );
-    
-    const char *chunked = find_http_body(readBuffer, buffer_len, &body_len);
-    if (!chunked) {
-        SYS_CONSOLE_PRINT("HTTP body not found\n");
-        return false;
-    }
+bool areUpdateSettingsAvailable(void) { if(loggingResponse.status==204&&buffer_len==0)return false;return parse_update_settings_from_json(readBuffer,buffer_len); }
 
-    size_t json_len;
-    char *json_data = dechunk_http_body(chunked, body_len, &json_len);
-    if (!json_data) {
-        buffer_len = 0;
-        SYS_CONSOLE_PRINT("Dechunking failed\n");
-        return false;
+
+
+
+bool readServerResponseDone(void) {
+    int ready,count;bool eof;LOG_HTTP_RESULT result;
+    if(loggingFault)return false;
+    if(loggingRxComplete)return true;
+    if(log_socket==INVALID_SOCKET) {loggingFault=true;return false;}
+    ready=NET_PRES_SocketReadIsReady(log_socket);
+    if(ready>0) {
+        size_t room=READ_BUFFER_SIZE-buffer_len,size=READ_CHUNK_SIZE;
+        if(!room) {loggingFault=true;return false;}
+        if(size>room)size=room;
+        if(size>(size_t)ready)size=(size_t)ready;
+        count=(int)NET_PRES_SocketRead(log_socket,(uint8_t*)readBuffer+buffer_len,(uint16_t)size);
+        if(count<0||(size_t)count>size) {loggingFault=true;return false;}
+        if(count>0) {buffer_len+=(size_t)count;readBuffer[buffer_len]=0;loggingProgress=loggingNow();}
     }
-    
-    buffer_len = 0;
-    bool updateSettings = parse_update_settings_from_json(json_data, json_len);
-    return updateSettings;
+    eof=ready<=0&&(!NET_PRES_SocketIsConnected(log_socket)||NET_PRES_SocketWasDisconnected(log_socket));
+    if(NET_PRES_SocketWasReset(log_socket)) {loggingFault=true;return false;}
+    result=LOG_HTTP_Response(readBuffer,buffer_len,eof,&loggingResponse);
+    if(result==LOG_HTTP_BAD) {loggingFault=true;return false;}
+    if(result==LOG_HTTP_MORE)return false;
+    buffer_len=loggingResponse.bodyLength;loggingRxComplete=true;
+    if(loggingResponse.status<200||loggingResponse.status>=300) {
+        SYS_CONSOLE_PRINT("Logging HTTP failure: %u\r\n",loggingResponse.status);loggingFault=true;return false;
+    }
+    return true;
 }
-
-
-
-
-static bool http_response_complete(const char* buf, size_t len)
-{
-    if (len < 4) return false;
-
-    // Ensure strstr can work safely (caller should keep buf[len] = '\0')
-    const char* hdrEnd = strstr(buf, "\r\n\r\n");
-    if (!hdrEnd) return false;
-
-    size_t headerLen = (size_t)(hdrEnd + 4 - buf);
-
-    // Chunked?
-    if (strstr(buf, "Transfer-Encoding: chunked") || strstr(buf, "transfer-encoding: chunked"))
-    {
-        // Look for the terminating chunk: "\r\n0\r\n\r\n"
-        // Search only after headers:
-        const char* body = buf + headerLen;
-        const char* end  = buf + len;
-
-        for (const char* p = body; p + 5 < end; p++)
-        {
-            if (p[0] == '\r' && p[1] == '\n' && p[2] == '0' &&
-                p[3] == '\r' && p[4] == '\n' && p[5] == '\r' && p[6] == '\n')
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Content-Length?
-    const char* cl = strstr(buf, "Content-Length:");
-    if (!cl) return false;
-
-    unsigned long contentLen = strtoul(cl + strlen("Content-Length:"), NULL, 10);
-    return len >= (headerLen + (size_t)contentLen);
-}
-
-
-
-bool readServerResponseDone(void)
-{
-    // if disconnected/reset, stop
-    if (NET_PRES_SocketWasReset(log_socket) || NET_PRES_SocketWasDisconnected(log_socket))
-    {
-        return true;
-    }
-
-    int ready = NET_PRES_SocketReadIsReady(log_socket);
-    if (ready <= 0)
-    {
-        // not done, just no data yet
-        return false;
-    }
-
-    // room left
-    size_t room = READ_BUFFER_SIZE - buffer_len;
-    if (room == 0)
-    {
-        SYS_CONSOLE_PRINT("HTTP response too large. Closing socket.\r\n");
-
-        closeSocket();
-
-        buffer_len = 0;
-        readBuffer[0] = '\0';
-
-        return false;
-    }
-
-    size_t toRead = READ_CHUNK_SIZE;
-    if (toRead > (size_t)ready) toRead = (size_t)ready;
-    if (toRead > room) toRead = room;
-
-    bytesRead = NET_PRES_SocketRead(log_socket, (uint8_t*)readBuffer + buffer_len, toRead);
-    if (bytesRead > 0)
-    {
-        buffer_len += (size_t)bytesRead;
-        readBuffer[buffer_len] = '\0';   // keep it string-safe for strstr
-
-        // Only return true when HTTP response is complete
-        return http_response_complete(readBuffer, buffer_len);
-    }
-
-    return false;
-}
-
-
-
-
-
-
 
 void processModbusSettingsFromServer (uint16_t address, uint16_t value) {
     switch(address) {
@@ -1683,31 +1337,18 @@ int setting_count = 0;
 bool parse_modbus_settings(void)
 {
     setting_count = 0;
+    if(loggingResponse.status==204&&buffer_len==0)return false;
 
-    size_t body_len;
-    const char *chunked = find_http_body(readBuffer, buffer_len, &body_len);
-    if (!chunked) {
-        SYS_CONSOLE_PRINT("HTTP body not found\n");
-        return false;
-    }
-
-    size_t json_len;
-    char *json_data = dechunk_http_body(chunked, body_len, &json_len);
-    if (!json_data) {
-        buffer_len = 0;
-        SYS_CONSOLE_PRINT("Dechunking failed\n");
-        return false;
-    }
-
-    cJSON *root = cJSON_ParseWithLength(json_data, json_len);
+    cJSON *root = loggingParseJson(readBuffer,buffer_len);
     if (!root) {
         buffer_len = 0;
         SYS_CONSOLE_PRINT("Failed to parse JSON\n");
-        return false;
+        loggingFault=true;return false;
     }
 
     cJSON *updates = cJSON_GetObjectItem(root, "settings_updates");
     if (!cJSON_IsArray(updates)) {
+        loggingFault=true;
         SYS_CONSOLE_PRINT("settings_updates not found or not an array\n");
         cJSON_Delete(root);
         buffer_len = 0;
@@ -1721,197 +1362,63 @@ bool parse_modbus_settings(void)
         return false;
     }
 
-    cJSON *item = NULL;
-    cJSON_ArrayForEach(item, updates)
-    {
-        if (setting_count >= MAX_SETTINGS) {
-            break;
-        }
-
-        cJSON *addr = cJSON_GetObjectItem(item, "modbus_address");
-        cJSON *val  = cJSON_GetObjectItem(item, "value");
-
-        if (cJSON_IsString(addr) && cJSON_IsString(val))
-        {
-            uint16_t modbusAddress = (uint16_t)strtol(addr->valuestring, NULL, 0);
-            uint16_t modbusValue   = (uint16_t)strtol(val->valuestring, NULL, 10);
-
-            SYS_CONSOLE_PRINT("\nModbus Addy >> %i\n", modbusAddress);
-            SYS_CONSOLE_PRINT("value >> %i\n", modbusValue);
-
-            processModbusSettingsFromServer(modbusAddress, modbusValue);
-
-            setting_count++;
-        }
+    /* Validate the complete batch before applying any setting. */
+    cJSON *item=NULL;
+    if(cJSON_GetArraySize(updates)>MAX_SETTINGS) {cJSON_Delete(root);loggingFault=true;return false;}
+    cJSON_ArrayForEach(item,updates) {
+        const cJSON *addr=cJSON_GetObjectItem(item,"modbus_address");
+        const cJSON *value=cJSON_GetObjectItem(item,"value");
+        char *end;long number;
+        if(!cJSON_IsObject(item)||!cJSON_IsString(addr)||!cJSON_IsString(value)||!addr->valuestring[0]||!value->valuestring[0])goto invalidBatch;
+        errno=0;number=strtol(addr->valuestring,&end,0);
+        if(errno||*end||number<0||number>65535)goto invalidBatch;
+        errno=0;number=strtol(value->valuestring,&end,10);
+        if(errno||*end||number< -32768||number>65535)goto invalidBatch;
     }
-
+    cJSON_ArrayForEach(item,updates) {
+        const cJSON *addr=cJSON_GetObjectItem(item,"modbus_address");
+        const cJSON *value=cJSON_GetObjectItem(item,"value");
+        processModbusSettingsFromServer((uint16_t)strtol(addr->valuestring,NULL,0),(uint16_t)strtol(value->valuestring,NULL,10));
+        setting_count++;
+    }
     cJSON_Delete(root);
     buffer_len = 0;
 
     return true;
-}
-
-
-
-void send_http_chunk(const char *data, size_t len) {
-    char header[16];
-    int n = snprintf(header, sizeof(header), "%X\r\n", (unsigned int)len);
-
-    NET_PRES_SocketWrite(log_socket, header, n);
-    NET_PRES_SocketWrite(log_socket, data, len);
-    NET_PRES_SocketWrite(log_socket, "\r\n", 2);
-}
-
-
-
-void getSettingValuesByModusIndex (int MODBUS_INDEX_START, int MODBUS_INDEX_END) {   
-    
-    char chunk[512];
-    memset(chunk, 0, sizeof (chunk));
-    size_t offset = 0;
-   
-    for(int modbus_index = MODBUS_INDEX_START; modbus_index < MODBUS_INDEX_END; modbus_index++) {
-        int n = 0;
-        n = snprintf(chunk + offset, sizeof(chunk) - offset, "%i,", getDataFromMemoryCallable(modbus_index, MASTER_HEATPUMP_IN_CASCADE));
-        
-        if (n < 0 || n >= (int)(sizeof(chunk) - offset)) {
-            // Buffer vol stuur chunk
-            send_http_chunk(chunk, offset);
-            offset = 0;
-            modbus_index--;
-            continue;
-        }
-        offset += n;        
-    }
-    
-    // Send remaining data if any
-    if (offset > 0) {
-        send_http_chunk(chunk, offset);
-    }      
-    return;
-}
-
-
-
-void getSettingValuesByEepromList8Bit(const uint32_t *addresses, size_t count)
-{
-    char chunk[512];
-    memset(chunk, 0, sizeof(chunk));
-    size_t offset = 0;
-
-    for (size_t i = 0; i < count; i++) {
-        int n = snprintf(chunk + offset, sizeof(chunk) - offset, "%u,", (unsigned)ReadSmartEeprom8(addresses[i]));
-
-        if (n < 0 || n >= (int)(sizeof(chunk) - offset)) {
-            // Buffer full: flush and retry this index
-            send_http_chunk(chunk, offset);
-            offset = 0;
-            i--;
-            continue;
-        }
-        offset += (size_t)n;
-    }
-
-    if (offset > 0) {
-        send_http_chunk(chunk, offset);
-    }
-}
-
-void getSettingValuesByEepromList16Bit(const uint32_t *addresses, size_t count)
-{
-    char chunk[512];
-    memset(chunk, 0, sizeof(chunk));
-    size_t offset = 0;
-
-    for (size_t i = 0; i < count; i++) {
-        int n = snprintf(chunk + offset, sizeof(chunk) - offset, "%u,", (unsigned)ReadSmartEeprom16(addresses[i]));
-
-        if (n < 0 || n >= (int)(sizeof(chunk) - offset)) {
-            // Buffer full: flush and retry this index
-            send_http_chunk(chunk, offset);
-            offset = 0;
-            i--;
-            continue;
-        }
-        offset += (size_t)n;
-    }
-
-    if (offset > 0) {
-        send_http_chunk(chunk, offset);
-    }
+invalidBatch:
+    cJSON_Delete(root);loggingFault=true;buffer_len=0;return false;
 }
 
 
 
 
-bool sendUpdatedSettingsList ( void ) {
-    char *networkBuffer = settingsNetworkBuffer;
-    char requestBody[512];
-    char HARDWARE_ID[50];
-    
-    memset(networkBuffer, 0, sizeof(settingsNetworkBuffer));
-    memset(requestBody, 0, sizeof (requestBody));
-    memset(HARDWARE_ID, 0, sizeof (HARDWARE_ID));
-    
-    snprintf(HARDWARE_ID, sizeof(HARDWARE_ID), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-W-1",
-                    eui64[0], eui64[1], eui64[2], eui64[3], eui64[4], eui64[5], eui64[6], eui64[7]);
-    
-    snprintf(networkBuffer, sizeof(settingsNetworkBuffer), "POST /api/v1/settings?hardware_id=%s&type=heatpump HTTP/1.1\r\n"
-                    "Host: %s\r\n"
-                    "Accept: application/json\r\n"
-                    "Authorization: Bearer %s\r\n"
-                    "Accept-Encoding: Identity\r\n"
-                    "Connection: close\r\n"
-                    "Content-Type: text/plain\r\n"
-                    "Cache-Control: no-cache\r\n"     
-                    "Transfer-Encoding: chunked\r\n\r\n",
-                    HARDWARE_ID, HOST, TOKEN);
-    
-    uint16_t bytesSend = NET_PRES_SocketWrite(log_socket, (uint8_t*) networkBuffer, strlen(networkBuffer));
-    
-    getSettingValuesByModusIndex(0x0100, 0x022C);  
-    getSettingValuesByModusIndex(0x0300, 0x0319);
-    getSettingValuesByModusIndex(0x0330, 0x0346);
-    getSettingValuesByModusIndex(0x0360, 0x0363);
-    getSettingValuesByModusIndex(0x0800, 0x0831);    
-    getSettingValuesByModusIndex(0x1000, 0x1024);      
-    
-    if (getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE, MASTER_HEATPUMP_IN_CASCADE) == 2) {
-        WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, true);
-        WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE, false);
-    } else if (getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE, MASTER_HEATPUMP_IN_CASCADE) == 1) {
-        WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, false);
-        WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE, true);
-    } else {
-        WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE, false);
-        WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE, false);
-    }    
-    
-    const uint32_t eep_addrs_8_bit_1[] = {
+
+
+
+
+
+
+
+
+
+
+static const uint32_t eep_addrs_8_bit_1[]={
         SEEP_ADDR_EVU_CONTACT_ENABLE,       
         SEEP_ADDR_HEATPUMP_WAS_ON_BEFORE_FORCED_OFF,     
         SEEP_ADDR_SWITCH_HEATPUMP_ON_OFF_WITH_THERMOSTAT,
         SEEP_ADDR_SOFTWARE_RESET,                        
         SEEP_ADDR_SILENT_MODE,      
     };
-    getSettingValuesByEepromList8Bit(eep_addrs_8_bit_1, sizeof(eep_addrs_8_bit_1)/sizeof(eep_addrs_8_bit_1[0]));  
-   
-    
-    const uint32_t eep_addrs_16_bit_1[] = {    
+static const uint32_t eep_addrs_16_bit_1[]={
         SEEP_ADDR_START_TIME_SILENT_MODE,                
         SEEP_ADDR_END_TIME_SILENT_MODE,   
     };
-    getSettingValuesByEepromList16Bit(eep_addrs_16_bit_1, sizeof(eep_addrs_16_bit_1)/sizeof(eep_addrs_16_bit_1[0]));    
-    
-    
-    const uint32_t eep_addrs_8_bit_2[] = {    
+static const uint32_t eep_addrs_8_bit_2[]={
         SEEP_ADDR_BOOST_MODE,                            
         SEEP_ADDR_USE_SILENT_MODE_TIMERS,                
         SEEP_ADDR_BLOCK_HOTWATER,                                    
      };
-    getSettingValuesByEepromList8Bit(eep_addrs_8_bit_2, sizeof(eep_addrs_8_bit_2)/sizeof(eep_addrs_8_bit_2[0]));  
-    
-    const uint32_t eep_addrs_16_bit_2[] = {
+static const uint32_t eep_addrs_16_bit_2[]={
         SEEP_ADDR_START_TIME_BLOCK_HOTWATER,             
         SEEP_ADDR_END_TIME_BLOCK_HOTWATER,    
         SEEP_ADDR_HOT_WATER_MIN_TIME_IN_HOT_WATER_MODE,
@@ -1919,20 +1426,14 @@ bool sendUpdatedSettingsList ( void ) {
         SEEP_ADDR_HOT_WATER_MAX_TIME_HEATING_ELEMENT_ON_IN_HEATING_MODE_SEC,
         SEEP_ADDR_PUMP_LAG_TIME_AFTER_THERMOSTAT_CONTACT_DISCONNECTED_SEC,
      };
-    getSettingValuesByEepromList16Bit(eep_addrs_16_bit_2, sizeof(eep_addrs_16_bit_2)/sizeof(eep_addrs_16_bit_2[0]));    
-    
-    
-    const uint32_t eep_addrs_8_bit_3[] = {
+static const uint32_t eep_addrs_8_bit_3[]={
         SEEP_ADDR_DIGITAL_INPUT_TWO,
         SEEP_ADDR_DIGITAL_INPUT_ONE,
         SEEP_ADDR_COOLING_CONTACT_ENABLE,
         SEEP_ADDR_RELAIS_OUTPUT_TWO,
         SEEP_ADDR_RELAIS_OUTPUT_THREE,
      };
-    getSettingValuesByEepromList8Bit(eep_addrs_8_bit_3, sizeof(eep_addrs_8_bit_3)/sizeof(eep_addrs_8_bit_3[0]));      
-    
-    
-    const uint32_t eep_addrs_16_bit_3[] = {
+static const uint32_t eep_addrs_16_bit_3[]={
         SEEP_ADDR_HEATING_TIME_CONSTANT_SEC,      
         SEEP_ADDR_HYBRID_SYSTEM_ENABLED_ON_HEATING_ELEMENT_RELAIS,
         SEEP_ADDR_HEATING_MODE_MAX_TIME_WITH_ELEMENT_ON,
@@ -1950,38 +1451,53 @@ bool sendUpdatedSettingsList ( void ) {
         SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_HEATING,
         SEEP_ADDR_RETURN_DIFFERENTIAL_VALUE_COOLING,
      };
-    
-    getSettingValuesByEepromList16Bit(eep_addrs_16_bit_3, sizeof(eep_addrs_16_bit_3)/sizeof(eep_addrs_16_bit_3[0]));    
-        
-    
-    
-    // Laatste write zodat de server weet dat ontvangen klaar is
-    NET_PRES_SocketWrite(log_socket, "0\r\n\r\n", 5);    
-    
-    if (bytesSend <= 0) {
-        SYS_CONSOLE_PRINT("***** COULD NOT COMPLETE REQUEST, CHECK IF NETWORK TX BUFFER SIZE IS BIG ENOUGH TO SEND THE REQUEST! SIZE NOW >> %d *****\r\n", strlen(networkBuffer));  
-        return false;
-    } else {
-        SYS_CONSOLE_PRINT("*** REQUEST SEND WITH FOLLOWING SETTINGS: POST, /api/v1/settings?hardware_id=%s&type=heatpump, SIZE %i\r\n", HARDWARE_ID, strlen(requestBody));
+typedef struct { unsigned bits;uint16_t first,end;const uint32_t *addresses;size_t count; } LOG_SETTING_SEGMENT;
+static const LOG_SETTING_SEGMENT settingSegments[]={
+{0,0x0100,0x022C,NULL,0},
+{0,0x0300,0x0319,NULL,0},
+{0,0x0330,0x0346,NULL,0},
+{0,0x0360,0x0363,NULL,0},
+{0,0x0800,0x0831,NULL,0},
+{0,0x1000,0x1024,NULL,0},
+{8,0,0,eep_addrs_8_bit_1,sizeof(eep_addrs_8_bit_1)/sizeof(eep_addrs_8_bit_1[0])},
+{16,0,0,eep_addrs_16_bit_1,sizeof(eep_addrs_16_bit_1)/sizeof(eep_addrs_16_bit_1[0])},
+{8,0,0,eep_addrs_8_bit_2,sizeof(eep_addrs_8_bit_2)/sizeof(eep_addrs_8_bit_2[0])},
+{16,0,0,eep_addrs_16_bit_2,sizeof(eep_addrs_16_bit_2)/sizeof(eep_addrs_16_bit_2[0])},
+{8,0,0,eep_addrs_8_bit_3,sizeof(eep_addrs_8_bit_3)/sizeof(eep_addrs_8_bit_3[0])},
+{16,0,0,eep_addrs_16_bit_3,sizeof(eep_addrs_16_bit_3)/sizeof(eep_addrs_16_bit_3[0])}
+};
+static unsigned settingsSegment;
+static size_t settingsIndex;
+static int nextSettings(void *user,const uint8_t **data,size_t *length) {
+    size_t at=0;unsigned budget=0;(void)user;
+    while(settingsSegment<sizeof(settingSegments)/sizeof(settingSegments[0])&&budget++<64) {
+        const LOG_SETTING_SEGMENT *g=&settingSegments[settingsSegment];unsigned value;int n;
+        size_t count=g->bits?g->count:(size_t)(g->end-g->first);
+        if(settingsIndex==count) {settingsIndex=0;settingsSegment++;continue;}
+        value=g->bits==8?ReadSmartEeprom8(g->addresses[settingsIndex]):g->bits==16?ReadSmartEeprom16(g->addresses[settingsIndex]):getDataFromMemoryCallable(g->first+(int)settingsIndex,MASTER_HEATPUMP_IN_CASCADE);
+        n=snprintf(loggingChunk+at,sizeof(loggingChunk)-at,"%u,",value);
+        if(n<0)return -1;
+        if((size_t)n>=sizeof(loggingChunk)-at)break;
+        at+=(size_t)n;settingsIndex++;
     }
-    return true;    
+    if(!at&&settingsSegment<sizeof(settingSegments)/sizeof(settingSegments[0]))return -1;
+    *data=(const uint8_t*)loggingChunk;*length=at;return at?1:0;
+}
+bool sendUpdatedSettingsList(void) {
+    int n;char hardware[50];
+    if(loggingTransmitBusy())return false;
+    snprintf(hardware,sizeof(hardware),"%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X-W-1",eui64[0],eui64[1],eui64[2],eui64[3],eui64[4],eui64[5],eui64[6],eui64[7]);
+    n=snprintf(settingsNetworkBuffer,sizeof(settingsNetworkBuffer),"POST /api/v1/settings?hardware_id=%s&type=heatpump HTTP/1.1\r\nHost: %s\r\nAccept: application/json\r\nAuthorization: Bearer %s\r\nAccept-Encoding: identity\r\nConnection: keep-alive\r\nContent-Type: text/plain\r\nTransfer-Encoding: chunked\r\n\r\n",hardware,HOST,TOKEN);
+    {
+        unsigned mode=getDataFromMemoryCallable(ADDRESS_FREQUENCY_CONVERSION_MODE,MASTER_HEATPUMP_IN_CASCADE);
+        uint8_t silent=(uint8_t)(mode==2),boost=(uint8_t)(mode==1);
+        if(ReadSmartEeprom8(SEEP_ADDR_SILENT_MODE)!=silent)WriteSmartEeprom8(SEEP_ADDR_SILENT_MODE,silent);
+        if(ReadSmartEeprom8(SEEP_ADDR_BOOST_MODE)!=boost)WriteSmartEeprom8(SEEP_ADDR_BOOST_MODE,boost);
+    }
+    settingsSegment=0;settingsIndex=0;
+    return n>0&&(size_t)n<sizeof(settingsNetworkBuffer)&&beginLoggingRequest((size_t)n,nextSettings);
 }
 
 
-bool readServerResponseUpdatedSettingsDone() {
-    bytesRead = NET_PRES_SocketRead(log_socket, (uint8_t*)readBuffer + buffer_len, READ_CHUNK_SIZE);
-    SYS_CONSOLE_PRINT("bytes read %i\n", bytesRead);
-    
-    for(int i = 0; i < buffer_len; i++) {
-        SYS_CONSOLE_PRINT("%c", readBuffer[i]);
-    }
-    
-    if (bytesRead > 0) {
-        buffer_len += bytesRead;
-        return false;
-    }    
-    SYS_CONSOLE_PRINT("Total bytes read %i\n", buffer_len);
-    
-    buffer_len = 0;
-    return true;
-}
+
+bool readServerResponseUpdatedSettingsDone(void) { return readServerResponseDone(); }

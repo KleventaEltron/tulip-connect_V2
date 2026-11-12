@@ -117,6 +117,35 @@ After testing, set TULIP_S2_COMM_TEST_ENABLE back to 0 and rebuild. Persisted la
 credentials remain in the reserved token slots; disabling does not erase them.
 Generated private material is ignored by Git and should remain local.
 
+## After programmer-induced EEPROM erasure
+
+The programmer used on this bench erases EEPROM after programming. The board
+then uses the original provisioning token again, while the dummy CEM normally
+retains a rotated token. HTTP 401 / coordinator error 9 is expected for that
+mismatch; changing TCP buffers does not repair it.
+
+Stop the server with Ctrl+C and wait for the shell prompt. After an EEPROM-erasing
+program operation, run:
+
+`python tools/s2_comm_test/server.py reset-device`
+
+`python tools/s2_comm_test/server.py serve --bind 192.168.0.106`
+
+Then reset/power-cycle the controller so its blocked bench task starts again.
+No firmware rebuild is required merely to run this PC command. Do not rerun init:
+reset-device preserves config.json, certificate, key, node IDs and generated header,
+backs up an existing state.json and restores the original lab token. Old rotated
+credentials are no longer accepted after the reset. Updated server processes hold
+a lease to exclude reset-device while running; always stop the server first,
+including an older process started before the lease support was added.
+
+For subsequent reprogramming, stop the PC server before programming, reset its
+bench state, restart it and reset the board. This avoids accidental token rotation
+between server reset and EEPROM erasure. Do not reset server state after an
+ordinary controller restart that preserved EEPROM, since that would introduce a
+mismatch. Production updates must preserve pairing credentials or perform explicit
+re-pairing; this offline bench reset is not a production recovery protocol.
+
 ## Memory
 
 No bench workspace is allocated in the OFF build. The enabled bench uses the

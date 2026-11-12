@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import secrets
+import shutil
 import socket
 import ssl
 import struct
@@ -301,17 +302,81 @@ class Handler(BaseHTTPRequestHandler):
                 print('S2 COMM TEST PASS: both directions, correlated responses, simulated measurement and control rejection.', flush=True)
 
 
+class ServerLease:
+    """Keep reset and serving mutually exclusive, including separate processes."""
+    def __init__(self, directory):
+        self.file = (directory/'server.lock').open('a+b')
+        self.file.seek(0, os.SEEK_END)
+        if self.file.tell() == 0:
+            self.file.write(b'0')
+            self.file.flush()
+        self.file.seek(0)
+        try:
+            if os.name == 'nt':
+                import msvcrt
+                msvcrt.locking(self.file.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(self.file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as error:
+            self.file.close()
+            raise RuntimeError('Bench CEM is running or busy. Stop it with Ctrl+C before resetting device state.') from error
+    def close(self):
+        if not self.file.closed:
+            self.file.close()
+    def __enter__(self):
+        return self
+    def __exit__(self, *args):
+        self.close()
+
+
+class BenchServer(ThreadingHTTPServer):
+    def server_close(self):
+        try:
+            super().server_close()
+        finally:
+            lease = getattr(self, 'lease', None)
+            if lease:
+                lease.close()
+
+
+def reset_device(directory):
+    """Bench-only reset after controller EEPROM erasure; retain identity/trust."""
+    config = json.loads((directory/'config.json').read_text())
+    with ServerLease(directory):
+        state = directory/'state.json'
+        if state.exists():
+            backup = directory/('state-backup-'+dt.datetime.now(dt.timezone.utc).strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:8]+'.json')
+            shutil.copy2(state, backup)
+        temporary = directory/'state.new'
+        with temporary.open('w') as stream:
+            json.dump({'active': config['initial_token'], 'pending': None, 'pending_at': 0}, stream)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, state)
+    print('Bench token state restored for an EEPROM-erased controller. Existing state backed up if present; certificates and identities unchanged.', flush=True)
+
+
 def create_server(directory, bind):
-    state = State(directory)
-    server = ThreadingHTTPServer((bind, state.config['port']), Handler)
-    server.daemon_threads = True
-    server.state = state
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    context.minimum_version = ssl.TLSVersion.TLSv1_2
-    context.maximum_version = ssl.TLSVersion.TLSv1_2
-    context.load_cert_chain(directory/'server.pem', directory/'server-key.pem')
-    server.socket = context.wrap_socket(server.socket, server_side=True)
-    return server
+    lease = ServerLease(directory)
+    server = None
+    try:
+        state = State(directory)
+        server = BenchServer((bind, state.config['port']), Handler)
+        server.lease = lease
+        server.daemon_threads = True
+        server.state = state
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.minimum_version = ssl.TLSVersion.TLSv1_2
+        context.maximum_version = ssl.TLSVersion.TLSv1_2
+        context.load_cert_chain(directory/'server.pem', directory/'server-key.pem')
+        server.socket = context.wrap_socket(server.socket, server_side=True)
+        return server
+    except Exception:
+        if server is not None:
+            server.server_close()
+        lease.close()
+        raise
 
 
 def main():
@@ -322,11 +387,17 @@ def main():
     init.add_argument('--ip', required=True, help='PC IPv4 address reachable by the board')
     init.add_argument('--hostname', default='tulip-s2-test.invalid')
     init.add_argument('--port', type=int, default=8443)
+    commands.add_parser('reset-device', help='Restore initial lab token after controller EEPROM erase; server must be stopped')
     serve = commands.add_parser('serve')
     serve.add_argument('--bind', default='127.0.0.1', help='Use the PC LAN address to accept the board connection')
     args = parser.parse_args()
     if args.command == 'init':
         initialize(args.directory, args.ip, args.hostname, args.port)
+    elif args.command == 'reset-device':
+        try:
+            reset_device(args.directory)
+        except RuntimeError as error:
+            parser.error(str(error))
     else:
         server = create_server(args.directory, args.bind)
         print('Bench CEM listening; credentials are not printed. Ctrl+C stops.', flush=True)

@@ -1,0 +1,100 @@
+{
+  "description": "Legacy settings CSV layout captured before the logging transport refactor. Values in test are synthetic.",
+  "ranges": [
+    [
+      256,
+      556
+    ],
+    [
+      768,
+      793
+    ],
+    [
+      816,
+      838
+    ],
+    [
+      864,
+      867
+    ],
+    [
+      2048,
+      2097
+    ],
+    [
+      4096,
+      4132
+    ]
+  ],
+  "groups": [
+    {
+      "bits": 8,
+      "addresses": [
+        74,
+        75,
+        76,
+        77,
+        78
+      ]
+    },
+    {
+      "bits": 16,
+      "addresses": [
+        79,
+        81
+      ]
+    },
+    {
+      "bits": 8,
+      "addresses": [
+        83,
+        84,
+        85
+      ]
+    },
+    {
+      "bits": 16,
+      "addresses": [
+        86,
+        88,
+        27,
+        19,
+        21,
+        17
+      ]
+    },
+    {
+      "bits": 8,
+      "addresses": [
+        98,
+        99,
+        100,
+        101,
+        102
+      ]
+    },
+    {
+      "bits": 16,
+      "addresses": [
+        25,
+        123,
+        125,
+        127,
+        129,
+        121,
+        123,
+        125,
+        127,
+        129,
+        131,
+        133,
+        135,
+        137,
+        141,
+        143
+      ]
+    }
+  ],
+  "silent": 78,
+  "boost": 83
+}

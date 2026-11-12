@@ -72,6 +72,14 @@ with tempfile.TemporaryDirectory(prefix='s2-messages-') as temp:
         status,init=post('/v1/initiateSession',cfg['initial_token'],request);assert status==200
         status,confirm=post('/v1/confirmAccessToken',init['accessToken'],None);assert status==200
         assert post('/v1/initiateSession',cfg['initial_token'],request)[0]==401
+        before=(temp/'state.json').read_bytes()
+        try:
+            bench.reset_device(temp)
+        except RuntimeError:
+            pass
+        else:
+            raise AssertionError('reset must refuse a running server')
+        assert (temp/'state.json').read_bytes()==before
         # State survives server object reload without printing credentials.
         assert bench.State(temp).data['active']==init['accessToken']
         with connect() as sock:
@@ -102,4 +110,16 @@ with tempfile.TemporaryDirectory(prefix='s2-messages-') as temp:
                 proc.stdin.close();proc.wait(timeout=5);assert proc.returncode==0
     finally:
         server.shutdown();server.server_close();thread.join(timeout=5)
+    config_before=(temp/'config.json').read_bytes()
+    certificate_before=(temp/'server.pem').read_bytes()
+    bench.reset_device(temp)
+    assert (temp/'config.json').read_bytes()==config_before
+    assert (temp/'server.pem').read_bytes()==certificate_before
+    backups=list(temp.glob('state-backup-*.json'));assert len(backups)==1
+    assert json.loads(backups[0].read_text())['active']==init['accessToken']
+    restarted=bench.State(temp)
+    assert restarted.data['active']==cfg['initial_token'] and restarted.data['pending'] is None
+    assert restarted.initiate(init['accessToken'],request)[0]==401
+    assert restarted.initiate(cfg['initial_token'],request)[0]==200
+    print('Bench reset backup, running-server exclusion and initial-token resynchronization passed.')
     print('Actual C diagnostic engine exchanged schema-valid S2 messages with local TLS/HTTPS/WebSocket CEM; both sides confirmed PASS. No pump-control module linked.')

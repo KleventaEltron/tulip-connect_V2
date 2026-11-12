@@ -28,6 +28,6 @@ with tempfile.TemporaryDirectory(prefix="tulip-logging-socket-") as temporary:
     isolated = temporary / "logging_socket.c"
     isolated.write_text('#include "stubs.h"\n' + "\n".join(functions))
     executable = temporary / ("test.exe" if os.name == "nt" else "test")
-    subprocess.run(compiler + ["-std=c99", "-Wall", "-Wextra", "-Werror", "-I" + str(tests),
-        str(isolated), str(tests / "test_socket.c"), "-o", str(executable)], check=True)
+    subprocess.run(compiler + ["-std=c99", "-Wall", "-Wextra", "-Werror", "-I" + str(tests), "-I" + str(root / "src/files"),
+        str(isolated), str(root / "src/files/logging_http.c"), str(tests / "test_socket.c"), "-o", str(executable)], check=True)
     subprocess.run([str(executable)], check=True)

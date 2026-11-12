@@ -3,6 +3,12 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
+#include "logging_http.h"
+extern LOG_HTTP_TX loggingTx;
+extern bool loggingFault;
+extern char settingsNetworkBuffer[4096],loggingChunk[512];
+void resetRxBuffer(void);
 typedef int NET_PRES_SKT_HANDLE_T;
 typedef int NET_PRES_SKT_ERROR_T;
 typedef int NET_PRES_SKT_OPTION_TYPE;
